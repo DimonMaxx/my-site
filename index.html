@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой сайт — бесплатные файлы</title>
+    <!-- Подключение шрифтов и иконок -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #f0f4ff 0%, #e6edf7 100%);
+            color: #1a202c;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 40px;
+            box-shadow: 0 25px 60px rgba(0, 20, 80, 0.15);
+            overflow: hidden;
+            padding: 30px 40px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* ===== ШАПКА ===== */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 2px solid rgba(37, 99, 235, 0.15);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo i {
+            color: #2563eb;
+            font-size: 32px;
+        }
+        .logo span {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== НАВИГАЦИЯ ===== */
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        nav a {
+            padding: 8px 16px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #475569;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        nav a:hover {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+
+        .nav-tab {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-tab:hover {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+
+        .nav-tab.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .submit-link {
+            background: #f59e0b;
+            color: white !important;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .submit-link:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+        }
+
+        .admin-link {
+            background: #1e293b;
+            color: white !important;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .admin-link:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+        }
+
+        /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== БАННЕР НА ГЛАВНОЙ ===== */
+        .hero-banner {
+            background: linear-gradient(135deg, #dbeafe, #ede9fe);
+            border-radius: 24px;
+            padding: 30px 40px;
+            margin-bottom: 35px;
+            border: 1px solid rgba(37, 99, 235, 0.15);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .hero-banner h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+        }
+        .hero-banner p {
+            font-size: 17px;
+            color: #334155;
+            margin: 6px 0 0;
+        }
+        .hero-banner .btn-hero {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 32px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            white-space: nowrap;
+        }
+        .hero-banner .btn-hero:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        /* ===== ЗАГОЛОВКИ РАЗДЕЛОВ ===== */
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 40px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title i {
+            color: #2563eb;
+        }
+
+        /* ===== КАРТОЧКИ ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 20px 22px 25px;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(37, 99, 235, 0.08);
+            border-color: #b1c5f0;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .card .meta {
+            font-size: 13px;
+            color: #94a3b8;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .btn-download {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-download:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .btn-download i {
+            margin-right: 6px;
+        }
+
+        /* ===== НОВОСТИ ===== */
+        .news-item {
+            background: #f8fafc;
+            border-left: 5px solid #2563eb;
+            padding: 16px 22px;
+            margin: 16px 0;
+            border-radius: 0 14px 14px 0;
+            transition: all 0.2s;
+        }
+        .news-item:hover {
+            background: #eef2ff;
+            border-left-color: #7c3aed;
+        }
+        .news-item time {
+            font-size: 13px;
+            color: #64748b;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .news-item h4 {
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .news-item p {
+            color: #334155;
+            margin-top: 4px;
+        }
+
+        /* ===== СТАТЬИ ===== */
+        .article-item {
+            padding: 18px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .article-item:last-child {
+            border-bottom: none;
+        }
+        .article-item h4 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .article-item p {
+            color: #475569;
+            margin: 4px 0 8px;
+        }
+        .article-item a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .article-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== ТЕГИ (разное) ===== */
+        .tag {
+            display: inline-block;
+            background: #e5e7eb;
+            border-radius: 30px;
+            padding: 6px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 4px 6px 4px 0;
+            transition: 0.2s;
+        }
+        .tag:hover {
+            background: #cbd5e1;
+        }
+
+        /* ===== ПОДВАЛ ===== */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px 30px;
+        }
+        footer a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        footer .footer-link {
+            color: #475569;
+            font-weight: 500;
+        }
+        footer .footer-link i {
+            margin-right: 6px;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 900px) {
+            .container { padding: 20px; }
+            header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .logo { justify-content: center; }
+            nav { justify-content: center; }
+            .hero-banner { flex-direction: column; text-align: center; padding: 25px; }
+            .hero-banner .btn-hero { white-space: normal; }
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; border-radius: 24px; }
+            .grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 22px; }
+            .nav-tab, nav a { font-size: 12px; padding: 6px 12px; }
+            .logo { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ШАПКА -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-cube"></i>
+            <span>MyFiles</span>
+        </div>
+        <nav id="tabNav">
+            <button class="nav-tab active" data-tab="home"><i class="fas fa-home"></i> Главная</button>
+            <button class="nav-tab" data-tab="news"><i class="fas fa-newspaper"></i> Новости</button>
+            <button class="nav-tab" data-tab="programs"><i class="fas fa-code"></i> Программы</button>
+            <button class="nav-tab" data-tab="books"><i class="fas fa-book"></i> Книги</button>
+            <button class="nav-tab" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</button>
+            <button class="nav-tab" data-tab="movies"><i class="fas fa-film"></i> Фильмы</button>
+            <button class="nav-tab" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</button>
+            <a href="/submit.html" class="submit-link"><i class="fas fa-upload"></i> Предложить материал</a>
+            <a href="/admin/" class="admin-link"><i class="fas fa-cog"></i> Админка</a>
+        </nav>
+    </header>
+
+    <!-- ==================== ГЛАВНАЯ ==================== -->
+    <div id="home" class="tab-content active">
+
+        <!-- Призывной баннер -->
+        <div class="hero-banner">
+            <div>
+                <h2><i class="fas fa-hand-peace" style="color:#2563eb;"></i> Хотите поделиться своим материалом?</h2>
+                <p>Заполните форму — и после проверки ваш файл появится на сайте.</p>
+            </div>
+            <a href="/submit.html" class="btn-hero"><i class="fas fa-arrow-right"></i> Перейти к форме</a>
+        </div>
+
+        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Добро пожаловать!</h1>
+        <p style="font-size: 18px; color: #334155; margin-bottom: 30px;">
+            Здесь вы найдёте <strong>бесплатные</strong> программы, книги, фильмы, статьи и многое другое.
+            Всё доступно для скачивания без регистрации и оплаты.
+        </p>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 25px; margin-bottom: 20px;">
+            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
+                <i class="fas fa-download fa-3x" style="color:#2563eb;"></i>
+                <h3 style="margin:12px 0 6px;">Быстрое скачивание</h3>
+                <p style="color:#475569; font-size:15px;">Все файлы лежат на облачных дисках, доступны по прямой ссылке.</p>
+            </div>
+            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
+                <i class="fas fa-shield-alt fa-3x" style="color:#2563eb;"></i>
+                <h3 style="margin:12px 0 6px;">Безопасно</h3>
+                <p style="color:#475569; font-size:15px;">Все файлы проверяются перед публикацией.</p>
+            </div>
+            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
+                <i class="fas fa-sync-alt fa-3x" style="color:#2563eb;"></i>
+                <h3 style="margin:12px 0 6px;">Регулярные обновления</h3>
+                <p style="color:#475569; font-size:15px;">Новый контент добавляется каждую неделю.</p>
+            </div>
+        </div>
+
+        <p style="margin-top: 20px; font-size: 15px; color: #64748b;">
+            <i class="fas fa-info-circle"></i> Навигация по вкладкам вверху страницы.
+        </p>
+    </div>
+
+    <!-- ==================== НОВОСТИ ==================== -->
+    <div id="news" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2>
+
+        <div class="news-item">
+            <time>31 августа 2026</time>
+            <h4>🚀 Запуск сайта!</h4>
+            <p>Мы открыли этот ресурс, чтобы делиться полезными файлами. Первая партия программ и книг уже доступна.</p>
+        </div>
+        <div class="news-item">
+            <time>30 августа 2026</time>
+            <h4>📚 Добавлены новые книги</h4>
+            <p>В раздел «Книги» загружены 3 новых издания по программированию и дизайну.</p>
+        </div>
+        <div class="news-item">
+            <time>29 августа 2026</time>
+            <h4>🛡️ Обновление антивирусных баз</h4>
+            <p>Все файлы прошли повторную проверку, вы можете скачивать их без опасений.</p>
+        </div>
+        <div class="news-item">
+            <time>28 августа 2026</time>
+            <h4>🎬 Новый раздел «Фильмы»</h4>
+            <p>Теперь на сайте доступны культовые фильмы в хорошем качестве.</p>
+        </div>
+        <div class="news-item">
+            <time>27 августа 2026</time>
+            <h4>📝 Добавлена форма для предложения материалов</h4>
+            <p>Теперь каждый пользователь может предложить свой файл для публикации.</p>
+        </div>
+
+        <p style="margin-top:25px;"><i class="fas fa-rss"></i> Подписывайтесь на обновления — скоро добавим ещё больше!</p>
+    </div>
+
+    <!-- ==================== ПРОГРАММЫ ==================== -->
+    <div id="programs" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-code"></i> Программы</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>PDF Merge Tool</h3>
+                <p>Объединяет несколько PDF в один файл за секунды. Работает офлайн.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 2.3 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Image Resizer Pro</h3>
+                <p>Пакетное изменение размера изображений. Поддерживает JPG, PNG, WEBP.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 1.8 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Text Editor Plus</h3>
+                <p>Лёгкий редактор с подсветкой синтаксиса для Python, JS, HTML, CSS.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 3.1 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>System Monitor</h3>
+                <p>Отображает загрузку ЦП, память, диск в реальном времени.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 4.2 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Network Scanner</h3>
+                <p>Сканирует локальную сеть и показывает активные устройства.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 1.2 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>File Organizer</h3>
+                <p>Автоматически сортирует файлы в папках по типу и дате.</p>
+                <div class="meta"><span><i class="fas fa-file"></i> .exe</span><span><i class="fas fa-weight-hanging"></i> 2.9 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+        </div>
+        <p style="margin-top:20px;"><i class="fas fa-info-circle"></i> Все программы бесплатны, без скрытых условий.</p>
+    </div>
+
+    <!-- ==================== КНИГИ ==================== -->
+    <div id="books" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-book"></i> Книги</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Изучаем Python (Марк Лутц)</h3>
+                <p>Полное руководство по языку Python — от основ до продвинутых тем.</p>
+                <div class="meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-weight-hanging"></i> 12 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Дизайн повседневных вещей (Дон Норман)</h3>
+                <p>Классика о том, как делать удобные и понятные интерфейсы.</p>
+                <div class="meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-weight-hanging"></i> 8.5 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Алгоритмы: построение и анализ (Кормен)</h3>
+                <p>Базовый учебник по алгоритмам для программистов и студентов.</p>
+                <div class="meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-weight-hanging"></i> 18 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Чистый код (Роберт Мартин)</h3>
+                <p>Книга о том, как писать читаемый и поддерживаемый код.</p>
+                <div class="meta"><span><i class="fas fa-file-pdf"></i> PDF</span><span><i class="fas fa-weight-hanging"></i> 5.2 МБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== СТАТЬИ ==================== -->
+    <div id="articles" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-pen-fancy"></i> Статьи</h2>
+
+        <div class="article-item">
+            <h4>🔒 Как защитить свои данные в интернете</h4>
+            <p>Рекомендации по выбору паролей, двухфакторная аутентификация и шифрование.</p>
+            <a href="#">Читать далее <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="article-item">
+            <h4>🛡️ Обзор лучших бесплатных антивирусов 2026</h4>
+            <p>Сравнение популярных решений: Kaspersky Free, Avast, Bitdefender и другие.</p>
+            <a href="#">Читать далее <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="article-item">
+            <h4>🐍 Как начать программировать на Python с нуля</h4>
+            <p>Пошаговое руководство для новичков: установка, первая программа, полезные ресурсы.</p>
+            <a href="#">Читать далее <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="article-item">
+            <h4>🎨 Тренды в дизайне интерфейсов 2026</h4>
+            <p>Минимализм, микроанимации, тёмная тема и нейросети в создании макетов.</p>
+            <a href="#">Читать далее <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="article-item">
+            <h4>☁️ Облачные технологии для начинающих</h4>
+            <p>Что такое облачные сервисы, какие есть провайдеры и как их использовать.</p>
+            <a href="#">Читать далее <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+    <!-- ==================== ФИЛЬМЫ ==================== -->
+    <div id="movies" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-film"></i> Фильмы</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Космическая одиссея 2001</h3>
+                <p>Классика научной фантастики Стэнли Кубрика.</p>
+                <div class="meta"><span><i class="fas fa-file-video"></i> .mp4</span><span><i class="fas fa-weight-hanging"></i> 2.1 ГБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Бегущий по лезвию (1982)</h3>
+                <p>Культовый киберпанк-фильм с Харрисоном Фордом.</p>
+                <div class="meta"><span><i class="fas fa-file-video"></i> .mkv</span><span><i class="fas fa-weight-hanging"></i> 3.5 ГБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Матрица (1999)</h3>
+                <p>Фильм, который изменил мир кино и философию.</p>
+                <div class="meta"><span><i class="fas fa-file-video"></i> .mp4</span><span><i class="fas fa-weight-hanging"></i> 1.8 ГБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Интерстеллар (2014)</h3>
+                <p>Научно-фантастический эпос о космосе и времени.</p>
+                <div class="meta"><span><i class="fas fa-file-video"></i> .mp4</span><span><i class="fas fa-weight-hanging"></i> 2.8 ГБ</span></div>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+        </div>
+        <p style="margin-top:15px; color:#64748b;"><i class="fas fa-info-circle"></i> Файлы большого размера — скачивайте через облачные диски.</p>
+    </div>
+
+    <!-- ==================== РАЗНОЕ ==================== -->
+    <div id="misc" class="tab-content">
+        <h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2>
+        <p style="font-size:17px; color:#475569;">Здесь собраны полезные материалы, которые не вошли в другие разделы.</p>
+
+        <div style="margin: 20px 0;">
+            <span class="tag"><i class="fas fa-cog"></i> Скрипты для автоматизации</span>
+            <span class="tag"><i class="fas fa-database"></i> Базы данных</span>
+            <span class="tag"><i class="fas fa-music"></i> Музыкальные треки</span>
+            <span class="tag"><i class="fas fa-robot"></i> Модели для нейросетей</span>
+            <span class="tag"><i class="fas fa-palette"></i> Наборы иконок</span>
+            <span class="tag"><i class="fas fa-cloud"></i> Шпаргалки по облачным сервисам</span>
+        </div>
+
+        <div class="grid" style="margin-top:25px;">
+            <div class="card">
+                <h3>Шпаргалка по Git</h3>
+                <p>PDF с основными командами для быстрого старта.</p>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Набор иконок (1000+)</h3>
+                <p>Готовая коллекция иконок для веб-дизайна в форматах SVG и PNG.</p>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Темы для Windows 11</h3>
+                <p>Красивые темы оформления рабочего стола.</p>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+            <div class="card">
+                <h3>Сборник полезных скриптов</h3>
+                <p>Готовые скрипты на Python и Bash для автоматизации рутины.</p>
+                <a href="#" class="btn-download"><i class="fas fa-download"></i> Скачать</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ПОДВАЛ ===== -->
+    <footer>
+        <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны</span>
+        <a href="/submit.html" class="footer-link"><i class="fas fa-upload"></i> Предложить материал</a>
+        <a href="/admin/" class="footer-link"><i class="fas fa-cog"></i> Админка</a>
+        <a href="#" class="footer-link"><i class="fas fa-envelope"></i> Контакт</a>
+    </footer>
+
+</div>
+
+<!-- ====== JAVASCRIPT ДЛЯ ВКЛАДОК ====== -->
+<script>
+    (function() {
+        const tabs = document.querySelectorAll('.nav-tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        function switchTab(tabId) {
+            contents.forEach(c => c.classList.remove('active'));
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+
+            tabs.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('active');
+                }
+            });
+            localStorage.setItem('activeTab', tabId);
+        }
+
+        tabs.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const tabId = this.dataset.tab;
+                switchTab(tabId);
+            });
+        });
+
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab && document.getElementById(savedTab)) {
+            switchTab(savedTab);
+        }
+    })();
+</script>
+
+<!-- ВНИМАНИЕ: Все ссылки # замените на реальные ссылки Яндекс.Диска (или других облачных сервисов) -->
+</body>
+</html>
