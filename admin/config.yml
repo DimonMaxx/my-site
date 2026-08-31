@@ -1,21 +1,15 @@
 # admin/config.yml
 
-# Настройка бэкенда — используется Git Gateway от Netlify
 backend:
   name: git-gateway
   branch: main
 
-# Папка для загружаемых изображений
 media_folder: 'assets/uploads'
 public_folder: '/assets/uploads'
 
-# Локализация интерфейса CMS на русский язык
 locale: 'ru'
 
-# ===== КОЛЛЕКЦИИ (РАЗДЕЛЫ САЙТА) =====
 collections:
-
-  # -------- 1. НОВОСТИ --------
   - name: 'news'
     label: 'Новости'
     label_singular: 'Новость'
@@ -24,11 +18,9 @@ collections:
     slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
     fields:
       - { label: 'Заголовок', name: 'title', widget: 'string' }
-      - { label: 'Дата публикации', name: 'date', widget: 'datetime' }
-      - { label: 'Текст новости', name: 'body', widget: 'markdown' }
-      - { label: 'Изображение', name: 'image', widget: 'image', required: false }
+      - { label: 'Дата', name: 'date', widget: 'datetime' }
+      - { label: 'Текст', name: 'body', widget: 'markdown' }
 
-  # -------- 2. ПРОГРАММЫ --------
   - name: 'programs'
     label: 'Программы'
     label_singular: 'Программа'
@@ -36,14 +28,12 @@ collections:
     create: true
     slug: '{{slug}}'
     fields:
-      - { label: 'Название программы', name: 'title', widget: 'string' }
-      - { label: 'Краткое описание', name: 'description', widget: 'text' }
+      - { label: 'Название', name: 'title', widget: 'string' }
+      - { label: 'Описание', name: 'description', widget: 'text' }
       - { label: 'Версия', name: 'version', widget: 'string', required: false }
       - { label: 'Размер (МБ)', name: 'size', widget: 'number', required: false }
       - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
-      - { label: 'Иконка', name: 'image', widget: 'image', required: false }
 
-  # -------- 3. КНИГИ --------
   - name: 'books'
     label: 'Книги'
     label_singular: 'Книга'
@@ -51,14 +41,12 @@ collections:
     create: true
     slug: '{{slug}}'
     fields:
-      - { label: 'Название книги', name: 'title', widget: 'string' }
+      - { label: 'Название', name: 'title', widget: 'string' }
       - { label: 'Автор', name: 'author', widget: 'string' }
       - { label: 'Описание', name: 'description', widget: 'text' }
       - { label: 'Формат', name: 'format', widget: 'string', default: 'PDF' }
       - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
-      - { label: 'Обложка', name: 'cover', widget: 'image', required: false }
 
-  # -------- 4. СТАТЬИ --------
   - name: 'articles'
     label: 'Статьи'
     label_singular: 'Статья'
@@ -66,12 +54,22 @@ collections:
     create: true
     slug: '{{slug}}'
     fields:
-      - { label: 'Заголовок статьи', name: 'title', widget: 'string' }
-      - { label: 'Дата публикации', name: 'date', widget: 'datetime' }
-      - { label: 'Текст статьи', name: 'body', widget: 'markdown' }
-      - { label: 'Изображение', name: 'image', widget: 'image', required: false }
+      - { label: 'Заголовок', name: 'title', widget: 'string' }
+      - { label: 'Дата', name: 'date', widget: 'datetime' }
+      - { label: 'Текст', name: 'body', widget: 'markdown' }
 
-  # -------- 5. РАЗНОЕ --------
+  - name: 'movies'
+    label: 'Фильмы'
+    label_singular: 'Фильм'
+    folder: '_content/movies/'
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: 'Название', name: 'title', widget: 'string' }
+      - { label: 'Год', name: 'year', widget: 'number' }
+      - { label: 'Описание', name: 'description', widget: 'text' }
+      - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
+
   - name: 'misc'
     label: 'Разное'
     label_singular: 'Материал'
@@ -82,4 +80,3 @@ collections:
       - { label: 'Название', name: 'title', widget: 'string' }
       - { label: 'Описание', name: 'description', widget: 'text' }
       - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
-      - { label: 'Изображение', name: 'image', widget: 'image', required: false }
