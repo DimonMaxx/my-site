@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Предложить материал — Мой сайт</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Дополнительные стили специально для этой страницы */
+        .form-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .form-container h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .form-container p.description {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border 0.2s;
+            background: #f8fafc;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-group .hint {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .success-message {
+            display: none;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        /* Адаптив */
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px;
+                margin: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка (используем ту же, что и на основном сайте) -->
+        <header>
+            <div class="logo">
+                <a href="/">Мой <span>Сайт</span></a>
+            </div>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/news/">Новости</a>
+                <a href="/programs/">Программы</a>
+                <a href="/books/">Книги</a>
+                <a href="/articles/">Статьи</a>
+                <a href="/misc/">Разное</a>
+                <a href="/admin/" class="admin-link">⚙️ Админка</a>
+            </nav>
+        </header>
+
+        <!-- Форма -->
+        <div class="form-container">
+            <h1>📤 Предложить материал</h1>
+            <p class="description">
+                Хотите поделиться полезной программой, книгой или статьёй? Заполните форму ниже.
+                После проверки материал появится на сайте.
+            </p>
+
+            <!-- Сама форма. Атрибут data-netlify="true" включает обработку Netlify Forms -->
+            <form id="submitForm" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                <!-- Скрытое поле для защиты от ботов -->
+                <input type="hidden" name="form-name" value="submitForm">
+
+                <!-- Поле-ловушка для ботов (honeypot) -->
+                <div style="display: none;">
+                    <label>Не заполняйте это поле, если вы человек: <input name="bot-field" /></label>
+                </div>
+
+                <!-- Поля формы -->
+                <div class="form-group">
+                    <label for="name">Ваше имя *</label>
+                    <input type="text" id="name" name="name" placeholder="Например: Иван Петров" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Ваш Email *</label>
+                    <input type="email" id="email" name="email" placeholder="ivan@example.com" required>
+                    <div class="hint">На этот адрес мы пришлём уведомление о решении.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Категория *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Выберите категорию</option>
+                        <option value="programs">Программы</option>
+                        <option value="books">Книги</option>
+                        <option value="articles">Статьи</option>
+                        <option value="misc">Разное</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Название материала *</label>
+                    <input type="text" id="title" name="title" placeholder="Например: Супер-программа v2.0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Описание *</label>
+                    <textarea id="description" name="description" placeholder="Краткое описание, что это за материал и чем он полезен..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="download_link">Ссылка для скачивания *</label>
+                    <input type="url" id="download_link" name="download_link" placeholder="https://disk.yandex.ru/d/..." required>
+                    <div class="hint">Ссылка должна вести на ваш файл в облаке (Яндекс.Диск, Google Drive и т.п.).</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Дополнительная информация (необязательно)</label>
+                    <textarea id="comment" name="comment" placeholder="Что-то ещё, что мы должны знать..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">📩 Отправить на модерацию</button>
+            </form>
+
+            <!-- Блок с сообщением об успешной отправке -->
+            <div class="success-message" id="successMessage">
+                <strong>✅ Спасибо!</strong>
+                <p>Ваша заявка отправлена на модерацию. Мы свяжемся с вами в ближайшее время.</p>
+                <a href="/" class="back-link">← Вернуться на главную</a>
+            </div>
+        </div>
+
+        <!-- Подвал (такой же, как на основном сайте) -->
+        <footer>
+            <p>&copy; 2026 Мой сайт. Все материалы распространяются бесплатно.</p>
+        </footer>
+    </div>
+
+    <!-- ====== JAVASCRIPT ДЛЯ ОБРАБОТКИ ФОРМЫ ====== -->
+    <script>
+        (function() {
+            const form = document.getElementById('submitForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const successMessage = document.getElementById('successMessage');
+
+            // Проверяем, что форма существует
+            if (!form) return;
+
+            // Функция для показа сообщения об успехе
+            function showSuccess() {
+                form.style.display = 'none';  // Скрываем форму
+                successMessage.classList.add('show');
+                // Прокручиваем страницу вверх, чтобы пользователь увидел сообщение
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // Обработка отправки формы через fetch (чтобы не перезагружать страницу)
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();  // Отменяем стандартную отправку
+
+                // Отключаем кнопку, чтобы избежать двойной отправки
+                submitBtn.disabled = true;
+                submitBtn.textContent = '⏳ Отправка...';
+
+                // Собираем данные формы
+                const formData = new FormData(form);
+
+                // Отправляем данные на Netlify Forms через fetch
+                fetch('/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData).toString()
+                })
+                .then(response => {
+                    // Если ответ успешный (даже если 200 OK), показываем успех
+                    if (response.ok) {
+                        showSuccess();
+                    } else {
+                        throw new Error('Ошибка при отправке. Попробуйте позже.');
+                    }
+                })
+                .catch(error => {
+                    alert('Произошла ошибка: ' + error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '📩 Отправить на модерацию';
+                });
+            });
+
+            // Если на странице уже есть параметр success=1 (например, после редиректа)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === '1') {
+                showSuccess();
+            }
+        })();
+    </script>
+</body>
+</html>
