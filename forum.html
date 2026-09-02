@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форум сообщества</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #1a202c;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 28px; margin-bottom: 20px; color: #0a58ca; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+
+        /* ===== АВТОРИЗАЦИЯ ===== */
+        #auth-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        #auth-section input {
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 150px;
+        }
+        #auth-section button {
+            padding: 10px 24px;
+            background: #0a58ca;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #auth-section button:hover { background: #0044a3; }
+        #auth-section .btn-secondary { background: #6b7280; }
+        #auth-section .btn-secondary:hover { background: #4b5563; }
+        #user-info { font-weight: 600; }
+
+        /* ===== ФОРУМ ===== */
+        .forum-section { margin-top: 30px; }
+        .topic-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 15px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .topic-card:hover { background: #f3f4f6; border-color: #0a58ca; }
+        .topic-card h3 { font-size: 18px; margin-bottom: 5px; }
+        .topic-card .meta { font-size: 13px; color: #6b7280; display: flex; gap: 15px; flex-wrap: wrap; }
+        .topic-card .badge { background: #e5e7eb; padding: 2px 10px; border-radius: 30px; font-size: 12px; }
+
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content input, .modal-content textarea, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .modal-content textarea { min-height: 150px; resize: vertical; }
+        .modal-content .btn-submit {
+            background: #0a58ca;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-content .btn-close {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .modal-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+
+        /* ===== КОММЕНТАРИИ ===== */
+        .comment {
+            background: #f9fafb;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 3px solid #0a58ca;
+        }
+        .comment .meta { font-size: 12px; color: #6b7280; }
+        .comment .attachment {
+            display: inline-block;
+            background: #e5e7eb;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        /* ===== АДМИН-ПАНЕЛЬ ===== */
+        .admin-panel {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .admin-panel h3 { color: #92400e; }
+        .user-list { list-style: none; }
+        .user-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .user-list .role-select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            #auth-section { flex-direction: column; align-items: stretch; }
+        }
+
+        /* ===== ССЫЛКА НА ГЛАВНУЮ ===== */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0a58ca;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+
+    <a href="/" class="back-link">← На главную</a>
+    <h1>📢 Форум сообщества</h1>
+
+    <!-- Секция авторизации -->
+    <div id="auth-section">
+        <div id="auth-forms">
+            <input type="email" id="email-input" placeholder="Email">
+            <input type="password" id="password-input" placeholder="Пароль">
+            <button id="login-btn">Войти</button>
+            <button id="register-btn" class="btn-secondary">Зарегистрироваться</button>
+        </div>
+        <div id="user-info" style="display: none;">
+            <span id="user-name"></span>
+            <button id="logout-btn" class="btn-secondary" style="margin-left: 15px;">Выйти</button>
+            <button id="profile-btn" class="btn-secondary" style="margin-left: 10px;">Профиль</button>
+        </div>
+    </div>
+
+    <!-- Форум -->
+    <div class="forum-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+            <h2 style="font-size: 22px;">Темы</h2>
+            <button id="new-topic-btn" class="btn-submit" style="background: #0a58ca; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">➕ Новая тема</button>
+        </div>
+        <div id="topics-list">
+            <p style="color: #6b7280;">Загрузка тем...</p>
+        </div>
+    </div>
+
+    <!-- Админ-панель (видна только админам) -->
+    <div id="admin-panel" class="admin-panel" style="display: none;">
+        <h3>👑 Панель администратора</h3>
+        <p><strong>Счетчик посещений:</strong> <span id="visit-counter">0</span></p>
+        <h4>Список пользователей</h4>
+        <ul id="user-list" class="user-list">
+            <li>Загрузка пользователей...</li>
+        </ul>
+    </div>
+
+    <!-- Модальное окно создания/редактирования темы -->
+    <div id="topic-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Создать новую тему</h3>
+            <input type="text" id="topic-title" placeholder="Заголовок темы">
+            <select id="topic-category">
+                <option value="Общее">Общее</option>
+                <option value="Программы">Программы</option>
+                <option value="Игры">Игры</option>
+                <option value="Обсуждение">Обсуждение</option>
+                <option value="Помощь">Помощь</option>
+            </select>
+            <textarea id="topic-content" placeholder="Содержание темы..."></textarea>
+            <div class="modal-actions">
+                <button id="modal-save-btn" class="btn-submit">Сохранить</button>
+                <button id="modal-close-btn" class="btn-close">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно просмотра темы -->
+    <div id="topic-view-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="view-topic-title"></h3>
+            <div id="view-topic-content" style="margin: 15px 0; padding: 15px; background: #f9fafb; border-radius: 8px;"></div>
+            <hr>
+            <h4>Комментарии</h4>
+            <div id="view-comments"></div>
+            <textarea id="comment-input" placeholder="Ваш комментарий..." style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #d1d5db; border-radius: 8px; min-height: 80px;"></textarea>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="file-input" style="flex: 1;">
+                <button id="comment-submit-btn" class="btn-submit">Отправить</button>
+            </div>
+            <div class="modal-actions">
+                <button id="view-modal-close-btn" class="btn-close">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ============================================================
+    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
+    // ============================================================
+    const SUPABASE_URL = 'https://ваш-проект.supabase.co'; // ЗАМЕНИТЕ
+    const SUPABASE_ANON_KEY = 'ваш-anon-ключ'; // ЗАМЕНИТЕ
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+    // ============================================================
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentTopicId = null;
+    let editingTopicId = null;
+
+    // DOM-элементы
+    const authForms = document.getElementById('auth-forms');
+    const userInfo = document.getElementById('user-info');
+    const userName = document.getElementById('user-name');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const profileBtn = document.getElementById('profile-btn');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const topicsList = document.getElementById('topics-list');
+    const newTopicBtn = document.getElementById('new-topic-btn');
+    const adminPanel = document.getElementById('admin-panel');
+    const userList = document.getElementById('user-list');
+    const visitCounter = document.getElementById('visit-counter');
+
+    // Модальные окна
+    const topicModal = document.getElementById('topic-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const topicTitle = document.getElementById('topic-title');
+    const topicCategory = document.getElementById('topic-category');
+    const topicContent = document.getElementById('topic-content');
+    const modalSaveBtn = document.getElementById('modal-save-btn');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    const viewModal = document.getElementById('topic-view-modal');
+    const viewTopicTitle = document.getElementById('view-topic-title');
+    const viewTopicContent = document.getElementById('view-topic-content');
+    const viewComments = document.getElementById('view-comments');
+    const commentInput = document.getElementById('comment-input');
+    const fileInput = document.getElementById('file-input');
+    const commentSubmitBtn = document.getElementById('comment-submit-btn');
+    const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
+
+    // ============================================================
+    // 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================================
+    function showAuthForms() {
+        authForms.style.display = 'flex';
+        userInfo.style.display = 'none';
+    }
+
+    function showUserInfo(user) {
+        authForms.style.display = 'none';
+        userInfo.style.display = 'flex';
+        userName.textContent = user.email || user.username;
+    }
+
+    async function getCurrentUser() {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data?.user) return null;
+        return data.user;
+    }
+
+    async function loadUserProfile(userId) {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        if (error) {
+            console.error('Ошибка загрузки профиля:', error);
+            return null;
+        }
+        return data;
+    }
+
+    // ============================================================
+    // 4. АВТОРИЗАЦИЯ
+    // ============================================================
+    async function login(email, password) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert('Ошибка входа: ' + error.message);
+            return;
+        }
+        currentUser = data.user;
+        currentUserProfile = await loadUserProfile(currentUser.id);
+        showUserInfo(currentUser);
+        await loadTopics();
+        checkAdmin();
+        updateVisitCounter();
+    }
+
+    async function register(email, password) {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+            alert('Ошибка регистрации: ' + error.message);
+            return;
+        }
+        // Создаем профиль
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{ id: data.user.id, username: email.split('@')[0] }]);
+        if (profileError) {
+            console.error('Ошибка создания профиля:', profileError);
+        }
+        alert('Регистрация успешна! Теперь войдите.');
+    }
+
+    async function logout() {
+        await supabase.auth.signOut();
+        currentUser = null;
+        currentUserProfile = null;
+        showAuthForms();
+        await loadTopics();
+        adminPanel.style.display = 'none';
+    }
+
+    // ============================================================
+    // 5. ЗАГРУЗКА ТЕМ
+    // ============================================================
+    async function loadTopics() {
+        topicsList.innerHTML = '<p style="color: #6b7280;">Загрузка тем...</p>';
+        const { data, error } = await supabase
+            .from('topics')
+            .select(`
+                *,
+                profiles (username)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            topicsList.innerHTML = '<p style="color: red;">Ошибка загрузки тем</p>';
+            console.error(error);
+            return;
+        }
+
+        if (data.length === 0) {
+            topicsList.innerHTML = '<p style="color: #6b7280;">Пока нет тем. Будьте первым!</p>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(topic => {
+            const author = topic.profiles?.username || 'Неизвестный';
+            const date = new Date(topic.created_at).toLocaleDateString('ru-RU');
+            html += `
+                <div class="topic-card" data-id="${topic.id}">
+                    <h3>${topic.title}</h3>
+                    <div class="meta">
+                        <span>👤 ${author}</span>
+                        <span>📅 ${date}</span>
+                        <span class="badge">${topic.category || 'Общее'}</span>
+                    </div>
+                </div>
+            `;
+        });
+        topicsList.innerHTML = html;
+
+        // Клик по теме для просмотра
+        document.querySelectorAll('.topic-card').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = parseInt(el.dataset.id);
+                openTopicView(id);
+            });
+        });
+    }
+
+    // ============================================================
+    // 6. СОЗДАНИЕ / РЕДАКТИРОВАНИЕ ТЕМЫ
+    // ============================================================
+    function openCreateTopic() {
+        if (!currentUser) {
+            alert('Войдите, чтобы создать тему.');
+            return;
+        }
+        editingTopicId = null;
+        modalTitle.textContent = 'Создать новую тему';
+        topicTitle.value = '';
+        topicCategory.value = 'Общее';
+        topicContent.value = '';
+        topicModal.style.display = 'flex';
+    }
+
+    async function saveTopic() {
+        const title = topicTitle.value.trim();
+        const category = topicCategory.value;
+        const content = topicContent.value.trim();
+
+        if (!title || !content) {
+            alert('Заполните все поля.');
+            return;
+        }
+
+        if (!currentUser) {
+            alert('Вы не авторизованы.');
+            return;
+        }
+
+        if (editingTopicId) {
+            // Редактирование
+            const { error } = await supabase
+                .from('topics')
+                .update({ title, category, content })
+                .eq('id', editingTopicId);
+            if (error) {
+                alert('Ошибка обновления: ' + error.message);
+                return;
+            }
+        } else {
+            // Создание
+            const { error } = await supabase
+                .from('topics')
+                .insert([{ title, category, content, author_id: currentUser.id }]);
+            if (error) {
+                alert('Ошибка создания: ' + error.message);
+                return;
+            }
+        }
+
+        topicModal.style.display = 'none';
+        await loadTopics();
+    }
+
+    // ============================================================
+    // 7. ПРОСМОТР ТЕМЫ И КОММЕНТАРИИ
+    // ============================================================
+    async function openTopicView(topicId) {
+        currentTopicId = topicId;
+
+        // Загружаем тему
+        const { data: topic, error: topicError } = await supabase
+            .from('topics')
+            .select('*, profiles(username)')
+            .eq('id', topicId)
+            .single();
+
+        if (topicError || !topic) {
+            alert('Тема не найдена.');
+            return;
+        }
+
+        viewTopicTitle.textContent = topic.title;
+        viewTopicContent.textContent = topic.content;
+
+        // Загружаем комментарии
+        const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select('*, profiles(username), attachments(*)')
+            .eq('topic_id', topicId)
+            .order('created_at', { ascending: true });
+
+        let commentsHtml = '';
+        if (comments && comments.length > 0) {
+            comments.forEach(c => {
+                const author = c.profiles?.username || 'Неизвестный';
+                const date = new Date(c.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(c.created_at).toLocaleTimeString('ru-RU');
+                let attachmentsHtml = '';
+                if (c.attachments && c.attachments.length > 0) {
+                    c.attachments.forEach(att => {
+                        attachmentsHtml += `<span class="attachment">📎 <a href="${att.file_url}" target="_blank">${att.file_name}</a></span> `;
+                    });
+                }
+                commentsHtml += `
+                    <div class="comment">
+                        <div><strong>${author}</strong> <span class="meta">${date}</span></div>
+                        <p>${c.content}</p>
+                        ${attachmentsHtml}
+                    </div>
+                `;
+            });
+        } else {
+            commentsHtml = '<p style="color: #6b7280;">Нет комментариев. Будьте первым!</p>';
+        }
+        viewComments.innerHTML = commentsHtml;
+
+        viewModal.style.display = 'flex';
+        commentInput.value = '';
+        fileInput.value = '';
+    }
+
+    async function addComment() {
+        const content = commentInput.value.trim();
+        if (!content) {
+            alert('Введите текст комментария.');
+            return;
+        }
+        if (!currentUser) {
+            alert('Войдите, чтобы комментировать.');
+            return;
+        }
+
+        // Вставляем комментарий
+        const { data: comment, error } = await supabase
+            .from('comments')
+            .insert([{ content, author_id: currentUser.id, topic_id: currentTopicId }])
+            .select()
+            .single();
+
+        if (error) {
+            alert('Ошибка отправки комментария: ' + error.message);
+            return;
+        }
+
+        // Загружаем файл, если есть
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `comments/${currentTopicId}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('attachments')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error('Ошибка загрузки файла:', uploadError);
+            } else {
+                const { data: urlData } = supabase.storage
+                    .from('attachments')
+                    .getPublicUrl(filePath);
+
+                await supabase
+                    .from('attachments')
+                    .insert([{
+                        file_url: urlData.publicUrl,
+                        file_name: file.name,
+                        file_size: file.size,
+                        comment_id: comment.id,
+                        uploaded_by: currentUser.id
+                    }]);
+            }
+        }
+
+        // Обновляем просмотр
+        await openTopicView(currentTopicId);
+    }
+
+    // ============================================================
+    // 8. АДМИН-ПАНЕЛЬ
+    // ============================================================
+    async function checkAdmin() {
+        if (currentUserProfile && currentUserProfile.role === 'admin') {
+            adminPanel.style.display = 'block';
+            await loadUsers();
+        } else {
+            adminPanel.style.display = 'none';
+        }
+    }
+
+    async function loadUsers() {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            userList.innerHTML = '<li>Ошибка загрузки пользователей</li>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(user => {
+            html += `
+                <li>
+                    <span>${user.username} (${user.role || 'user'})</span>
+                    <select class="role-select" data-id="${user.id}" ${user.id === currentUser?.id ? 'disabled' : ''}>
+                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>Пользователь</option>
+                        <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Модератор</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Администратор</option>
+                    </select>
+                </li>
+            `;
+        });
+        userList.innerHTML = html;
+
+        // Обработчики смены роли
+        document.querySelectorAll('.role-select').forEach(select => {
+            select.addEventListener('change', async (e) => {
+                const userId = e.target.dataset.id;
+                const newRole = e.target.value;
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ role: newRole })
+                    .eq('id', userId);
+                if (error) {
+                    alert('Ошибка обновления роли: ' + error.message);
+                } else {
+                    alert('Роль обновлена!');
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // 9. СЧЕТЧИК ПОСЕЩЕНИЙ
+    // ============================================================
+    async function updateVisitCounter() {
+        // Если админ, не считаем
+        if (currentUserProfile?.role === 'admin') {
+            const { data } = await supabase
+                .from('site_stats')
+                .select('visit_count')
+                .single();
+            if (data) visitCounter.textContent = data.visit_count;
+            return;
+        }
+
+        // Обновляем счетчик через RPC (функция должна быть создана)
+        const { data, error } = await supabase
+            .rpc('increment_visit_counter');
+
+        if (error) {
+            // fallback
+            const { data: stats } = await supabase
+                .from('site_stats')
+                .select('visit_count')
+                .single();
+            if (stats) {
+                const newCount = (stats.visit_count || 0) + 1;
+                await supabase
+                    .from('site_stats')
+                    .update({ visit_count: newCount })
+                    .eq('id', 1);
+                visitCounter.textContent = newCount;
+            }
+        } else {
+            visitCounter.textContent = data;
+        }
+    }
+
+    // ============================================================
+    // 10. ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ
+    // ============================================================
+    async function openProfile() {
+        if (!currentUser) return;
+        const profile = await loadUserProfile(currentUser.id);
+        if (!profile) return;
+
+        const newUsername = prompt('Изменить имя пользователя:', profile.username);
+        if (newUsername && newUsername !== profile.username) {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ username: newUsername })
+                .eq('id', currentUser.id);
+            if (error) {
+                alert('Ошибка обновления: ' + error.message);
+            } else {
+                currentUserProfile = await loadUserProfile(currentUser.id);
+                showUserInfo(currentUser);
+                alert('Имя обновлено!');
+            }
+        }
+    }
+
+    // ============================================================
+    // 11. ОБРАБОТЧИКИ СОБЫТИЙ
+    // ============================================================
+    loginBtn.addEventListener('click', () => {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        if (email && password) login(email, password);
+        else alert('Введите email и пароль.');
+    });
+
+    registerBtn.addEventListener('click', () => {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        if (email && password && password.length >= 6) register(email, password);
+        else alert('Введите email и пароль (мин. 6 символов).');
+    });
+
+    logoutBtn.addEventListener('click', logout);
+    profileBtn.addEventListener('click', openProfile);
+
+    newTopicBtn.addEventListener('click', openCreateTopic);
+    modalCloseBtn.addEventListener('click', () => { topicModal.style.display = 'none'; });
+    modalSaveBtn.addEventListener('click', saveTopic);
+
+    viewModalCloseBtn.addEventListener('click', () => { viewModal.style.display = 'none'; });
+    commentSubmitBtn.addEventListener('click', addComment);
+
+    // Закрытие модалок по клику вне окна
+    window.addEventListener('click', (e) => {
+        if (e.target === topicModal) topicModal.style.display = 'none';
+        if (e.target === viewModal) viewModal.style.display = 'none';
+    });
+
+    // ============================================================
+    // 12. ЗАПУСК ПРИ ЗАГРУЗКЕ
+    // ============================================================
+    (async function init() {
+        const user = await getCurrentUser();
+        if (user) {
+            currentUser = user;
+            currentUserProfile = await loadUserProfile(user.id);
+            showUserInfo(user);
+            await checkAdmin();
+        } else {
+            showAuthForms();
+        }
+        await loadTopics();
+        await updateVisitCounter();
+    })();
+
+</script>
+</body>
+</html>
