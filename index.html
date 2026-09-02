@@ -8,12 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(145deg, #f0f4ff 0%, #e6edf7 100%);
@@ -22,7 +17,6 @@
             padding: 20px;
             min-height: 100vh;
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -35,7 +29,6 @@
             padding: 30px 40px 40px;
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
-
         header {
             display: flex;
             justify-content: space-between;
@@ -45,7 +38,6 @@
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
-
         .logo {
             font-size: 28px;
             font-weight: 800;
@@ -61,14 +53,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         nav {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             align-items: center;
         }
-
         nav a, .nav-tab {
             padding: 8px 16px;
             border-radius: 40px;
@@ -82,18 +72,15 @@
             cursor: pointer;
             font-family: 'Inter', sans-serif;
         }
-
         nav a:hover, .nav-tab:hover {
             background: #eef2ff;
             color: #1e293b;
         }
-
         .nav-tab.active {
             background: #2563eb;
             color: white;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
-
         .submit-link {
             background: #f59e0b;
             color: white !important;
@@ -106,7 +93,6 @@
             background: #d97706;
             transform: translateY(-2px);
         }
-
         .admin-link {
             background: #1e293b;
             color: white !important;
@@ -118,7 +104,6 @@
             background: #0f172a;
             transform: translateY(-2px);
         }
-
         .tab-content {
             display: none;
             animation: fadeIn 0.4s ease;
@@ -128,7 +113,6 @@
             0% { opacity: 0; transform: translateY(12px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-
         .hero-banner {
             background: linear-gradient(135deg, #dbeafe, #ede9fe);
             border-radius: 24px;
@@ -169,7 +153,6 @@
             background: #1d4ed8;
             transform: translateY(-2px);
         }
-
         .section-title {
             font-size: 28px;
             font-weight: 700;
@@ -181,13 +164,11 @@
             gap: 12px;
         }
         .section-title i { color: #2563eb; }
-
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 25px;
         }
-
         .card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -238,7 +219,6 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
         .btn-download i { margin-right: 6px; }
-
         .news-item {
             background: #f8fafc;
             border-left: 5px solid #2563eb;
@@ -265,14 +245,11 @@
             color: #334155;
             margin-top: 4px;
         }
-
         .article-item {
             padding: 18px 0;
             border-bottom: 1px solid #e5e7eb;
         }
-        .article-item:last-child {
-            border-bottom: none;
-        }
+        .article-item:last-child { border-bottom: none; }
         .article-item h4 {
             font-size: 18px;
             font-weight: 700;
@@ -286,10 +263,7 @@
             font-weight: 600;
             text-decoration: none;
         }
-        .article-item a:hover {
-            text-decoration: underline;
-        }
-
+        .article-item a:hover { text-decoration: underline; }
         .tag {
             display: inline-block;
             background: #e5e7eb;
@@ -301,10 +275,7 @@
             margin: 4px 6px 4px 0;
             transition: 0.2s;
         }
-        .tag:hover {
-            background: #cbd5e1;
-        }
-
+        .tag:hover { background: #cbd5e1; }
         footer {
             margin-top: 50px;
             text-align: center;
@@ -322,15 +293,12 @@
             text-decoration: none;
             font-weight: 500;
         }
-        footer a:hover {
-            text-decoration: underline;
-        }
+        footer a:hover { text-decoration: underline; }
         .footer-link {
             color: #475569;
             font-weight: 500;
         }
         .footer-link i { margin-right: 6px; }
-
         @media (max-width: 900px) {
             .container { padding: 20px; }
             header { flex-direction: column; align-items: stretch; gap: 15px; }
@@ -365,27 +333,26 @@
             <button class="nav-tab" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</button>
             <button class="nav-tab" data-tab="movies"><i class="fas fa-film"></i> Фильмы</button>
             <button class="nav-tab" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</button>
+            <a href="/forum.html" class="submit-link"><i class="fas fa-comments"></i> Форум</a>
             <a href="/submit.html" class="submit-link"><i class="fas fa-upload"></i> Предложить материал</a>
             <a href="/admin/" class="admin-link"><i class="fas fa-cog"></i> Админка</a>
         </nav>
     </header>
 
-    <!-- ==================== ГЛАВНАЯ ==================== -->
+    <!-- ===== ГЛАВНАЯ ===== -->
     <div id="home" class="tab-content active">
         <div class="hero-banner">
             <div>
-                <h2><i class="fas fa-hand-peace" style="color:#2563eb;"></i> Хотите поделиться своим материалом?</h2>
-                <p>Заполните форму — и после проверки ваш файл появится на сайте.</p>
+                <h2><i class="fas fa-hand-peace" style="color:#2563eb;"></i> Добро пожаловать!</h2>
+                <p>Здесь вы найдёте бесплатные программы, книги, фильмы, статьи и многое другое. Присоединяйтесь к нашему сообществу на форуме!</p>
             </div>
-            <a href="/submit.html" class="btn-hero"><i class="fas fa-arrow-right"></i> Перейти к форме</a>
+            <a href="/forum.html" class="btn-hero"><i class="fas fa-comments"></i> Перейти на форум</a>
         </div>
 
-        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Добро пожаловать!</h1>
+        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Ваш центр бесплатных материалов</h1>
         <p style="font-size: 18px; color: #334155; margin-bottom: 30px;">
-            Здесь вы найдёте <strong>бесплатные</strong> программы, книги, фильмы, статьи и многое другое.
-            Всё доступно для скачивания без регистрации и оплаты.
+            Скачивайте файлы без регистрации, общайтесь на форуме, предлагайте свои материалы.
         </p>
-
         <div style="display: flex; flex-wrap: wrap; gap: 25px; margin-bottom: 20px;">
             <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
                 <i class="fas fa-download fa-3x" style="color:#2563eb;"></i>
@@ -398,9 +365,9 @@
                 <p style="color:#475569; font-size:15px;">Все файлы проверяются перед публикацией.</p>
             </div>
             <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
-                <i class="fas fa-sync-alt fa-3x" style="color:#2563eb;"></i>
-                <h3 style="margin:12px 0 6px;">Регулярные обновления</h3>
-                <p style="color:#475569; font-size:15px;">Новый контент добавляется каждую неделю.</p>
+                <i class="fas fa-comments fa-3x" style="color:#2563eb;"></i>
+                <h3 style="margin:12px 0 6px;">Активное сообщество</h3>
+                <p style="color:#475569; font-size:15px;">Общайтесь на форуме с единомышленниками.</p>
             </div>
         </div>
         <p style="margin-top: 20px; font-size: 15px; color: #64748b;">
@@ -408,69 +375,58 @@
         </p>
     </div>
 
-    <!-- ==================== НОВОСТИ ==================== -->
+    <!-- ===== НОВОСТИ (динамическая загрузка) ===== -->
     <div id="news" class="tab-content">
         <h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2>
         <div id="news-container">
-            <p style="color:#94a3b8; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка новостей...
-            </p>
+            <p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
-    <!-- ==================== ПРОГРАММЫ ==================== -->
+    <!-- ===== ПРОГРАММЫ ===== -->
     <div id="programs" class="tab-content">
         <h2 class="section-title"><i class="fas fa-code"></i> Программы</h2>
         <div id="programs-container" class="grid">
-            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка программ...
-            </p>
+            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
-    <!-- ==================== КНИГИ ==================== -->
+    <!-- ===== КНИГИ ===== -->
     <div id="books" class="tab-content">
         <h2 class="section-title"><i class="fas fa-book"></i> Книги</h2>
         <div id="books-container" class="grid">
-            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка книг...
-            </p>
+            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
-    <!-- ==================== СТАТЬИ ==================== -->
+    <!-- ===== СТАТЬИ ===== -->
     <div id="articles" class="tab-content">
         <h2 class="section-title"><i class="fas fa-pen-fancy"></i> Статьи</h2>
         <div id="articles-container">
-            <p style="color:#94a3b8; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка статей...
-            </p>
+            <p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
-    <!-- ==================== ФИЛЬМЫ ==================== -->
+    <!-- ===== ФИЛЬМЫ ===== -->
     <div id="movies" class="tab-content">
         <h2 class="section-title"><i class="fas fa-film"></i> Фильмы</h2>
         <div id="movies-container" class="grid">
-            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка фильмов...
-            </p>
+            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
-    <!-- ==================== РАЗНОЕ ==================== -->
+    <!-- ===== РАЗНОЕ ===== -->
     <div id="misc" class="tab-content">
         <h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2>
         <div id="misc-container" class="grid">
-            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;">
-                <i class="fas fa-spinner fa-spin"></i> Загрузка материалов...
-            </p>
+            <p style="color:#94a3b8; grid-column: 1 / -1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
         </div>
     </div>
 
     <!-- ПОДВАЛ -->
     <footer>
         <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны</span>
+        <a href="/forum.html" class="footer-link"><i class="fas fa-comments"></i> Форум</a>
         <a href="/submit.html" class="footer-link"><i class="fas fa-upload"></i> Предложить материал</a>
         <a href="/admin/" class="footer-link"><i class="fas fa-cog"></i> Админка</a>
         <a href="#" class="footer-link"><i class="fas fa-envelope"></i> Контакт</a>
@@ -478,7 +434,7 @@
 
 </div>
 
-<!-- ====== JAVASCRIPT ====== -->
+<!-- ====== JAVASCRIPT ДЛЯ ВКЛАДОК И ЗАГРУЗКИ КОНТЕНТА ====== -->
 <script>
     (function() {
         // ---- Переключение вкладок ----
@@ -510,7 +466,7 @@
             switchTab(savedTab);
         }
 
-        // ---- Общая функция загрузки контента из GitHub ----
+        // ---- Загрузка контента через GitHub API (как раньше) ----
         const REPO_OWNER = 'DimonMaxx';
         const REPO_NAME = 'my-site';
 
@@ -560,7 +516,6 @@
                     if (!contentResponse.ok) continue;
                     const text = await contentResponse.text();
                     const { data, body } = parseMarkdown(text);
-                    // Для новостей и статей body может использоваться для отображения
                     items.push({ data, body, filename: file.name });
                 }
 
@@ -569,7 +524,6 @@
                     return;
                 }
 
-                // Сортируем по дате (если есть) или по имени файла
                 items.sort((a, b) => {
                     if (a.data.date && b.data.date) {
                         return new Date(b.data.date) - new Date(a.data.date);
@@ -589,7 +543,6 @@
             }
         }
 
-        // ---- Рендер-функции для каждого раздела ----
         function renderNews(data, body) {
             const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
             return `
@@ -669,17 +622,14 @@
             `;
         }
 
-        // ---- Загружаем все разделы ----
+        // Загружаем все разделы
         loadCollection('news-container', '_content/news', renderNews);
         loadCollection('programs-container', '_content/programs', renderProgram);
         loadCollection('books-container', '_content/books', renderBook);
         loadCollection('articles-container', '_content/articles', renderArticle);
         loadCollection('movies-container', '_content/movies', renderMovie);
         loadCollection('misc-container', '_content/misc', renderMisc);
-
     })();
 </script>
-
-<!-- ВНИМАНИЕ: Замените ссылки # на реальные ссылки для скачивания, если они не заданы в админке -->
 </body>
 </html>
