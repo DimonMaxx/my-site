@@ -4,7 +4,7 @@ backend:
   name: github
   repo: DimonMaxx/my-site
   branch: main
-  base_url: https://my-site.macsimenkodima.workers.dev
+  base_url: https://decap-proxy.macsimenkodima.workers.dev
 
 media_folder: 'assets/uploads'
 public_folder: '/assets/uploads'
