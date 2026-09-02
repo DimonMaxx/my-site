@@ -1,8 +1,10 @@
 # admin/config.yml
 
 backend:
-  name: git-gateway
+  name: github
+  repo: DimonMaxx/my-site
   branch: main
+  base_url: https://ваш-сайт.pages.dev
 
 media_folder: 'assets/uploads'
 public_folder: '/assets/uploads'
