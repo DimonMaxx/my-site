@@ -5,6 +5,7 @@ backend:
   repo: DimonMaxx/my-site
   branch: main
   base_url: https://my-site.macsimenkodima.workers.dev
+  auth_endpoint: /auth
 
 media_folder: 'assets/uploads'
 public_folder: '/assets/uploads'
