@@ -266,11 +266,12 @@
 
 <script>
     // ============================================================
-    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
+    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE (используем уникальное имя)
     // ============================================================
     const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase client создан');
 
     // ============================================================
     // 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
@@ -315,7 +316,7 @@
     const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
 
     // ============================================================
-    // 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (все обращения к supabaseClient)
     // ============================================================
     function showAuthForms() {
         authForms.style.display = 'flex';
@@ -329,13 +330,13 @@
     }
 
     async function getCurrentUser() {
-        const { data, error } = await supabase.auth.getUser();
+        const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) return null;
         return data.user;
     }
 
     async function loadUserProfile(userId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', userId)
@@ -352,7 +353,7 @@
     // ============================================================
     async function login(email, password) {
         console.log('login вызвана, email:', email);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         console.log('Ответ Supabase login:', { data, error });
         if (error) {
             alert('Ошибка входа: ' + error.message);
@@ -368,7 +369,7 @@
 
     async function register(email, password) {
         console.log('register вызвана, email:', email, 'длина пароля:', password.length);
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
         console.log('Ответ Supabase register:', { data, error });
         if (error) {
             alert('Ошибка регистрации: ' + error.message);
@@ -379,7 +380,7 @@
 
     async function logout() {
         console.log('logout вызван');
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         currentUser = null;
         currentUserProfile = null;
         showAuthForms();
@@ -392,7 +393,7 @@
     // ============================================================
     async function loadTopics() {
         topicsList.innerHTML = '<p style="color: #6b7280;">Загрузка тем...</p>';
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('topics')
             .select(`
                 *,
@@ -470,7 +471,7 @@
 
         if (editingTopicId) {
             // Редактирование
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('topics')
                 .update({ title, category, content })
                 .eq('id', editingTopicId);
@@ -480,7 +481,7 @@
             }
         } else {
             // Создание
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('topics')
                 .insert([{ title, category, content, author_id: currentUser.id }]);
             if (error) {
@@ -500,7 +501,7 @@
         currentTopicId = topicId;
 
         // Загружаем тему
-        const { data: topic, error: topicError } = await supabase
+        const { data: topic, error: topicError } = await supabaseClient
             .from('topics')
             .select('*, profiles(username)')
             .eq('id', topicId)
@@ -515,7 +516,7 @@
         viewTopicContent.textContent = topic.content;
 
         // Загружаем комментарии
-        const { data: comments, error: commentsError } = await supabase
+        const { data: comments, error: commentsError } = await supabaseClient
             .from('comments')
             .select('*, profiles(username), attachments(*)')
             .eq('topic_id', topicId)
@@ -562,7 +563,7 @@
         }
 
         // Вставляем комментарий
-        const { data: comment, error } = await supabase
+        const { data: comment, error } = await supabaseClient
             .from('comments')
             .insert([{ content, author_id: currentUser.id, topic_id: currentTopicId }])
             .select()
@@ -580,18 +581,18 @@
             const fileName = `${Date.now()}.${fileExt}`;
             const filePath = `comments/${currentTopicId}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabaseClient.storage
                 .from('attachments')
                 .upload(filePath, file);
 
             if (uploadError) {
                 console.error('Ошибка загрузки файла:', uploadError);
             } else {
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = supabaseClient.storage
                     .from('attachments')
                     .getPublicUrl(filePath);
 
-                await supabase
+                await supabaseClient
                     .from('attachments')
                     .insert([{
                         file_url: urlData.publicUrl,
@@ -620,7 +621,7 @@
     }
 
     async function loadUsers() {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .order('created_at', { ascending: false });
@@ -650,7 +651,7 @@
             select.addEventListener('change', async (e) => {
                 const userId = e.target.dataset.id;
                 const newRole = e.target.value;
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('profiles')
                     .update({ role: newRole })
                     .eq('id', userId);
@@ -669,7 +670,7 @@
     async function updateVisitCounter() {
         // Если админ, не считаем
         if (currentUserProfile?.role === 'admin') {
-            const { data } = await supabase
+            const { data } = await supabaseClient
                 .from('site_stats')
                 .select('visit_count')
                 .single();
@@ -678,18 +679,18 @@
         }
 
         // Обновляем счетчик через RPC (функция должна быть создана)
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .rpc('increment_visit_counter');
 
         if (error) {
             // fallback
-            const { data: stats } = await supabase
+            const { data: stats } = await supabaseClient
                 .from('site_stats')
                 .select('visit_count')
                 .single();
             if (stats) {
                 const newCount = (stats.visit_count || 0) + 1;
-                await supabase
+                await supabaseClient
                     .from('site_stats')
                     .update({ visit_count: newCount })
                     .eq('id', 1);
@@ -710,7 +711,7 @@
 
         const newUsername = prompt('Изменить имя пользователя:', profile.username);
         if (newUsername && newUsername !== profile.username) {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('profiles')
                 .update({ username: newUsername })
                 .eq('id', currentUser.id);
