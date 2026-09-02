@@ -370,13 +370,6 @@
             alert('Ошибка регистрации: ' + error.message);
             return;
         }
-        // Создаем профиль
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{ id: data.user.id, username: email.split('@')[0] }]);
-        if (profileError) {
-            console.error('Ошибка создания профиля:', profileError);
-        }
         alert('Регистрация успешна! Теперь войдите.');
     }
 
