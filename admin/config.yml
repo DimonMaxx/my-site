@@ -4,7 +4,7 @@ backend:
   name: github
   repo: DimonMaxx/my-site
   branch: main
-  base_url: https://ваш-сайт.pages.dev
+  base_url: https://my-site.macsimenkodima.workers.dev
 
 media_folder: 'assets/uploads'
 public_folder: '/assets/uploads'
