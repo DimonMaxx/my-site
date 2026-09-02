@@ -268,8 +268,8 @@
     // ============================================================
     // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
     // ============================================================
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co'; // ЗАМЕНИТЕ
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW'; // ЗАМЕНИТЕ
+    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ============================================================
@@ -351,7 +351,9 @@
     // 4. АВТОРИЗАЦИЯ
     // ============================================================
     async function login(email, password) {
+        console.log('login вызвана, email:', email);
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        console.log('Ответ Supabase login:', { data, error });
         if (error) {
             alert('Ошибка входа: ' + error.message);
             return;
@@ -365,7 +367,9 @@
     }
 
     async function register(email, password) {
+        console.log('register вызвана, email:', email, 'длина пароля:', password.length);
         const { data, error } = await supabase.auth.signUp({ email, password });
+        console.log('Ответ Supabase register:', { data, error });
         if (error) {
             alert('Ошибка регистрации: ' + error.message);
             return;
@@ -374,6 +378,7 @@
     }
 
     async function logout() {
+        console.log('logout вызван');
         await supabase.auth.signOut();
         currentUser = null;
         currentUserProfile = null;
@@ -723,6 +728,7 @@
     // 11. ОБРАБОТЧИКИ СОБЫТИЙ
     // ============================================================
     loginBtn.addEventListener('click', () => {
+        console.log('loginBtn клик');
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
         if (email && password) login(email, password);
@@ -730,10 +736,17 @@
     });
 
     registerBtn.addEventListener('click', () => {
+        console.log('registerBtn клик');
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
-        if (email && password && password.length >= 6) register(email, password);
-        else alert('Введите email и пароль (мин. 6 символов).');
+        console.log('email:', email, 'длина пароля:', password.length);
+        if (email && password && password.length >= 6) {
+            console.log('Условия выполнены, вызываем register');
+            register(email, password);
+        } else {
+            console.log('Условия не выполнены, показываем alert');
+            alert('Введите email и пароль (мин. 6 символов).');
+        }
     });
 
     logoutBtn.addEventListener('click', logout);
@@ -756,6 +769,7 @@
     // 12. ЗАПУСК ПРИ ЗАГРУЗКЕ
     // ============================================================
     (async function init() {
+        console.log('Страница загружена, инициализация...');
         const user = await getCurrentUser();
         if (user) {
             currentUser = user;
@@ -767,6 +781,7 @@
         }
         await loadTopics();
         await updateVisitCounter();
+        console.log('Инициализация завершена');
     })();
 
 </script>
