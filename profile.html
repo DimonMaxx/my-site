@@ -134,7 +134,7 @@
         <button id="logoutBtn" class="btn-danger">Выйти</button>
     </div>
 
-    <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -150,7 +150,7 @@
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) {
-            window.location.href = '/login.html';
+            window.location.href = 'login.html';
             return;
         }
         currentUser = data.user;
@@ -236,7 +236,7 @@
     // Выход
     document.getElementById('logoutBtn').addEventListener('click', async function() {
         await supabaseClient.auth.signOut();
-        window.location.href = '/';
+        window.location.href = 'index.html';
     });
 
     // Загрузка аватара (простой вариант)
