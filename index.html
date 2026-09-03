@@ -435,7 +435,7 @@
                 <h2><i class="fas fa-hand-peace" style="color:#2563eb;"></i> Добро пожаловать!</h2>
                 <p>Бесплатные файлы для всех. Чтобы скачать, <strong>зарегистрируйтесь</strong>.</p>
             </div>
-            <a href="/login.html" class="btn-hero"><i class="fas fa-user-plus"></i> Войти / Регистрация</a>
+            <a href="login.html" class="btn-hero"><i class="fas fa-user-plus"></i> Войти / Регистрация</a>
         </div>
         <h1 style="font-size:32px; font-weight:800; margin-bottom:12px;">Ваш центр бесплатных материалов</h1>
         <p style="font-size:18px; color:#334155; margin-bottom:30px;">
@@ -514,9 +514,9 @@
     <!-- ПОДВАЛ -->
     <footer>
         <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны, но скачивание только для зарегистрированных</span>
-        <a href="/forum.html" class="footer-link"><i class="fas fa-comments"></i> Форум</a>
-        <a href="/submit.html" class="footer-link"><i class="fas fa-upload"></i> Предложить материал</a>
-        <a href="/admin/" class="footer-link"><i class="fas fa-cog"></i> Админка</a>
+        <a href="forum.html" class="footer-link"><i class="fas fa-comments"></i> Форум</a>
+        <a href="submit.html" class="footer-link"><i class="fas fa-upload"></i> Предложить материал</a>
+        <a href="admin/" class="footer-link"><i class="fas fa-cog"></i> Админка</a>
         <a href="#" class="footer-link"><i class="fas fa-envelope"></i> Контакт</a>
     </footer>
 </div>
@@ -575,8 +575,8 @@
         const widget = document.getElementById('authWidget');
         if (!isLoggedIn) {
             widget.innerHTML = `
-                <a href="/login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
-                <a href="/login.html" class="auth-btn" style="background:#f59e0b;"><i class="fas fa-user-plus"></i> Регистрация</a>
+                <a href="login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                <a href="login.html" class="auth-btn" style="background:#f59e0b;"><i class="fas fa-user-plus"></i> Регистрация</a>
             `;
         } else {
             const avatarUrl = currentProfile?.avatar_url || '';
