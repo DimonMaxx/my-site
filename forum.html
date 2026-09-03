@@ -623,8 +623,8 @@
         if (!widget) return;
         if (!currentUser) {
             widget.innerHTML = `
-                <a href="/login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
-                <a href="/login.html" class="auth-btn auth-btn-outline"><i class="fas fa-user-plus"></i> Регистрация</a>
+                <a href="login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                <a href="login.html" class="auth-btn auth-btn-outline"><i class="fas fa-user-plus"></i> Регистрация</a>
             `;
         } else {
             const avatarUrl = currentUserProfile?.avatar_url || '';
@@ -632,7 +632,7 @@
             widget.innerHTML = `
                 <span class="username">${username}</span>
                 <div class="user-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
-                <a href="/profile.html" class="auth-btn" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
+                <a href="profile.html" class="auth-btn" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
                 <button id="logoutBtnWidget" class="auth-btn auth-btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
             document.getElementById('logoutBtnWidget').addEventListener('click', async function() {
