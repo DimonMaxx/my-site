@@ -159,7 +159,7 @@
         </form>
     </div>
 
-    <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -210,7 +210,7 @@
             successDiv.textContent = 'Успешный вход! Перенаправление...';
             successDiv.style.display = 'block';
             // Перенаправляем на главную через 1.5 сек
-            setTimeout(() => { window.location.href = '/'; }, 1500);
+            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
         }
     });
 
