@@ -49,7 +49,33 @@ collections:
       - { label: 'Описание', name: 'description', widget: 'text' }
       - { label: 'Формат', name: 'format', widget: 'string', default: 'PDF' }
       - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
+      
+  - name: 'music'
+    label: 'Музыка'
+    label_singular: 'Альбом'
+    folder: '_content/music/'
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: 'Название', name: 'title', widget: 'string' }
+      - { label: 'Исполнитель', name: 'artist', widget: 'string' }
+      - { label: 'Год', name: 'year', widget: 'number' }
+      - { label: 'Описание', name: 'description', widget: 'text' }
+      - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
 
+  - name: 'games'
+    label: 'Игры'
+    label_singular: 'Игра'
+    folder: '_content/games/'
+    create: true
+    slug: '{{slug}}'
+    fields:
+      - { label: 'Название', name: 'title', widget: 'string' }
+      - { label: 'Платформа', name: 'platform', widget: 'string' }
+      - { label: 'Год', name: 'year', widget: 'number' }
+      - { label: 'Описание', name: 'description', widget: 'text' }
+      - { label: 'Ссылка для скачивания', name: 'download_link', widget: 'string' }
+      
   - name: 'articles'
     label: 'Статьи'
     label_singular: 'Статья'
