@@ -33,15 +33,10 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # Синхронизируем локальную ветку с удалённой
           git fetch origin main
           git reset --hard origin/main
           git add _content/
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Автоматическое обновление контента из Google Sheets [skip ci]"
-            git push origin main
-          fi
+          git commit -m "Автоматическое обновление контента из Google Sheets [skip ci]" || echo "No changes to commit"
+          git push origin main --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
