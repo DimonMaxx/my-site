@@ -12,121 +12,101 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #f0f4ff 0%, #e6edf7 100%);
+            background: #f0f4ff;
             color: #1a202c;
             line-height: 1.6;
             padding: 20px;
             min-height: 100vh;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 40px;
-            box-shadow: 0 25px 60px rgba(0, 20, 80, 0.15);
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0,20,80,0.08);
             overflow: hidden;
-            padding: 30px 40px 40px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
         }
+        /* ===== ШАПКА ===== */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            border-bottom: 2px solid rgba(37, 99, 235, 0.15);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding: 16px 30px;
+            border-bottom: 2px solid #eef2ff;
+            background: white;
         }
         .logo {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
             color: #0f172a;
-            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .logo i { color: #2563eb; font-size: 32px; }
+        .logo i { color: #2563eb; font-size: 30px; }
         .logo span {
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        nav {
+        .header-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
             align-items: center;
+            gap: 8px;
         }
-        nav a, .nav-tab {
-            padding: 8px 16px;
+        .header-actions a, .header-actions button {
+            padding: 8px 18px;
             border-radius: 40px;
-            text-decoration: none;
-            color: #475569;
             font-weight: 600;
             font-size: 14px;
-            transition: all 0.2s ease;
-            background: transparent;
+            text-decoration: none;
             border: none;
             cursor: pointer;
+            transition: 0.2s;
             font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            color: #475569;
         }
-        nav a:hover, .nav-tab:hover {
+        .header-actions a:hover, .header-actions button:hover {
             background: #eef2ff;
             color: #1e293b;
         }
-        .nav-tab.active {
+        .header-actions .btn-primary {
             background: #2563eb;
             color: white;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
-        .submit-link {
-            background: #f59e0b;
-            color: white !important;
-            border-radius: 40px;
-            padding: 8px 20px;
-            font-weight: 700;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
-        .submit-link:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-        }
-        .admin-link {
-            background: #1e293b;
-            color: white !important;
-            border-radius: 40px;
-            padding: 8px 18px;
-            font-weight: 600;
-        }
-        .admin-link:hover {
-            background: #0f172a;
-            transform: translateY(-2px);
-        }
-        /* Кнопки авторизации */
-        .auth-btn {
-            background: #2563eb;
-            color: white !important;
-            border-radius: 40px;
-            padding: 8px 18px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .auth-btn:hover {
+        .header-actions .btn-primary:hover {
             background: #1d4ed8;
             transform: translateY(-2px);
         }
-        .auth-btn i { margin-right: 6px; }
+        .header-actions .btn-update {
+            background: #f59e0b;
+            color: #1e293b;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+        }
+        .header-actions .btn-update:hover {
+            background: #d97706;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .header-actions .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        .header-actions .btn-danger:hover {
+            background: #b91c1c;
+        }
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-        .user-info span {
-            font-weight: 600;
-            color: #0f172a;
         }
         .user-avatar {
             width: 32px; height: 32px;
@@ -138,60 +118,113 @@
             overflow: hidden;
         }
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .username { font-weight: 600; font-size: 14px; color: #0f172a; }
+
+        /* ===== ОСНОВНОЙ КОНТЕНТ (две колонки) ===== */
+        .main-layout {
+            display: flex;
+            flex: 1;
+        }
+        /* Левая колонка — вертикальное меню */
+        .sidebar {
+            width: 220px;
+            background: #f8fafc;
+            padding: 20px 10px;
+            border-right: 2px solid #eef2ff;
+            flex-shrink: 0;
+        }
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #475569;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+            transition: 0.2s;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+        .sidebar .nav-link i {
+            width: 24px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .sidebar .nav-link:hover {
+            background: #eef2ff;
+            color: #1e293b;
+        }
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+        }
+        /* Правая колонка — контент + статистика */
+        .content-area {
+            flex: 1;
+            padding: 25px 30px;
+            display: flex;
+            gap: 30px;
+        }
+        .tab-content-wrapper {
+            flex: 1;
+            min-width: 0;
+        }
         .tab-content {
             display: none;
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.3s ease;
         }
         .tab-content.active { display: block; }
         @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(12px); }
+            0% { opacity: 0; transform: translateY(8px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        .hero-banner {
-            background: linear-gradient(135deg, #dbeafe, #ede9fe);
-            border-radius: 24px;
-            padding: 30px 40px;
-            margin-bottom: 35px;
-            border: 1px solid rgba(37, 99, 235, 0.15);
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+        /* Блок статистики справа */
+        .stats-panel {
+            width: 220px;
+            flex-shrink: 0;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 18px 16px;
+            align-self: flex-start;
         }
-        .hero-banner h2 {
+        .stats-panel h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .stats-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .stats-panel td {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .stats-panel td:last-child {
+            text-align: right;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .stats-panel tr:last-child td { border-bottom: none; }
+        .stats-panel .label { color: #64748b; }
+        .stats-panel .value { font-size: 16px; }
+
+        /* ===== СТИЛИ ДЛЯ КОНТЕНТА ===== */
+        .section-title {
             font-size: 26px;
             font-weight: 700;
-            margin: 0;
-            color: #1e293b;
-        }
-        .hero-banner p {
-            font-size: 17px;
-            color: #334155;
-            margin: 6px 0 0;
-        }
-        .hero-banner .btn-hero {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 12px 32px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 16px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-            white-space: nowrap;
-        }
-        .hero-banner .btn-hero:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        .section-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin: 40px 0 20px;
-            padding-bottom: 12px;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
             border-bottom: 3px solid #e2e8f0;
             display: flex;
             align-items: center;
@@ -200,32 +233,31 @@
         .section-title i { color: #2563eb; }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
         }
         .card {
-            background: #ffffff;
+            background: white;
             border: 1px solid #e5e7eb;
-            border-radius: 20px;
-            padding: 20px 22px 25px;
-            transition: all 0.25s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border-radius: 16px;
+            padding: 18px 20px 22px;
+            transition: 0.25s;
         }
         .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 40px rgba(37, 99, 235, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.06);
             border-color: #b1c5f0;
         }
         .card h3 {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             color: #0f172a;
         }
         .card p {
             font-size: 14px;
             color: #475569;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .card .meta {
             font-size: 13px;
@@ -233,63 +265,57 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            margin-top: 8px;
+            margin-top: 6px;
         }
         .btn-download {
             display: inline-block;
             background: #2563eb;
             color: white;
-            padding: 8px 20px;
+            padding: 6px 18px;
             border-radius: 40px;
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: 0.2s;
             margin-top: 10px;
         }
         .btn-download:hover {
             background: #1d4ed8;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
         }
-        .btn-download i { margin-right: 6px; }
         .btn-download.disabled {
             background: #94a3b8;
             cursor: not-allowed;
         }
+        .btn-download i { margin-right: 6px; }
+
         .news-item {
             background: #f8fafc;
-            border-left: 5px solid #2563eb;
-            padding: 16px 22px;
-            margin: 16px 0;
-            border-radius: 0 14px 14px 0;
-            transition: all 0.2s;
-        }
-        .news-item:hover {
-            background: #eef2ff;
-            border-left-color: #7c3aed;
+            border-left: 4px solid #2563eb;
+            padding: 14px 18px;
+            margin: 12px 0;
+            border-radius: 0 12px 12px 0;
         }
         .news-item time {
             font-size: 13px;
             color: #64748b;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .news-item h4 {
             font-size: 17px;
             font-weight: 700;
         }
-        .news-item p {
-            color: #334155;
-            margin-top: 4px;
-        }
+        .news-item p { color: #334155; margin-top: 4px; }
+
         .article-item {
-            padding: 18px 0;
+            padding: 14px 0;
             border-bottom: 1px solid #e5e7eb;
         }
         .article-item:last-child { border-bottom: none; }
         .article-item h4 {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
         }
         .article-item p {
@@ -302,240 +328,189 @@
             text-decoration: none;
         }
         .article-item a:hover { text-decoration: underline; }
+
         .tag {
             display: inline-block;
             background: #e5e7eb;
             border-radius: 30px;
-            padding: 6px 18px;
+            padding: 4px 14px;
             font-size: 13px;
             font-weight: 600;
             color: #1e293b;
-            margin: 4px 6px 4px 0;
-            transition: 0.2s;
-        }
-        .tag:hover { background: #cbd5e1; }
-        footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 14px;
-            color: #94a3b8;
-            border-top: 2px solid #e5e7eb;
-            padding-top: 28px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px 30px;
-        }
-        footer a {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        footer a:hover { text-decoration: underline; }
-        .footer-link {
-            color: #475569;
-            font-weight: 500;
-        }
-        .footer-link i { margin-right: 6px; }
-
-        /* ВИДЖЕТ СТАТИСТИКИ (тот же) */
-        #stats-widget {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 999;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-            border: 1px solid rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            min-width: 180px;
-            overflow: hidden;
-        }
-        #stats-widget .stats-toggle {
-            display: flex; align-items: center; gap: 8px;
-            padding: 12px 18px; cursor: pointer; font-weight: 600;
-            color: #1e293b; background: rgba(255,255,255,0.6);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        #stats-widget .stats-toggle:hover { background: rgba(37,99,235,0.05); }
-        #stats-widget .stats-toggle i { font-size:18px; color:#2563eb; }
-        #stats-widget .stats-content {
-            display: none; padding: 12px 18px; gap: 8px; flex-direction: column;
-        }
-        #stats-widget .stats-content.active { display: flex; }
-        .stats-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
-        }
-        .stats-item:last-child { border-bottom: none; }
-        .stats-icon { width: 28px; color: #2563eb; font-size:16px; text-align:center; }
-        .stats-number { font-weight:700; font-size:16px; color:#0f172a; min-width:36px; }
-        .stats-label { font-size:13px; color:#64748b; font-weight:500; }
-        @keyframes fadeSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        #stats-widget { animation: fadeSlideUp 0.5s ease; }
-        @media (max-width:600px) {
-            #stats-widget { bottom:15px; right:15px; min-width:140px; font-size:13px; }
-            .stats-number { font-size:14px; min-width:28px; }
-            .stats-label { font-size:11px; }
+            margin: 3px 6px 3px 0;
         }
 
-        @media (max-width:900px) {
-            .container { padding:20px; }
-            header { flex-direction: column; align-items: stretch; gap:15px; }
-            .logo { justify-content:center; }
-            nav { justify-content:center; }
-            .hero-banner { flex-direction: column; text-align:center; padding:25px; }
-            .hero-banner .btn-hero { white-space:normal; }
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 1024px) {
+            .content-area { flex-direction: column; }
+            .stats-panel { width: 100%; align-self: stretch; }
         }
-        @media (max-width:600px) {
-            .container { padding:15px; border-radius:24px; }
-            .grid { grid-template-columns:1fr; }
-            .section-title { font-size:22px; }
-            .nav-tab, nav a { font-size:12px; padding:6px 12px; }
-            .logo { font-size:22px; }
+        @media (max-width: 768px) {
+            .container { border-radius: 24px; }
+            header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .logo { justify-content: center; }
+            .header-actions { justify-content: center; flex-wrap: wrap; }
+            .main-layout { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid #eef2ff;
+                padding: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                justify-content: center;
+            }
+            .sidebar .nav-link {
+                padding: 8px 14px;
+                font-size: 14px;
+                gap: 8px;
+            }
+            .content-area { padding: 16px; }
+            .grid { grid-template-columns: 1fr; }
+            .stats-panel { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .header-actions a, .header-actions button { font-size: 12px; padding: 6px 12px; }
+            .sidebar .nav-link { font-size: 13px; padding: 6px 10px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- ШАПКА -->
+    <!-- ===== ШАПКА ===== -->
     <header>
         <div class="logo">
             <i class="fas fa-cube"></i>
             <span>MyFiles</span>
         </div>
-        <nav id="tabNav">
-            <button class="nav-tab active" data-tab="home"><i class="fas fa-home"></i> Главная</button>
-            <button class="nav-tab" data-tab="news"><i class="fas fa-newspaper"></i> Новости</button>
-            <button class="nav-tab" data-tab="programs"><i class="fas fa-code"></i> Программы</button>
-            <button class="nav-tab" data-tab="books"><i class="fas fa-book"></i> Книги</button>
-            <button class="nav-tab" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</button>
-            <button class="nav-tab" data-tab="movies"><i class="fas fa-film"></i> Фильмы</button>
-            <button class="nav-tab" data-tab="music"><i class="fas fa-music"></i> Музыка</button>
-            <button class="nav-tab" data-tab="games"><i class="fas fa-gamepad"></i> Игры</button>
-            <button class="nav-tab" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</button>
-            <a href="forum.html" class="submit-link"><i class="fas fa-comments"></i> Форум</a>
-            <a href="submit.html" class="submit-link"><i class="fas fa-upload"></i> Предложить</a>
-            <a href="admin/" class="admin-link"><i class="fas fa-cog"></i> Админка</a>
+        <div class="header-actions">
+            <a href="forum.html" class="btn-primary"><i class="fas fa-comments"></i> Форум</a>
+            <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить</a>
+            <a href="admin/" class="btn-primary" style="background:#1e293b;"><i class="fas fa-cog"></i> Админка</a>
+            <!-- Кнопка обновления (только админ) -->
+            <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
+               target="_blank" 
+               class="btn-update" 
+               id="adminUpdateBtn" 
+               style="display:none;">
+               <i class="fas fa-sync-alt"></i> Обновить
+            </a>
             <!-- Виджет авторизации -->
-            <div id="authWidget" style="display: flex; align-items: center; gap: 8px;">
-                <!-- Сюда динамически вставляется кнопка входа или информация о пользователе -->
-            </div>
-        </nav>
+            <div id="authWidget" style="display:flex; align-items:center; gap:6px;"></div>
+        </div>
     </header>
 
-    <!-- ГЛАВНАЯ -->
-    <div id="home" class="tab-content active">
-        <div class="hero-banner">
-            <div>
-                <h2><i class="fas fa-hand-peace" style="color:#2563eb;"></i> Добро пожаловать!</h2>
-                <p>Бесплатные файлы для всех. Чтобы скачать, <strong>зарегистрируйтесь</strong>.</p>
+    <!-- ===== ОСНОВНАЯ ЧАСТЬ (две колонки) ===== -->
+    <div class="main-layout">
+
+        <!-- Левая колонка – вертикальное меню -->
+        <aside class="sidebar" id="sidebarNav">
+            <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
+            <div class="nav-link" data-tab="news"><i class="fas fa-newspaper"></i> Новости</div>
+            <div class="nav-link" data-tab="programs"><i class="fas fa-code"></i> Программы</div>
+            <div class="nav-link" data-tab="books"><i class="fas fa-book"></i> Книги</div>
+            <div class="nav-link" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</div>
+            <div class="nav-link" data-tab="movies"><i class="fas fa-film"></i> Фильмы</div>
+            <div class="nav-link" data-tab="music"><i class="fas fa-music"></i> Музыка</div>
+            <div class="nav-link" data-tab="games"><i class="fas fa-gamepad"></i> Игры</div>
+            <div class="nav-link" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</div>
+        </aside>
+
+        <!-- Правая часть: контент + статистика -->
+        <div class="content-area">
+
+            <!-- Блок контента -->
+            <div class="tab-content-wrapper">
+
+                <!-- ГЛАВНАЯ -->
+                <div id="home" class="tab-content active">
+                    <h1 style="font-size:28px; font-weight:800; margin-bottom:8px;">Добро пожаловать!</h1>
+                    <p style="font-size:17px; color:#334155; margin-bottom:20px;">
+                        Бесплатные программы, книги, фильмы, музыка, игры и многое другое. Чтобы скачивать, <strong>зарегистрируйтесь</strong>.
+                    </p>
+                    <p style="font-size:15px; color:#64748b;">
+                        <i class="fas fa-info-circle"></i> Выберите раздел в меню слева.
+                    </p>
+                </div>
+
+                <!-- НОВОСТИ -->
+                <div id="news" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2>
+                    <div id="news-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- ПРОГРАММЫ -->
+                <div id="programs" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-code"></i> Программы</h2>
+                    <div id="programs-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- КНИГИ -->
+                <div id="books" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-book"></i> Книги</h2>
+                    <div id="books-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- СТАТЬИ -->
+                <div id="articles" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-pen-fancy"></i> Статьи</h2>
+                    <div id="articles-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- ФИЛЬМЫ -->
+                <div id="movies" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-film"></i> Фильмы</h2>
+                    <div id="movies-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- МУЗЫКА -->
+                <div id="music" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-music"></i> Музыка</h2>
+                    <div id="music-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- ИГРЫ -->
+                <div id="games" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-gamepad"></i> Игры</h2>
+                    <div id="games-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
+                <!-- РАЗНОЕ -->
+                <div id="misc" class="tab-content">
+                    <h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2>
+                    <div id="misc-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                </div>
+
             </div>
-            <a href="login.html" class="btn-hero"><i class="fas fa-user-plus"></i> Войти / Регистрация</a>
+
+            <!-- Блок статистики справа (всегда виден) -->
+            <div class="stats-panel" id="statsPanel">
+                <h4><i class="fas fa-chart-simple"></i> Статистика</h4>
+                <table>
+                    <tr><td class="label">Всего</td><td class="value" id="stat-total">0</td></tr>
+                    <tr><td class="label">За год</td><td class="value" id="stat-year">0</td></tr>
+                    <tr><td class="label">За месяц</td><td class="value" id="stat-month">0</td></tr>
+                    <tr><td class="label">За неделю</td><td class="value" id="stat-week">0</td></tr>
+                    <tr><td class="label">За сегодня</td><td class="value" id="stat-today">0</td></tr>
+                </table>
+            </div>
+
         </div>
-        <h1 style="font-size:32px; font-weight:800; margin-bottom:12px;">Ваш центр бесплатных материалов</h1>
-        <p style="font-size:18px; color:#334155; margin-bottom:30px;">
-            Скачивайте файлы только после регистрации, общайтесь на форуме, предлагайте свои материалы.
-        </p>
-        <div style="display:flex; flex-wrap:wrap; gap:25px; margin-bottom:20px;">
-            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
-                <i class="fas fa-download fa-3x" style="color:#2563eb;"></i>
-                <h3 style="margin:12px 0 6px;">Доступ к файлам</h3>
-                <p style="color:#475569; font-size:15px;">Только для зарегистрированных пользователей.</p>
-            </div>
-            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
-                <i class="fas fa-shield-alt fa-3x" style="color:#2563eb;"></i>
-                <h3 style="margin:12px 0 6px;">Безопасно</h3>
-                <p style="color:#475569; font-size:15px;">Все файлы проверяются перед публикацией.</p>
-            </div>
-            <div style="flex:1; min-width:180px; background:#f8fafc; border-radius:20px; padding:24px; text-align:center;">
-                <i class="fas fa-comments fa-3x" style="color:#2563eb;"></i>
-                <h3 style="margin:12px 0 6px;">Активное сообщество</h3>
-                <p style="color:#475569; font-size:15px;">Общайтесь на форуме с единомышленниками.</p>
-            </div>
-        </div>
-        <p style="margin-top:20px; font-size:15px; color:#64748b;">
-            <i class="fas fa-info-circle"></i> Навигация по вкладкам вверху страницы.
-        </p>
+        <!-- /content-area -->
     </div>
-
-    <!-- НОВОСТИ -->
-    <div id="news" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2>
-        <div id="news-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- ПРОГРАММЫ -->
-    <div id="programs" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-code"></i> Программы</h2>
-        <div id="programs-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- КНИГИ -->
-    <div id="books" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-book"></i> Книги</h2>
-        <div id="books-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- СТАТЬИ -->
-    <div id="articles" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-pen-fancy"></i> Статьи</h2>
-        <div id="articles-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- ФИЛЬМЫ -->
-    <div id="movies" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-film"></i> Фильмы</h2>
-        <div id="movies-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- МУЗЫКА -->
-    <div id="music" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-music"></i> Музыка</h2>
-        <div id="music-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- ИГРЫ -->
-    <div id="games" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-gamepad"></i> Игры</h2>
-        <div id="games-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
-
-    <!-- РАЗНОЕ -->
-    <div id="misc" class="tab-content">
-        <h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2>
-        <div id="misc-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
-    </div>
+    <!-- /main-layout -->
 
     <!-- ПОДВАЛ -->
-    <footer>
-        <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны, но скачивание только для зарегистрированных</span>
-        <a href="forum.html" class="footer-link"><i class="fas fa-comments"></i> Форум</a>
-        <a href="submit.html" class="footer-link"><i class="fas fa-upload"></i> Предложить материал</a>
-        <a href="admin/" class="footer-link"><i class="fas fa-cog"></i> Админка</a>
-        <a href="#" class="footer-link"><i class="fas fa-envelope"></i> Контакт</a>
+    <footer style="text-align:center; font-size:14px; color:#94a3b8; border-top:2px solid #e5e7eb; padding:18px 30px; background:white;">
+        <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны, скачивание только для зарегистрированных</span>
     </footer>
-</div>
 
-<!-- ВИДЖЕТ СТАТИСТИКИ -->
-<div id="stats-widget">
-    <div class="stats-toggle" onclick="toggleStats()">
-        <i class="fas fa-chart-simple"></i>
-        <span>Статистика</span>
-    </div>
-    <div class="stats-content">
-        <div class="stats-item"><span class="stats-icon"><i class="fas fa-users"></i></span><span class="stats-number" id="stat-total">0</span><span class="stats-label">Всего</span></div>
-        <div class="stats-item"><span class="stats-icon"><i class="fas fa-calendar-year"></i></span><span class="stats-number" id="stat-year">0</span><span class="stats-label">За год</span></div>
-        <div class="stats-item"><span class="stats-icon"><i class="fas fa-calendar-month"></i></span><span class="stats-number" id="stat-month">0</span><span class="stats-label">За месяц</span></div>
-        <div class="stats-item"><span class="stats-icon"><i class="fas fa-calendar-week"></i></span><span class="stats-number" id="stat-week">0</span><span class="stats-label">За неделю</span></div>
-        <div class="stats-item"><span class="stats-icon"><i class="fas fa-calendar-day"></i></span><span class="stats-number" id="stat-today">0</span><span class="stats-label">За сегодня</span></div>
-    </div>
 </div>
+<!-- /container -->
 
+<!-- ===== JAVASCRIPT ===== -->
 <script>
     // ============================================================
     // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
@@ -547,7 +522,7 @@
     let currentProfile = null;
 
     // ============================================================
-    // 2. АВТОРИЗАЦИЯ / ВИДЖЕТ
+    // 2. АВТОРИЗАЦИЯ И ВИДЖЕТ
     // ============================================================
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
@@ -558,15 +533,12 @@
             return;
         }
         currentUser = data.user;
-        // Загружаем профиль
         const { data: profile, error: profError } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
-        if (profError) {
-            console.error('Ошибка загрузки профиля:', profError);
-        }
+        if (profError) console.error('Ошибка загрузки профиля:', profError);
         currentProfile = profile || null;
         renderAuthWidget(true);
     }
@@ -575,32 +547,38 @@
         const widget = document.getElementById('authWidget');
         if (!isLoggedIn) {
             widget.innerHTML = `
-                <a href="login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
-                <a href="login.html" class="auth-btn" style="background:#f59e0b;"><i class="fas fa-user-plus"></i> Регистрация</a>
+                <a href="login.html" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                <a href="login.html" class="btn-primary" style="background:#f59e0b;"><i class="fas fa-user-plus"></i> Регистрация</a>
             `;
         } else {
             const avatarUrl = currentProfile?.avatar_url || '';
             const username = currentProfile?.username || currentUser.email;
             widget.innerHTML = `
-                <div class="user-info">
-                    <span>${username}</span>
-                    <div class="user-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
-                    <a href="profile.html" class="auth-btn" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
-                    <button id="logoutBtnMain" class="auth-btn" style="background:#dc2626; border:none; cursor:pointer; padding:8px 18px; border-radius:40px; font-weight:600; color:white;"><i class="fas fa-sign-out-alt"></i> Выйти</button>
-                </div>
+                <span class="username">${username}</span>
+                <div class="user-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
+                <a href="profile.html" class="btn-primary" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
+                <button id="logoutBtnMain" class="btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
-            // Обработчик выхода
             document.getElementById('logoutBtnMain').addEventListener('click', async function() {
                 await supabaseClient.auth.signOut();
                 window.location.href = '/';
             });
         }
+        // Показать/скрыть кнопку обновления для админа
+        const updateBtn = document.getElementById('adminUpdateBtn');
+        if (updateBtn) {
+            if (isLoggedIn && currentProfile && currentProfile.role === 'admin') {
+                updateBtn.style.display = 'inline-flex';
+            } else {
+                updateBtn.style.display = 'none';
+            }
+        }
     }
 
     // ============================================================
-    // 3. ЗАГРУЗКА СТАТИСТИКИ
+    // 3. СТАТИСТИКА
     // ============================================================
-    async function loadStatsWidget() {
+    async function loadStats() {
         try {
             const { data: total } = await supabaseClient.rpc('get_total_visitors');
             const { data: year } = await supabaseClient.rpc('get_visitors_last_year');
@@ -616,29 +594,6 @@
             console.error('Ошибка загрузки статистики:', error);
         }
     }
-
-    function toggleStats() {
-        const content = document.querySelector('#stats-widget .stats-content');
-        content.classList.toggle('active');
-        if (content.classList.contains('active')) {
-            localStorage.removeItem('stats_widget_closed');
-        } else {
-            localStorage.setItem('stats_widget_closed', 'true');
-        }
-    }
-
-    // Автоматическое открытие виджета
-    setTimeout(() => {
-        const content = document.querySelector('#stats-widget .stats-content');
-        if (content && !localStorage.getItem('stats_widget_closed')) {
-            content.classList.add('active');
-            setTimeout(() => {
-                if (!localStorage.getItem('stats_widget_closed')) {
-                    content.classList.remove('active');
-                }
-            }, 5000);
-        }
-    }, 1500);
 
     // ============================================================
     // 4. ЗАГРУЗКА КОНТЕНТА (GITHUB API)
@@ -704,13 +659,12 @@
         }
     }
 
-    // Рендер-функции с проверкой авторизации для скачивания
+    // Рендер-функции
     function renderNews(data, body) {
         const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
         return `<div class="news-item">${date ? `<time>${date}</time>` : ''}<h4>${data.title || 'Без названия'}</h4><p>${body ? body.slice(0,200)+(body.length>200?'...':'') : ''}</p></div>`;
     }
 
-    // Общая функция для отрисовки карточки с проверкой регистрации
     function renderCard(data, extraMeta = '') {
         const isLoggedIn = currentUser !== null;
         const downloadLink = isLoggedIn ? data.download_link : '#';
@@ -743,7 +697,6 @@
         return renderCard(data, year);
     }
 
-    // Для музыки и игр используем ту же renderCard
     function renderMusic(data) {
         const year = data.year ? `Год: ${data.year}` : '';
         const artist = data.artist ? `Исполнитель: ${data.artist}` : '';
@@ -758,42 +711,42 @@
         return renderCard(data, meta);
     }
 
-    // Разное
     function renderMisc(data) {
         return renderCard(data);
     }
 
     // ============================================================
-    // 5. ВКЛАДКИ
+    // 5. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК (вертикальное меню)
     // ============================================================
-    const tabs = document.querySelectorAll('.nav-tab');
-    const contents = document.querySelectorAll('.tab-content');
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    const tabContents = document.querySelectorAll('.tab-content');
 
     function switchTab(tabId) {
-        contents.forEach(c => c.classList.remove('active'));
+        tabContents.forEach(el => el.classList.remove('active'));
         const target = document.getElementById(tabId);
         if (target) target.classList.add('active');
-        tabs.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.tab === tabId) btn.classList.add('active');
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.tab === tabId) link.classList.add('active');
         });
         localStorage.setItem('activeTab', tabId);
     }
 
-    tabs.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
             const tabId = this.dataset.tab;
             switchTab(tabId);
         });
     });
 
+    // Восстановление активной вкладки
     const savedTab = localStorage.getItem('activeTab');
     if (savedTab && document.getElementById(savedTab)) {
         switchTab(savedTab);
     }
 
     // ============================================================
-    // 6. ЗАПИСЬ ПОСЕЩЕНИЙ И СТАТИСТИКА
+    // 6. ЗАПИСЬ ПОСЕЩЕНИЙ
     // ============================================================
     async function trackVisit() {
         let visitorId = localStorage.getItem('visitor_id');
@@ -801,7 +754,7 @@
             visitorId = crypto.randomUUID();
             localStorage.setItem('visitor_id', visitorId);
         }
-        const user = currentUser; // уже получен
+        const user = currentUser;
         const userId = user?.id || null;
         const { error } = await supabaseClient
             .from('visits')
@@ -813,10 +766,9 @@
     // 7. ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ
     // ============================================================
     (async function init() {
-        await checkAuth(); // currentUser обновится
+        await checkAuth();
         await trackVisit();
 
-        // Загружаем контент
         loadCollection('news-container', '_content/news', renderNews);
         loadCollection('programs-container', '_content/programs', renderProgram);
         loadCollection('books-container', '_content/books', renderBook);
@@ -826,8 +778,7 @@
         loadCollection('games-container', '_content/games', renderGame);
         loadCollection('misc-container', '_content/misc', renderMisc);
 
-        // Загружаем статистику
-        await loadStatsWidget();
+        loadStats();
     })();
 </script>
 </body>
