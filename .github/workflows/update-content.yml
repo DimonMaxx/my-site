@@ -23,6 +23,17 @@ jobs:
         run: |
           pip install gspread pandas
 
+      - name: Check if secret exists
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: |
+          if [ -n "$GOOGLE_CREDENTIALS_JSON" ]; then
+            echo "✅ Secret GOOGLE_CREDENTIALS_JSON exists (length: ${#GOOGLE_CREDENTIALS_JSON})"
+          else
+            echo "❌ Secret GOOGLE_CREDENTIALS_JSON is empty or not set"
+            exit 1
+          fi
+
       - name: Run script
         env:
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
