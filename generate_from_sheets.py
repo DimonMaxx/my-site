@@ -2,12 +2,11 @@ import gspread
 import pandas as pd
 import os
 import re
+import json  # добавили
 
 # ========== НАСТРОЙКИ ==========
-# ID вашей таблицы (из URL)
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 
-# Соответствие: название листа в таблице -> папка назначения
 SHEET_TO_FOLDER = {
     "Новости": "_content/news",
     "Программы": "_content/programs",
@@ -19,10 +18,8 @@ SHEET_TO_FOLDER = {
     "Разное": "_content/misc",
 }
 
-# Имя файла с ключами сервисного аккаунта
-CREDENTIALS_FILE = "amiable-webbing-507622-j3-ba4e1213c101.json"
+CREDENTIALS_FILE = "credentials.json"  # используется только локально
 
-# Сопоставление русских названий колонок -> ключи для front matter
 COLUMN_MAPPING = {
     "Название": "title",
     "Описание": "description",
@@ -33,10 +30,18 @@ COLUMN_MAPPING = {
     "Формат": "format",
     "Год": "year",
     "Платформа": "platform",
-    "Текст": "body",           # если есть колонка с полным текстом статьи
+    "Текст": "body",
 }
 # ==============================
 
+def get_gspread_client():
+    # Если переменная окружения задана (в GitHub Actions), используем её
+    if 'GOOGLE_CREDENTIALS_JSON' in os.environ:
+        creds_dict = json.loads(os.environ['GOOGLE_CREDENTIALS_JSON'])
+        return gspread.service_account_from_dict(creds_dict)
+    else:
+        # Иначе читаем из файла (локально)
+        return gspread.service_account(filename=CREDENTIALS_FILE)
 def slugify(title):
     """Преобразует заголовок в имя файла (slug)"""
     slug = re.sub(r'[^\w\s-]', '', title).strip().lower()
