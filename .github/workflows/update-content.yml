@@ -9,7 +9,7 @@ jobs:
   update-content:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # <-- ключевая строка
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -38,6 +38,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Автоматическое обновление контента из Google Sheets [skip ci]"
+            git pull --rebase origin main
             git push origin main
           fi
         env:
