@@ -103,6 +103,7 @@ def main():
         print("Таблица найдена.")
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"ОШИБКА: Таблица с ID '{SPREADSHEET_ID}' не найдена.")
+        print("Проверьте ID и права доступа для сервисного аккаунта.")
         return
 
     for sheet_title, folder in SHEET_TO_FOLDER.items():
