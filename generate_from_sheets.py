@@ -2,7 +2,7 @@ import gspread
 import pandas as pd
 import os
 import re
-import json  # добавили
+import json
 
 # ========== НАСТРОЙКИ ==========
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
@@ -42,6 +42,7 @@ def get_gspread_client():
     else:
         # Иначе читаем из файла (локально)
         return gspread.service_account(filename=CREDENTIALS_FILE)
+
 def slugify(title):
     """Преобразует заголовок в имя файла (slug)"""
     slug = re.sub(r'[^\w\s-]', '', title).strip().lower()
@@ -50,47 +51,36 @@ def slugify(title):
 
 def generate_md_files_from_sheet(worksheet, folder):
     print(f"Обработка листа: {worksheet.title}")
-    # Получаем все данные как список словарей (ключи — это названия колонок)
     records = worksheet.get_all_records()
     if not records:
         print(f"  Лист '{worksheet.title}' пуст, пропускаем.")
         return
 
-    # Создаём папку, если её нет
     os.makedirs(folder, exist_ok=True)
 
-    # Для каждой строки
     for row in records:
-        # Проверяем наличие названия (используем русское название "Название")
         title = row.get("Название", "").strip()
         if not title:
             print(f"  Пропущена строка без названия: {row}")
             continue
 
-        # Генерируем имя файла
         filename = f"{slugify(title)}.md"
         filepath = os.path.join(folder, filename)
 
-        # Строим front matter
         front_matter = "---\n"
         for ru_col, en_key in COLUMN_MAPPING.items():
             value = row.get(ru_col)
-            # Пропускаем пустые значения (None, NaN, пустую строку)
             if pd.isna(value) or value == "":
                 continue
-            # Экранируем кавычки и обратные слеши
             safe_value = str(value).replace('"', '\\"')
             front_matter += f'{en_key}: "{safe_value}"\n'
         front_matter += "---\n\n"
 
-        # Тело файла (если есть колонка "Текст", её содержимое идёт после front matter)
         body = row.get("Текст", "")
         if pd.isna(body):
             body = ""
 
         full_content = front_matter + body
-
-        # Записываем файл
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(full_content)
 
@@ -98,7 +88,7 @@ def generate_md_files_from_sheet(worksheet, folder):
 
 def main():
     print("Подключение к Google Sheets...")
-    gc = gspread.service_account(filename=CREDENTIALS_FILE)
+    gc = get_gspread_client()  # ← теперь используем функцию
 
     try:
         sh = gc.open_by_key(SPREADSHEET_ID)
@@ -115,7 +105,7 @@ def main():
         except gspread.exceptions.WorksheetNotFound:
             print(f"ПРЕДУПРЕЖДЕНИЕ: Лист '{sheet_title}' не найден. Пропускаем.")
 
-    print("Готово! Файлы созданы. Теперь их нужно закоммитить и запушить в репозиторий.")
+    print("Готово! Файлы созданы.")
 
 if __name__ == "__main__":
     main()
