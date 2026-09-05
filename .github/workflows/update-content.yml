@@ -9,7 +9,7 @@ jobs:
   update-content:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # <-- добавляем право на запись
+      contents: write   # <-- ключевая строка
 
     steps:
       - name: Checkout repository
