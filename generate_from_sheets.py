@@ -34,6 +34,7 @@ COLUMN_MAPPING = {
 # ==============================
 
 def get_gspread_client():
+    # Если переменная окружения задана (в GitHub Actions), используем её
     creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
     if creds_json:
         try:
@@ -43,6 +44,7 @@ def get_gspread_client():
             print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
             sys.exit(1)
     else:
+        # Локально: читаем из файла
         try:
             return gspread.service_account(filename="credentials.json")
         except FileNotFoundError:
@@ -93,7 +95,7 @@ def generate_md_files_from_sheet(worksheet, folder):
 
 def main():
     print("Подключение к Google Sheets...")
-    gc = get_gspread_client()   # <-- ИСПРАВЛЕНО: правильное имя функции
+    gc = get_gspread_client()
     print("Клиент создан.")
 
     try:
