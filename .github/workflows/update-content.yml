@@ -33,8 +33,9 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # Сначала синхронизируем с удалённым репозиторием
-          git pull origin main --rebase
+          # Синхронизируем локальную ветку с удалённой
+          git fetch origin main
+          git reset --hard origin/main
           git add _content/
           if git diff --staged --quiet; then
             echo "No changes to commit"
