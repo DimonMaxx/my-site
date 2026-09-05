@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import re
 import json
+import sys
 
 # ========== НАСТРОЙКИ ==========
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
@@ -17,8 +18,6 @@ SHEET_TO_FOLDER = {
     "Фильмы": "_content/movies",
     "Разное": "_content/misc",
 }
-
-CREDENTIALS_FILE = "credentials.json"  # используется только локально
 
 COLUMN_MAPPING = {
     "Название": "title",
@@ -36,15 +35,23 @@ COLUMN_MAPPING = {
 
 def get_gspread_client():
     # Если переменная окружения задана (в GitHub Actions), используем её
-    if 'GOOGLE_CREDENTIALS_JSON' in os.environ:
-        creds_dict = json.loads(os.environ['GOOGLE_CREDENTIALS_JSON'])
-        return gspread.service_account_from_dict(creds_dict)
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+    if creds_json:
+        try:
+            creds_dict = json.loads(creds_json)
+            return gspread.service_account_from_dict(creds_dict)
+        except Exception as e:
+            print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
+            sys.exit(1)
     else:
-        # Иначе читаем из файла (локально)
-        return gspread.service_account(filename=CREDENTIALS_FILE)
+        # Локально: читаем из файла
+        try:
+            return gspread.service_account(filename="credentials.json")
+        except FileNotFoundError:
+            print("Файл credentials.json не найден. Убедитесь, что он есть при локальном запуске.")
+            sys.exit(1)
 
 def slugify(title):
-    """Преобразует заголовок в имя файла (slug)"""
     slug = re.sub(r'[^\w\s-]', '', title).strip().lower()
     slug = re.sub(r'[-\s]+', '-', slug)
     return slug
@@ -88,14 +95,14 @@ def generate_md_files_from_sheet(worksheet, folder):
 
 def main():
     print("Подключение к Google Sheets...")
-    gc = get_gspread_client()  # ← теперь используем функцию
+    gc = get_gspread_client()
+    print("Клиент создан.")
 
     try:
         sh = gc.open_by_key(SPREADSHEET_ID)
         print("Таблица найдена.")
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"ОШИБКА: Таблица с ID '{SPREADSHEET_ID}' не найдена.")
-        print("Проверьте ID и права доступа для сервисного аккаунта.")
         return
 
     for sheet_title, folder in SHEET_TO_FOLDER.items():
