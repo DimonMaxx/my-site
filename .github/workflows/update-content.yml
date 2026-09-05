@@ -1,1 +1,43 @@
+name: Update content from Google Sheets
 
+on:
+  schedule:
+    # Запуск каждый день в 10:00 UTC (13:00 по Москве)
+    - cron: '0 10 * * *'
+  workflow_dispatch:  # позволяет запускать вручную из интерфейса GitHub
+
+jobs:
+  update-content:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install gspread pandas
+
+      - name: Run script
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python generate_from_sheets.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add _content/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Автоматическое обновление контента из Google Sheets [skip ci]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
