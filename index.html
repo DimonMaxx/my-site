@@ -641,30 +641,27 @@
     }
 
     async function incrementDownload(fileId, downloadUrl) {
-        if (!currentUser) {
-            alert('Для скачивания необходимо зарегистрироваться.');
-            return;
+    if (!currentUser) {
+        alert('Для скачивания необходимо зарегистрироваться.');
+        return;
+    }
+    try {
+        const { data, error } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
+        if (error) throw error;
+        downloadCounts[fileId] = data;
+        const countSpan = document.getElementById('download-count-' + fileId);
+        if (countSpan) countSpan.textContent = data;
+        if (downloadUrl && downloadUrl !== '#') {
+            window.open(downloadUrl, '_blank');
         }
-        try {
-            const { data, error } = await supabaseClient.rpc('increment_download', { file_id: fileId });
-            if (error) throw error;
-            // Обновляем локальный кэш и отображение
-            downloadCounts[fileId] = data;
-            const countSpan = document.getElementById('download-count-' + fileId);
-            if (countSpan) countSpan.textContent = data;
-            // Перенаправляем на ссылку
-            if (downloadUrl && downloadUrl !== '#') {
-                window.open(downloadUrl, '_blank');
-            }
-        } catch (error) {
-            console.error('Ошибка увеличения счётчика скачиваний:', error);
-            alert('Не удалось обновить счётчик, но вы можете попробовать скачать позже.');
-            // Всё равно переходим по ссылке
-            if (downloadUrl && downloadUrl !== '#') {
-                window.open(downloadUrl, '_blank');
-            }
+    } catch (error) {
+        console.error('Ошибка увеличения счётчика скачиваний:', error);
+        alert('Не удалось обновить счётчик, но вы можете попробовать скачать позже.');
+        if (downloadUrl && downloadUrl !== '#') {
+            window.open(downloadUrl, '_blank');
         }
     }
+}
 
     // Обработчик клика по кнопке "Скачать"
     function attachDownloadHandler(btn) {
