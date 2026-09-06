@@ -405,7 +405,6 @@
             <a href="forum.html" class="btn-primary"><i class="fas fa-comments"></i> Форум</a>
             <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить</a>
             <a href="admin/" class="btn-primary" style="background:#1e293b;"><i class="fas fa-cog"></i> Админка</a>
-            <!-- Ссылка для админа: список скачиваний -->
             <a href="admin-downloads.html" class="btn-admin-downloads" id="adminDownloadsLink" style="display:none;"><i class="fas fa-download"></i> Скачивания</a>
             <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
                target="_blank" 
@@ -565,12 +564,8 @@
         const isAdmin = isLoggedIn && currentProfile && currentProfile.role === 'admin';
         const updateBtn = document.getElementById('adminUpdateBtn');
         const downloadsLink = document.getElementById('adminDownloadsLink');
-        if (updateBtn) {
-            updateBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-        }
-        if (downloadsLink) {
-            downloadsLink.style.display = isAdmin ? 'inline-flex' : 'none';
-        }
+        if (updateBtn) updateBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        if (downloadsLink) downloadsLink.style.display = isAdmin ? 'inline-flex' : 'none';
     }
 
     // ============================================================
@@ -625,6 +620,7 @@
         });
     }
 
+    // Обработчик клика по скачиванию
     async function incrementDownload(fileId, downloadUrl, fileName) {
         if (!currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
@@ -662,15 +658,21 @@
         }
     }
 
+    // Единая функция-обработчик для кнопок
+    function handleDownloadClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = this;
+        const fileId = btn.dataset.fileId;
+        const downloadUrl = btn.dataset.downloadUrl;
+        const fileName = btn.dataset.fileName || '';
+        incrementDownload(fileId, downloadUrl, fileName);
+    }
+
+    // Функция для привязки обработчика (с удалением старого)
     function attachDownloadHandler(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const fileId = this.dataset.fileId;
-            const downloadUrl = this.dataset.downloadUrl;
-            const fileName = this.dataset.fileName || '';
-            incrementDownload(fileId, downloadUrl, fileName);
-        });
+        btn.removeEventListener('click', handleDownloadClick);
+        btn.addEventListener('click', handleDownloadClick);
     }
 
     // ============================================================
