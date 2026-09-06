@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лог скачиваний — Админ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4ff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            padding: 30px 35px;
+            box-shadow: 0 20px 60px rgba(0,20,80,0.08);
+        }
+        h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+        .subtitle { color: #64748b; font-size: 15px; margin-bottom: 30px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:hover td { background: #f8fafc; }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .empty { text-align: center; color: #94a3b8; padding: 40px; }
+        .badge {
+            display: inline-block;
+            background: #e5e7eb;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-download"></i> Лог скачиваний</h1>
+    <p class="subtitle">Список всех скачиваний файлов (только для администратора)</p>
+
+    <div id="logs-table">
+        <p class="empty"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
+    </div>
+
+    <a href="/admin/" class="back-link"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
+    <a href="/" class="back-link" style="margin-left:20px;"><i class="fas fa-home"></i> На главную</a>
+</div>
+
+<script>
+    // ============================================================
+    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
+    // ============================================================
+    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // 2. ПРОВЕРКА ПРАВ (только администратор)
+    // ============================================================
+    async function checkAdmin() {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error || !user) {
+            window.location.href = '/login.html';
+            return;
+        }
+        const { data: profile, error: profError } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        if (profError || !profile || profile.role !== 'admin') {
+            document.body.innerHTML = '<div style="text-align:center; padding:50px;"><h1>⛔ Доступ запрещён</h1><p>Только для администраторов.</p><a href="/">На главную</a></div>';
+            return;
+        }
+        loadLogs();
+    }
+
+    // ============================================================
+    // 3. ЗАГРУЗКА ЛОГОВ
+    // ============================================================
+    async function loadLogs() {
+        const container = document.getElementById('logs-table');
+        try {
+            const { data, error } = await supabaseClient
+                .from('download_logs')
+                .select('*')
+                .order('downloaded_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="empty"><i class="fas fa-info-circle"></i> Пока нет записей о скачиваниях.</p>`;
+                return;
+            }
+
+            let html = `<table>
+                <thead><tr>
+                    <th>Название файла</th>
+                    <th>Пользователь</th>
+                    <th>Время скачивания</th>
+                </tr></thead><tbody>`;
+            data.forEach(row => {
+                const time = new Date(row.downloaded_at).toLocaleString('ru-RU');
+                const user = row.username || 'Неизвестный';
+                html += `<tr>
+                    <td><strong>${row.file_name || row.file_id}</strong></td>
+                    <td>${user}</td>
+                    <td>${time}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Ошибка загрузки логов:', error);
+            container.innerHTML = `<p class="empty" style="color:#ef4444;">Не удалось загрузить логи. Попробуйте позже.</p>`;
+        }
+    }
+
+    // ============================================================
+    // ЗАПУСК
+    // ============================================================
+    checkAdmin();
+</script>
+</body>
+</html>
