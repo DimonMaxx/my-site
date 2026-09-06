@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лог скачиваний — Админ</title>
+    <title>История скачиваний — Админ</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,6 +12,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background: #f0f4ff;
+            color: #1a202c;
             padding: 20px;
             min-height: 100vh;
         }
@@ -20,133 +21,233 @@
             margin: 0 auto;
             background: white;
             border-radius: 32px;
-            padding: 30px 35px;
             box-shadow: 0 20px 60px rgba(0,20,80,0.08);
+            padding: 30px 35px 40px;
         }
-        h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
-        .subtitle { color: #64748b; font-size: 15px; margin-bottom: 30px; }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 25px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
         th {
-            background: #f1f5f9;
-            padding: 12px 16px;
             text-align: left;
+            padding: 12px 10px;
+            background: #f8fafc;
             font-weight: 600;
-            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
         }
         td {
-            padding: 10px 16px;
+            padding: 10px;
             border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
         }
         tr:hover td { background: #f8fafc; }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 0;
+            font-style: italic;
         }
-        .back-link:hover { text-decoration: underline; }
-        .empty { text-align: center; color: #94a3b8; padding: 40px; }
-        .badge {
-            display: inline-block;
-            background: #e5e7eb;
-            padding: 2px 10px;
+        .refresh-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refresh-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filters input, .filters select {
+            padding: 8px 14px;
+            border: 1px solid #d1d5db;
             border-radius: 30px;
-            font-size: 12px;
+            font-size: 14px;
+            background: white;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            table { font-size: 13px; }
+            td, th { padding: 8px 6px; }
+            .nav-links { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1><i class="fas fa-download"></i> Лог скачиваний</h1>
-    <p class="subtitle">Список всех скачиваний файлов (только для администратора)</p>
-
-    <div id="logs-table">
-        <p class="empty"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>
+    <div class="nav-links">
+        <a href="admin/"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
+        <a href="../"><i class="fas fa-home"></i> На главную</a>
     </div>
 
-    <a href="/admin/" class="back-link"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
-    <a href="/" class="back-link" style="margin-left:20px;"><i class="fas fa-home"></i> На главную</a>
+    <h1><i class="fas fa-download" style="color:#8b5cf6;"></i> История скачиваний</h1>
+    <p class="subtitle">Все скачивания файлов пользователями (только для администратора)</p>
+
+    <div class="filters">
+        <input type="text" id="searchInput" placeholder="Поиск по названию или пользователю...">
+        <select id="filterPeriod">
+            <option value="all">Все время</option>
+            <option value="today">Сегодня</option>
+            <option value="week">За неделю</option>
+            <option value="month">За месяц</option>
+        </select>
+        <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Обновить</button>
+    </div>
+
+    <div id="logsContainer">
+        <table>
+            <thead>
+                <tr>
+                    <th>Название файла</th>
+                    <th>Пользователь</th>
+                    <th>Дата и время</th>
+                </tr>
+            </thead>
+            <tbody id="logsTableBody">
+                <tr><td colspan="3" class="empty"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // ============================================================
-    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
-    // ============================================================
     const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ============================================================
-    // 2. ПРОВЕРКА ПРАВ (только администратор)
-    // ============================================================
-    async function checkAdmin() {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-        if (error || !user) {
-            window.location.href = '/login.html';
+    let allLogs = [];
+    let currentUser = null;
+    let currentProfile = null;
+
+    async function checkAuth() {
+        const { data, error } = await supabaseClient.auth.getUser();
+        if (error || !data?.user) {
+            window.location.href = 'login.html';
             return;
         }
+        currentUser = data.user;
         const { data: profile, error: profError } = await supabaseClient
             .from('profiles')
-            .select('role')
-            .eq('id', user.id)
+            .select('*')
+            .eq('id', currentUser.id)
             .single();
-        if (profError || !profile || profile.role !== 'admin') {
-            document.body.innerHTML = '<div style="text-align:center; padding:50px;"><h1>⛔ Доступ запрещён</h1><p>Только для администраторов.</p><a href="/">На главную</a></div>';
+        if (profError || profile?.role !== 'admin') {
+            alert('Доступ запрещён. Только администраторы могут видеть эту страницу.');
+            window.location.href = '../';
             return;
         }
+        currentProfile = profile;
         loadLogs();
     }
 
-    // ============================================================
-    // 3. ЗАГРУЗКА ЛОГОВ
-    // ============================================================
     async function loadLogs() {
-        const container = document.getElementById('logs-table');
         try {
             const { data, error } = await supabaseClient
                 .from('download_logs')
                 .select('*')
                 .order('downloaded_at', { ascending: false });
-
             if (error) throw error;
-
-            if (!data || data.length === 0) {
-                container.innerHTML = `<p class="empty"><i class="fas fa-info-circle"></i> Пока нет записей о скачиваниях.</p>`;
-                return;
-            }
-
-            let html = `<table>
-                <thead><tr>
-                    <th>Название файла</th>
-                    <th>Пользователь</th>
-                    <th>Время скачивания</th>
-                </tr></thead><tbody>`;
-            data.forEach(row => {
-                const time = new Date(row.downloaded_at).toLocaleString('ru-RU');
-                const user = row.username || 'Неизвестный';
-                html += `<tr>
-                    <td><strong>${row.file_name || row.file_id}</strong></td>
-                    <td>${user}</td>
-                    <td>${time}</td>
-                </tr>`;
-            });
-            html += `</tbody></table>`;
-            container.innerHTML = html;
+            allLogs = data || [];
+            applyFilters();
         } catch (error) {
             console.error('Ошибка загрузки логов:', error);
-            container.innerHTML = `<p class="empty" style="color:#ef4444;">Не удалось загрузить логи. Попробуйте позже.</p>`;
+            document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="3" class="empty">Ошибка загрузки. Попробуйте позже.</td></tr>';
         }
     }
 
-    // ============================================================
-    // ЗАПУСК
-    // ============================================================
-    checkAdmin();
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase().trim();
+        const period = document.getElementById('filterPeriod').value;
+        const now = new Date();
+
+        let filtered = allLogs.filter(log => {
+            if (search) {
+                const fileMatch = (log.file_name || '').toLowerCase().includes(search);
+                const userMatch = (log.username || '').toLowerCase().includes(search);
+                if (!fileMatch && !userMatch) return false;
+            }
+            if (period !== 'all') {
+                const logDate = new Date(log.downloaded_at);
+                let diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
+                if (period === 'today' && diffDays >= 1) return false;
+                if (period === 'week' && diffDays >= 7) return false;
+                if (period === 'month' && diffDays >= 30) return false;
+            }
+            return true;
+        });
+
+        renderTable(filtered);
+    }
+
+    function renderTable(logs) {
+        const tbody = document.getElementById('logsTableBody');
+        if (!logs || logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="empty">Нет записей о скачиваниях</td></tr>';
+            return;
+        }
+        let html = '';
+        logs.forEach(log => {
+            const date = new Date(log.downloaded_at);
+            const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU');
+            html += `<tr>
+                <td><strong>${log.file_name || log.file_id || 'Без названия'}</strong></td>
+                <td>${log.username || 'Неизвестный'}</td>
+                <td>${dateStr}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('filterPeriod').addEventListener('change', applyFilters);
+    document.getElementById('refreshBtn').addEventListener('click', loadLogs);
+
+    checkAuth();
 </script>
 </body>
 </html>
