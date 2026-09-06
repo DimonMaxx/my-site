@@ -122,7 +122,7 @@
 <div class="container">
     <div class="nav-links">
         <a href="admin/"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
-        <a href="../"><i class="fas fa-home"></i> На главную</a>
+        <a href="index.html"><i class="fas fa-home"></i> На главную</a>
     </div>
 
     <h1><i class="fas fa-download" style="color:#8b5cf6;"></i> История скачиваний</h1>
@@ -178,7 +178,7 @@
             .single();
         if (profError || profile?.role !== 'admin') {
             alert('Доступ запрещён. Только администраторы могут видеть эту страницу.');
-            window.location.href = '../';
+            window.location.href = '/';
             return;
         }
         currentProfile = profile;
@@ -206,11 +206,16 @@
         const now = new Date();
 
         let filtered = allLogs.filter(log => {
+            // Поиск по названию файла (file_name) или ID, или пользователю
             if (search) {
-                const fileMatch = (log.file_name || '').toLowerCase().includes(search);
-                const userMatch = (log.username || '').toLowerCase().includes(search);
-                if (!fileMatch && !userMatch) return false;
+                const fileName = (log.file_name || '').toLowerCase();
+                const fileId = (log.file_id || '').toLowerCase();
+                const username = (log.username || '').toLowerCase();
+                if (!fileName.includes(search) && !fileId.includes(search) && !username.includes(search)) {
+                    return false;
+                }
             }
+            // Фильтр по периоду
             if (period !== 'all') {
                 const logDate = new Date(log.downloaded_at);
                 let diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
@@ -234,8 +239,9 @@
         logs.forEach(log => {
             const date = new Date(log.downloaded_at);
             const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU');
+            const displayName = log.file_name || log.file_id || 'Без названия';
             html += `<tr>
-                <td><strong>${log.file_name || log.file_id || 'Без названия'}</strong></td>
+                <td><strong>${displayName}</strong></td>
                 <td>${log.username || 'Неизвестный'}</td>
                 <td>${dateStr}</td>
             </tr>`;
