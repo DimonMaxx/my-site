@@ -750,10 +750,18 @@
         }
     }
 
-    // Рендер-функции
+    // ============================================================
+    // 6. РЕНДЕР-ФУНКЦИИ (С ИСПРАВЛЕННЫМ ЭКРАНИРОВАНИЕМ ССЫЛОК)
+    // ============================================================
     function renderNews(data, body) {
         const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
         return `<div class="news-item">${date ? `<time>${date}</time>` : ''}<h4>${data.title || 'Без названия'}</h4><p>${body ? body.slice(0,200)+(body.length>200?'...':'') : ''}</p></div>`;
+    }
+
+    // Вспомогательная функция для экранирования HTML-символов в ссылке
+    function escapeHtmlLink(url) {
+        if (!url) return '';
+        return url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function renderCard(data, extraMeta = '', filename) {
@@ -764,12 +772,14 @@
         const btnClass = isLoggedIn ? 'btn-download' : 'btn-download disabled';
         const countHtml = (isLoggedIn && fileId) ? `<span class="download-count" id="download-count-${fileId}"><i class="fas fa-download"></i> <span>${downloadCounts[fileId] || 0}</span></span>` : '';
         const onclickAttr = isLoggedIn ? '' : ' onclick="alert(\'Для скачивания необходимо зарегистрироваться.\'); return false;"';
+        // Экранируем ссылку для атрибута data-download-url
+        const downloadLinkEscaped = escapeHtmlLink(downloadLink);
         return `<div class="card">
             <h3>${fileTitle}</h3>
             <p>${data.description || ''}</p>
             <div class="meta">${extraMeta}</div>
             ${isLoggedIn ? 
-                `<a href="#" class="${btnClass}" data-file-id="${fileId}" data-download-url="${downloadLink}" data-file-name="${fileTitle}" ${onclickAttr}><i class="fas fa-download"></i> Скачать ${countHtml}</a>` :
+                `<a href="#" class="${btnClass}" data-file-id="${fileId}" data-download-url="${downloadLinkEscaped}" data-file-name="${fileTitle}" ${onclickAttr}><i class="fas fa-download"></i> Скачать ${countHtml}</a>` :
                 `<a href="#" class="${btnClass}" ${onclickAttr}><i class="fas fa-download"></i> Скачать</a>`
             }
         </div>`;
@@ -818,7 +828,7 @@
     }
 
     // ============================================================
-    // 6. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // 7. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     // ============================================================
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -847,7 +857,7 @@
     }
 
     // ============================================================
-    // 7. ЗАПИСЬ ПОСЕЩЕНИЙ
+    // 8. ЗАПИСЬ ПОСЕЩЕНИЙ
     // ============================================================
     async function trackVisit() {
         let visitorId = localStorage.getItem('visitor_id');
@@ -864,7 +874,7 @@
     }
 
     // ============================================================
-    // 8. ИНИЦИАЛИЗАЦИЯ
+    // 9. ИНИЦИАЛИЗАЦИЯ
     // ============================================================
     (async function init() {
         await checkAuth();
