@@ -620,7 +620,6 @@
         });
     }
 
-    // Обработчик клика по скачиванию с логом
     async function incrementDownload(fileId, downloadUrl, fileName) {
         console.log('[incrementDownload] fileId:', fileId);
         console.log('[incrementDownload] downloadUrl:', downloadUrl);
@@ -630,14 +629,12 @@
             return;
         }
         try {
-            // Увеличиваем счётчик
             const { data, error } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
             if (error) throw error;
             downloadCounts[fileId] = data;
             const countSpan = document.getElementById('download-count-' + fileId);
             if (countSpan) countSpan.textContent = data;
 
-            // Логируем скачивание
             const { error: logError } = await supabaseClient
                 .from('download_logs')
                 .insert([{
@@ -648,7 +645,6 @@
                 }]);
             if (logError) console.error('Ошибка записи лога скачивания:', logError);
 
-            // Переходим по ссылке
             if (downloadUrl && downloadUrl !== '#') {
                 console.log('[incrementDownload] Открываем ссылку:', downloadUrl);
                 window.open(downloadUrl, '_blank');
@@ -664,7 +660,6 @@
         }
     }
 
-    // Единая функция-обработчик для кнопок
     function handleDownloadClick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -675,69 +670,29 @@
         incrementDownload(fileId, downloadUrl, fileName);
     }
 
-    // Функция для привязки обработчика (с удалением старого)
     function attachDownloadHandler(btn) {
         btn.removeEventListener('click', handleDownloadClick);
         btn.addEventListener('click', handleDownloadClick);
     }
 
     // ============================================================
-    // 5. ЗАГРУЗКА КОНТЕНТА (GITHUB API)
+    // 5. ЗАГРУЗКА КОНТЕНТА ИЗ СТАТИЧЕСКИХ JSON (без GitHub API)
     // ============================================================
-    const REPO_OWNER = 'DimonMaxx';
-    const REPO_NAME = 'my-site';
-
-    function parseMarkdown(content) {
-        const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
-        const match = content.match(frontMatterRegex);
-        if (!match) return { data: {}, body: content };
-        const yaml = match[1];
-        const body = match[2];
-        const data = {};
-        yaml.split('\n').forEach(line => {
-            const [key, ...valueParts] = line.split(':');
-            if (key && valueParts.length) {
-                const val = valueParts.join(':').trim();
-                data[key.trim()] = val;
-            }
-        });
-        return { data, body };
-    }
-
-    async function loadCollection(containerId, folderPath, renderItem) {
+    async function loadCollection(containerId, jsonPath, renderItem) {
         const container = document.getElementById(containerId);
         if (!container) return;
         try {
-            const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${folderPath}`);
-            if (!response.ok) throw new Error(`Ошибка загрузки списка: ${response.status}`);
-            const files = await response.json();
-            if (!Array.isArray(files) || files.length === 0) {
+            const response = await fetch(jsonPath);
+            if (!response.ok) throw new Error(`Ошибка загрузки ${jsonPath}: ${response.status}`);
+            const items = await response.json();
+            if (!items || items.length === 0) {
                 container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:30px;">Пока нет материалов в этом разделе.</p>`;
                 return;
             }
-            const mdFiles = files.filter(f => f.name.endsWith('.md') && f.type === 'file');
-            if (mdFiles.length === 0) {
-                container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:30px;">Пока нет материалов в этом разделе.</p>`;
-                return;
-            }
-            let items = [];
-            for (const file of mdFiles) {
-                const contentResponse = await fetch(file.download_url);
-                if (!contentResponse.ok) continue;
-                const text = await contentResponse.text();
-                const { data, body } = parseMarkdown(text);
-                items.push({ data, body, filename: file.name });
-            }
-            if (items.length === 0) {
-                container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:30px;">Пока нет материалов в этом разделе.</p>`;
-                return;
-            }
-            items.sort((a, b) => {
-                if (a.data.date && b.data.date) return new Date(b.data.date) - new Date(a.data.date);
-                return a.filename.localeCompare(b.filename);
-            });
             let html = '';
-            items.forEach(item => { html += renderItem(item.data, item.body, item.filename); });
+            items.forEach(item => {
+                html += renderItem(item);
+            });
             container.innerHTML = html;
 
             // Привязываем обработчики скачивания
@@ -749,22 +704,15 @@
             if (Object.keys(downloadCounts).length > 0) {
                 updateDownloadCountsDisplay();
             }
-
         } catch (error) {
-            console.error(`Ошибка загрузки ${folderPath}:`, error);
+            console.error(`Ошибка загрузки ${jsonPath}:`, error);
             container.innerHTML = `<p style="color:#ef4444; text-align:center; padding:30px;">Не удалось загрузить раздел. Попробуйте позже.</p>`;
         }
     }
 
     // ============================================================
-    // 6. РЕНДЕР-ФУНКЦИИ С ЭКРАНИРОВАНИЕМ ССЫЛОК
+    // 6. РЕНДЕР-ФУНКЦИИ (работают с объектами из JSON)
     // ============================================================
-    function renderNews(data, body) {
-        const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
-        return `<div class="news-item">${date ? `<time>${date}</time>` : ''}<h4>${data.title || 'Без названия'}</h4><p>${body ? body.slice(0,200)+(body.length>200?'...':'') : ''}</p></div>`;
-    }
-
-    // Вспомогательная функция для экранирования HTML-символов в ссылке
     function escapeHtmlLink(url) {
         if (!url) return '';
         return url.replace(/&/g, '&amp;')
@@ -774,19 +722,23 @@
                   .replace(/'/g, '&#39;');
     }
 
-    function renderCard(data, extraMeta = '', filename) {
+    function renderNews(item) {
+        const date = item.date ? new Date(item.date).toLocaleDateString('ru-RU') : '';
+        return `<div class="news-item">${date ? `<time>${date}</time>` : ''}<h4>${item.title || 'Без названия'}</h4><p>${item.body ? item.body.slice(0,200)+(item.body.length>200?'...':'') : ''}</p></div>`;
+    }
+
+    function renderCard(item, extraMeta = '') {
         const isLoggedIn = currentUser !== null;
-        const downloadLink = isLoggedIn ? data.download_link : '#';
-        const fileId = filename ? filename.replace(/\.md$/, '') : '';
-        const fileTitle = data.title || 'Без названия';
+        const downloadLink = isLoggedIn ? item.download_link : '#';
+        const fileId = item.title ? item.title.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\-]/g, '-').toLowerCase() : '';
+        const fileTitle = item.title || 'Без названия';
         const btnClass = isLoggedIn ? 'btn-download' : 'btn-download disabled';
         const countHtml = (isLoggedIn && fileId) ? `<span class="download-count" id="download-count-${fileId}"><i class="fas fa-download"></i> <span>${downloadCounts[fileId] || 0}</span></span>` : '';
         const onclickAttr = isLoggedIn ? '' : ' onclick="alert(\'Для скачивания необходимо зарегистрироваться.\'); return false;"';
-        // Экранируем ссылку для атрибута data-download-url
         const downloadLinkEscaped = escapeHtmlLink(downloadLink);
         return `<div class="card">
             <h3>${fileTitle}</h3>
-            <p>${data.description || ''}</p>
+            <p>${item.description || ''}</p>
             <div class="meta">${extraMeta}</div>
             ${isLoggedIn ? 
                 `<a href="#" class="${btnClass}" data-file-id="${fileId}" data-download-url="${downloadLinkEscaped}" data-file-name="${fileTitle}" ${onclickAttr}><i class="fas fa-download"></i> Скачать ${countHtml}</a>` :
@@ -795,46 +747,46 @@
         </div>`;
     }
 
-    function renderProgram(data, body, filename) {
-        const size = data.size ? `${data.size} МБ` : '';
-        const version = data.version ? `Версия: ${data.version}` : '';
+    function renderProgram(item) {
+        const size = item.size ? `${item.size} МБ` : '';
+        const version = item.version ? `Версия: ${item.version}` : '';
         const meta = `${version ? `<span>${version}</span>` : ''}${size ? `<span>${size}</span>` : ''}`;
-        return renderCard(data, meta, filename);
+        return renderCard(item, meta);
     }
 
-    function renderBook(data, body, filename) {
-        const author = data.author ? `<strong>Автор:</strong> ${data.author}` : '';
-        const format = data.format ? data.format : 'PDF';
+    function renderBook(item) {
+        const author = item.author ? `<strong>Автор:</strong> ${item.author}` : '';
+        const format = item.format ? item.format : 'PDF';
         const meta = `${author ? `<span>${author}</span>` : ''}<span><i class="fas fa-file-pdf"></i> ${format}</span>`;
-        return renderCard(data, meta, filename);
+        return renderCard(item, meta);
     }
 
-    function renderArticle(data, body) {
-        const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
-        return `<div class="article-item"><h4>${data.title || 'Без названия'}</h4>${date ? `<span style="font-size:13px; color:#94a3b8;">${date}</span>` : ''}<p>${body ? body.slice(0,150)+(body.length>150?'...':'') : ''}</p><a href="#">Читать далее <i class="fas fa-arrow-right"></i></a></div>`;
+    function renderArticle(item) {
+        const date = item.date ? new Date(item.date).toLocaleDateString('ru-RU') : '';
+        return `<div class="article-item"><h4>${item.title || 'Без названия'}</h4>${date ? `<span style="font-size:13px; color:#94a3b8;">${date}</span>` : ''}<p>${item.body ? item.body.slice(0,150)+(item.body.length>150?'...':'') : ''}</p><a href="#">Читать далее <i class="fas fa-arrow-right"></i></a></div>`;
     }
 
-    function renderMovie(data, body, filename) {
-        const year = data.year ? `Год: ${data.year}` : '';
-        return renderCard(data, year, filename);
+    function renderMovie(item) {
+        const year = item.year ? `Год: ${item.year}` : '';
+        return renderCard(item, year);
     }
 
-    function renderMusic(data, body, filename) {
-        const year = data.year ? `Год: ${data.year}` : '';
-        const artist = data.artist ? `Исполнитель: ${data.artist}` : '';
+    function renderMusic(item) {
+        const year = item.year ? `Год: ${item.year}` : '';
+        const artist = item.artist ? `Исполнитель: ${item.artist}` : '';
         const meta = `${artist ? `<span>${artist}</span>` : ''}${year ? `<span>${year}</span>` : ''}`;
-        return renderCard(data, meta, filename);
+        return renderCard(item, meta);
     }
 
-    function renderGame(data, body, filename) {
-        const platform = data.platform ? `Платформа: ${data.platform}` : '';
-        const year = data.year ? `Год: ${data.year}` : '';
+    function renderGame(item) {
+        const platform = item.platform ? `Платформа: ${item.platform}` : '';
+        const year = item.year ? `Год: ${item.year}` : '';
         const meta = `${platform ? `<span>${platform}</span>` : ''}${year ? `<span>${year}</span>` : ''}`;
-        return renderCard(data, meta, filename);
+        return renderCard(item, meta);
     }
 
-    function renderMisc(data, body, filename) {
-        return renderCard(data, '', filename);
+    function renderMisc(item) {
+        return renderCard(item, '');
     }
 
     // ============================================================
@@ -890,17 +842,18 @@
         await checkAuth();
         await trackVisit();
 
-        // Загружаем счётчики
+        // Загружаем счётчики скачиваний
         await loadDownloadCounts();
 
-        loadCollection('news-container', '_content/news', renderNews);
-        loadCollection('programs-container', '_content/programs', renderProgram);
-        loadCollection('books-container', '_content/books', renderBook);
-        loadCollection('articles-container', '_content/articles', renderArticle);
-        loadCollection('movies-container', '_content/movies', renderMovie);
-        loadCollection('music-container', '_content/music', renderMusic);
-        loadCollection('games-container', '_content/games', renderGame);
-        loadCollection('misc-container', '_content/misc', renderMisc);
+        // Загружаем контент из JSON-файлов
+        loadCollection('news-container', '_content/news.json', renderNews);
+        loadCollection('programs-container', '_content/programs.json', renderProgram);
+        loadCollection('books-container', '_content/books.json', renderBook);
+        loadCollection('articles-container', '_content/articles.json', renderArticle);
+        loadCollection('movies-container', '_content/movies.json', renderMovie);
+        loadCollection('music-container', '_content/music.json', renderMusic);
+        loadCollection('games-container', '_content/games.json', renderGame);
+        loadCollection('misc-container', '_content/misc.json', renderMisc);
 
         loadStats();
     })();
