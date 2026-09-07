@@ -36,6 +36,7 @@ COLUMN_MAPPING = {
 # ==============================
 
 def get_gspread_client():
+    # Если переменная окружения задана (в GitHub Actions), используем её
     creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
     if creds_json:
         try:
@@ -45,6 +46,7 @@ def get_gspread_client():
             print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
             sys.exit(1)
     else:
+        # Локально: читаем из файла
         try:
             return gspread.service_account(filename="credentials.json")
         except FileNotFoundError:
@@ -65,10 +67,13 @@ def generate_json_from_sheet(worksheet, json_path):
                 value = row.get(ru_col)
                 if pd.isna(value) or value == "":
                     continue
+                # Если колонка "Текст" — сохраняем как есть (может быть многострочный)
                 if ru_col == "Текст":
                     item[en_key] = str(value)
                 else:
+                    # Для остальных полей убираем лишние пробелы
                     item[en_key] = str(value).strip()
+            # Проверяем наличие обязательного поля 'title'
             if 'title' in item and item['title']:
                 data.append(item)
             else:
@@ -89,6 +94,7 @@ def main():
         print("Таблица найдена.")
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"ОШИБКА: Таблица с ID '{SPREADSHEET_ID}' не найдена.")
+        print("Проверьте ID и права доступа для сервисного аккаунта.")
         return
 
     for sheet_title, json_path in SHEET_TO_JSON.items():
