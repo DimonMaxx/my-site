@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ (без изменений) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -557,7 +557,7 @@
             `;
             document.getElementById('logoutBtnMain').addEventListener('click', async function() {
                 await supabaseClient.auth.signOut();
-                window.location.href = '/';
+                window.location.href = 'index.html';
             });
         }
         // Показать/скрыть админские ссылки
@@ -620,8 +620,11 @@
         });
     }
 
-    // Обработчик клика по скачиванию
+    // Обработчик клика по скачиванию с логом
     async function incrementDownload(fileId, downloadUrl, fileName) {
+        console.log('[incrementDownload] fileId:', fileId);
+        console.log('[incrementDownload] downloadUrl:', downloadUrl);
+        console.log('[incrementDownload] fileName:', fileName);
         if (!currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
             return;
@@ -647,7 +650,10 @@
 
             // Переходим по ссылке
             if (downloadUrl && downloadUrl !== '#') {
+                console.log('[incrementDownload] Открываем ссылку:', downloadUrl);
                 window.open(downloadUrl, '_blank');
+            } else {
+                console.warn('[incrementDownload] Ссылка пуста или равна #');
             }
         } catch (error) {
             console.error('Ошибка увеличения счётчика скачиваний:', error);
@@ -751,7 +757,7 @@
     }
 
     // ============================================================
-    // 6. РЕНДЕР-ФУНКЦИИ (С ИСПРАВЛЕННЫМ ЭКРАНИРОВАНИЕМ ССЫЛОК)
+    // 6. РЕНДЕР-ФУНКЦИИ С ЭКРАНИРОВАНИЕМ ССЫЛОК
     // ============================================================
     function renderNews(data, body) {
         const date = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '';
@@ -761,7 +767,11 @@
     // Вспомогательная функция для экранирования HTML-символов в ссылке
     function escapeHtmlLink(url) {
         if (!url) return '';
-        return url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return url.replace(/&/g, '&amp;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/'/g, '&#39;');
     }
 
     function renderCard(data, extraMeta = '', filename) {
