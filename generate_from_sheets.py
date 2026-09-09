@@ -7,7 +7,6 @@ import re
 
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 
-# Сопоставление листов с JSON-файлом и папкой для Markdown
 SHEET_CONFIG = {
     "Новости": {"json": "_content/news.json", "folder": "_content/news"},
     "Программы": {"json": "_content/programs.json", "folder": "_content/programs"},
@@ -59,20 +58,15 @@ def generate_json_and_md(worksheet, json_path, folder_path):
     if not records:
         print(f"  Лист '{worksheet.title}' пуст, создаём пустые файлы.")
         data = []
-        # Создаём пустой JSON
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        # Создаём пустую папку (файлы не создаются)
         os.makedirs(folder_path, exist_ok=True)
         return
 
-    # Данные для JSON
     json_data = []
-    # Создаём папку для Markdown, если её нет
     os.makedirs(folder_path, exist_ok=True)
 
     for row in records:
-        # Формируем объект для JSON
         item = {}
         for ru_col, en_key in COLUMN_MAPPING.items():
             value = row.get(ru_col)
@@ -82,29 +76,20 @@ def generate_json_and_md(worksheet, json_path, folder_path):
                 item[en_key] = str(value)
             else:
                 item[en_key] = str(value).strip()
-        # Проверяем наличие обязательного поля 'title'
         if 'title' in item and item['title']:
             json_data.append(item)
-
-            # Генерируем Markdown файл для админки
+            # Создаём Markdown
             title = item['title']
             slug = slugify(title)
             md_filename = f"{slug}.md"
             md_path = os.path.join(folder_path, md_filename)
-
-            # Формируем front matter (YAML)
             front_matter = "---\n"
             for key, value in item.items():
-                # Экранируем кавычки в значениях
                 safe_value = str(value).replace('"', '\\"')
                 front_matter += f'{key}: "{safe_value}"\n'
             front_matter += "---\n\n"
-
-            # Тело (если есть)
             body = item.get('body', '')
             full_content = front_matter + body
-
-            # Записываем Markdown
             with open(md_path, 'w', encoding='utf-8') as f:
                 f.write(full_content)
             print(f"  Создан Markdown: {md_path}")
@@ -112,9 +97,15 @@ def generate_json_and_md(worksheet, json_path, folder_path):
             print(f"  Пропущена строка без названия: {row}")
 
     # Записываем JSON
-    with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=2)
-    print(f"  Создан JSON: {json_path} ({len(json_data)} записей)")
+    try:
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
+        print(f"  Создан JSON: {json_path} ({len(json_data)} записей)")
+        # Дополнительный вывод содержимого для отладки
+        if json_data:
+            print(f"  Пример данных: {json_data[0]}")
+    except Exception as e:
+        print(f"  ОШИБКА записи JSON: {e}")
 
 def main():
     print("Подключение к Google Sheets...")
