@@ -1,0 +1,8 @@
+---
+title: "Герой не нашего времени. Эпизод II"
+description: "В жизни всегда есть место подвигу, но лучше держаться от него подальше. Эту истину Саша Панов усвоил давно — герои чаще нужны там, где не хватает профессионалов. Война — это час боя на месяц учений, её романтика — кровь и пот, а люди, идущие в бой, — не винтики. Вот почему он никогда не хотел воевать... Но по чьей-то прихоти придётся ему пожаловать в 1941 год, в самое начало июня, реального, невымышленного, и вести там шахматную партию, предугадывая результат её смертельного исхода."
+download_link: "https://downloader.disk.yandex.ru/disk/414d30e8a2f9a9de786f7afd084bf3b4c6eb3c9359242c041bc412cdbbe005ee/6aa2d5b3/qQlZEe-mixcGccy6H3GG9_NP84XCu81Fy5BwjKnVpNMrklEtm_JmL0cAHTGjArjdUUUZcBBxHZ-Xfgby709KXw%3D%3D?uid=0&filename=%D0%9F%D0%BE%D0%BB%D0%BA%D0%BE%D0%B2%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2.%20%D0%93%D0%B5%D1%80%D0%BE%D0%B9%20%D0%BD%D0%B5%20%D0%BD%D0%B0%D1%88%D0%B5%D0%B3%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%B8.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2&disposition=attachment&hash=TDzNbGjmOewoob3DJ61vSsErGgWEZ6/jn6lpYsFYjQ590i86Tg0zKQOfqe/0%2BcA5q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/%D0%9F%D0%BE%D0%BB%D0%BA%D0%BE%D0%B2%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2.%20%D0%93%D0%B5%D1%80%D0%BE%D0%B9%20%D0%BD%D0%B5%20%D0%BD%D0%B0%D1%88%D0%B5%D0%B3%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%B8.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2&limit=0&content_type=application%2Fx-fictionbook%2Bxml&owner_uid=92896035&fsize=1407403&hid=4251c7afcc9ea2fc58347f4942aaf334&media_type=book&tknv=v3&is_direct_zip_experiment=1"
+author: "Дмитрий Полковников"
+format: "FB2"
+---
+
