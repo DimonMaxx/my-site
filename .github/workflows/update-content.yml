@@ -30,13 +30,9 @@ jobs:
         run: python generate_from_sheets.py
 
       - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git fetch origin main
-          git reset --hard origin/main
-          git add _content/
-          git commit -m "Автоматическое обновление контента из Google Sheets [skip ci]" || echo "No changes to commit"
-          git push origin main --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Автоматическое обновление контента из Google Sheets [skip ci]"
+          file_pattern: "_content/*.json _content/**/*.md"
+          commit_user_name: "GitHub Actions Bot"
+          commit_user_email: "actions@github.com"
