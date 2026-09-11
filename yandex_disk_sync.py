@@ -5,6 +5,7 @@ import sys
 import re
 import time
 import base64
+import hashlib
 import requests
 import xml.etree.ElementTree as ET
 from urllib.parse import quote
@@ -72,7 +73,6 @@ def get_yandex_files_with_download(public_url):
     return result
 
 def parse_fb2(content_bytes):
-    """Возвращает словарь {title, author, description, cover_data, cover_ext}."""
     result = {'title': '', 'author': '', 'description': '', 'cover_data': None, 'cover_ext': ''}
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
@@ -114,12 +114,10 @@ def parse_fb2(content_bytes):
                 if el is not None: return el
         return None
 
-    # Название
     t_el = find_el(root, 'book-title')
     if t_el is not None and t_el.text:
         result['title'] = t_el.text.strip()
 
-    # Автор
     ti = find_el(root, 'title-info')
     a_el = None
     if ti is not None:
@@ -139,7 +137,6 @@ def parse_fb2(content_bytes):
                     break
         result['author'] = ' '.join(parts)
 
-    # Описание
     ann = find_el(root, 'annotation')
     if ann is not None:
         parts = []
@@ -153,17 +150,14 @@ def parse_fb2(content_bytes):
             desc = desc[:MAX_DESC_LEN] + '...'
         result['description'] = desc
 
-    # Обложка
     cover = find_el(root, 'coverpage')
     if cover is not None:
-        # Ищем тег <image> внутри coverpage
         img_el = None
         for ns in ns_candidates:
             prefix = f'{{{ns}}}' if ns else ''
             img_el = cover.find(f'.//{prefix}image')
             if img_el is not None: break
         if img_el is not None:
-            # Атрибут l:href или href
             href = None
             for attr in img_el.attrib:
                 if attr.endswith('href'):
@@ -171,7 +165,6 @@ def parse_fb2(content_bytes):
                     break
             if href and href.startswith('#'):
                 binary_id = href[1:]
-                # Ищем <binary id="...">
                 for ns in ns_candidates:
                     prefix = f'{{{ns}}}' if ns else ''
                     for b_el in root.iter(f'{prefix}binary'):
@@ -202,17 +195,18 @@ def normalize(name):
     name = re.sub(r'[^\w\s\-]', ' ', name)
     return re.sub(r'\s+', ' ', name).strip()
 
-def upload_cover_to_supabase(cover_data, ext, book_slug):
-    """Загружает обложку в Supabase Storage, возвращает публичный URL."""
+def upload_cover_to_supabase(cover_data, ext, book_title):
+    """Загружает обложку в Supabase Storage. Имя файла = MD5 от названия."""
     if not SUPABASE_SERVICE_KEY:
         print("  SUPABASE_SERVICE_ROLE_KEY не задан — пропускаем загрузку обложки.")
         return None
-    filename = f"{book_slug}.{ext}"
+    filename = f"{hashlib.md5(book_title.encode('utf-8')).hexdigest()}.{ext}"
     url = f"{SUPABASE_URL}/storage/v1/object/{COVERS_BUCKET}/{filename}"
     headers = {
         "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
         "Content-Type": f"image/{ext}",
-        "x-upsert": "true"
+        "x-upsert": "true",
+        "apikey": SUPABASE_SERVICE_KEY
     }
     try:
         resp = requests.put(url, headers=headers, data=cover_data, timeout=30)
@@ -220,7 +214,7 @@ def upload_cover_to_supabase(cover_data, ext, book_slug):
             public_url = f"{SUPABASE_URL}/storage/v1/object/public/{COVERS_BUCKET}/{filename}"
             return public_url
         else:
-            print(f"  Ошибка загрузки обложки: {resp.status_code} — {resp.text[:100]}")
+            print(f"  Ошибка загрузки обложки: {resp.status_code} — {resp.text[:200]}")
     except Exception as e:
         print(f"  Ошибка загрузки обложки: {e}")
     return None
@@ -251,7 +245,6 @@ def main():
         print("Колонка 'Обложка' не найдена. Добавьте её в таблицу.")
         return
 
-    # Собираем существующие книги
     name_to_row = {}
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
@@ -264,13 +257,11 @@ def main():
         return
 
     updated = 0
-    added = 0
     skipped = 0
 
     for f in files:
         norm = normalize(f['name'])
         fb2_title = ''
-        # Скачиваем FB2
         try:
             resp = requests.get(f['download_url'], timeout=60)
             if resp.status_code != 200:
@@ -281,7 +272,6 @@ def main():
             print(f"  Ошибка парсинга {f['name']}: {e}")
             continue
 
-        # Ищем строку в таблице
         row_num = None
         for db_title, rnum in name_to_row.items():
             if db_title == norm: 
@@ -292,7 +282,6 @@ def main():
                 row_num = name_to_row[norm2]
 
         if row_num:
-            # Обновляем только обложку, если пуста
             row = all_values[row_num - 1]
             current_cover = row[col_cover] if col_cover < len(row) else ''
             if current_cover.strip():
@@ -303,8 +292,7 @@ def main():
             if not cover_data:
                 skipped += 1
                 continue
-            slug = re.sub(r'[^\w\-]+', '-', normalize(fb2_title or f['name']))[:80]
-            url = upload_cover_to_supabase(cover_data, cover_ext, slug)
+            url = upload_cover_to_supabase(cover_data, cover_ext, fb2_title or f['name'])
             if url:
                 col_letter = chr(65 + col_cover)
                 worksheet.update(f'{col_letter}{row_num}', [[url]], value_input_option='RAW')
