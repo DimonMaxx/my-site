@@ -29,6 +29,7 @@ COLUMN_MAPPING = {
     "Год": "year",
     "Платформа": "platform",
     "Текст": "body",
+    "Обложка": "cover",   # ← добавьте эту строку
 }
 
 def get_gspread_client():
