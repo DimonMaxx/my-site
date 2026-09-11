@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форум сообщества</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
             color: #1a202c;
             padding: 20px;
@@ -21,14 +23,19 @@
             padding: 30px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        h1 { font-size: 28px; margin-bottom: 20px; color: #0a58ca; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        /* === виджет авторизации === */
         .forum-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             margin-bottom: 15px;
+            gap: 10px;
+        }
+        .forum-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         .forum-header .back-link {
             display: inline-block;
@@ -37,6 +44,24 @@
             font-weight: 600;
         }
         .forum-header .back-link:hover { text-decoration: underline; }
+        .admin-panel-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #8b5cf6;
+            color: white !important;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            transition: 0.2s;
+        }
+        .admin-panel-link:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+        h1 { font-size: 28px; margin-bottom: 20px; color: #0a58ca; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
         .auth-widget {
             display: flex;
             align-items: center;
@@ -60,16 +85,9 @@
             color: #2563eb !important;
             border: 1px solid #2563eb;
         }
-        .auth-widget .auth-btn-outline:hover { background: #eef2ff; }
-        .auth-widget .auth-btn-danger {
-            background: #dc2626;
-        }
+        .auth-widget .auth-btn-danger { background: #dc2626; }
         .auth-widget .auth-btn-danger:hover { background: #b91c1c; }
-        .auth-widget .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .auth-widget .user-info { display: flex; align-items: center; gap: 8px; }
         .auth-widget .user-avatar {
             width: 30px; height: 30px;
             border-radius: 50%;
@@ -83,32 +101,16 @@
         .auth-widget .username { font-weight: 600; font-size: 14px; color: #1e293b; }
 
         #auth-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 12px;
+            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+            margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 12px;
         }
         #auth-section input {
-            padding: 10px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            flex: 1;
-            min-width: 150px;
+            padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 14px; flex: 1; min-width: 150px;
         }
         #auth-section button {
-            padding: 10px 24px;
-            background: #0a58ca;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
+            padding: 10px 24px; background: #0a58ca; color: white; border: none;
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
         #auth-section button:hover { background: #0044a3; }
         #auth-section .btn-secondary { background: #6b7280; }
@@ -116,123 +118,81 @@
         #user-info { font-weight: 600; }
         .forum-section { margin-top: 30px; }
         .topic-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 18px 22px;
-            margin-bottom: 15px;
-            transition: 0.2s;
-            cursor: pointer;
+            background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+            padding: 18px 22px; margin-bottom: 15px; transition: 0.2s; cursor: pointer;
         }
         .topic-card:hover { background: #f3f4f6; border-color: #0a58ca; }
         .topic-card h3 { font-size: 18px; margin-bottom: 5px; }
         .topic-card .meta { font-size: 13px; color: #6b7280; display: flex; gap: 15px; flex-wrap: wrap; }
         .topic-card .badge { background: #e5e7eb; padding: 2px 10px; border-radius: 30px; font-size: 12px; }
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center; z-index: 1000;
         }
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
+            background: white; padding: 30px; border-radius: 16px;
+            max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto;
         }
         .modal-content input, .modal-content textarea, .modal-content select {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
+            width: 100%; padding: 12px; margin: 8px 0;
+            border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
         }
         .modal-content textarea { min-height: 150px; resize: vertical; }
         .modal-content .btn-submit {
-            background: #0a58ca;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
+            background: #0a58ca; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-weight: 600; cursor: pointer;
         }
         .modal-content .btn-close {
-            background: #6b7280;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-left: 10px;
+            background: #6b7280; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; margin-left: 10px;
         }
         .modal-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
         .comment {
-            background: #f9fafb;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 3px solid #0a58ca;
+            background: #f9fafb; padding: 12px 16px; border-radius: 8px;
+            margin: 10px 0; border-left: 3px solid #0a58ca;
         }
         .comment .meta { font-size: 12px; color: #6b7280; }
         .comment .attachment {
-            display: inline-block;
-            background: #e5e7eb;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 13px;
-            margin-top: 6px;
+            display: inline-block; background: #e5e7eb; padding: 4px 12px;
+            border-radius: 30px; font-size: 13px; margin-top: 6px;
         }
         .admin-panel {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 30px;
+            background: #fef3c7; border: 1px solid #f59e0b;
+            border-radius: 12px; padding: 20px; margin-top: 30px;
         }
         .admin-panel h3 { color: #92400e; }
         .user-list { list-style: none; }
         .user-list li {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e5e7eb;
+            display: flex; justify-content: space-between;
+            padding: 8px 0; border-bottom: 1px solid #e5e7eb;
         }
         .user-list .role-select {
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #d1d5db;
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db;
         }
         @media (max-width: 768px) {
             .container { padding: 15px; }
             #auth-section { flex-direction: column; align-items: stretch; }
-            .forum-header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .forum-header { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
 <div class="container" id="app">
 
-    <!-- Шапка форума с виджетом авторизации -->
     <div class="forum-header">
-        <a href="index.html" class="back-link">← На главную</a>
-        <div id="forumAuthWidget" class="auth-widget">
-            <!-- Виджет будет вставлен динамически -->
+        <div class="forum-header-left">
+            <a href="index.html" class="back-link">← На главную</a>
+            <!-- Ссылка на админ-панель (видна только админам) -->
+            <a href="admin-panel.html" class="admin-panel-link" id="forumAdminPanelLink" style="display:none;">
+                <i class="fas fa-shield-alt"></i> Админ-панель
+            </a>
         </div>
+        <div id="forumAuthWidget" class="auth-widget"></div>
     </div>
 
     <h1>📢 Форум сообщества</h1>
 
-    <!-- Секция авторизации (оставляем для обратной совместимости) -->
     <div id="auth-section">
         <div id="auth-forms">
             <input type="email" id="email-input" placeholder="Email">
@@ -250,7 +210,7 @@
     <div class="forum-section">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
             <h2 style="font-size:22px;">Темы</h2>
-            <button id="new-topic-btn" class="btn-submit" style="background:#0a58ca; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">➕ Новая тема</button>
+            <button id="new-topic-btn" style="background:#0a58ca; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">➕ Новая тема</button>
         </div>
         <div id="topics-list"><p style="color:#6b7280;">Загрузка тем...</p></div>
     </div>
@@ -265,6 +225,11 @@
             <p><strong>За месяц:</strong> <span id="stat-month">0</span></p>
             <p><strong>За неделю:</strong> <span id="stat-week">0</span></p>
             <p><strong>За сегодня:</strong> <span id="stat-today">0</span></p>
+        </div>
+        <div style="margin: 15px 0 10px;">
+            <a href="admin-panel.html" style="display:inline-block; background:#8b5cf6; color:white; padding:12px 24px; border-radius:60px; font-weight:700; font-size:16px; text-decoration:none; box-shadow:0 4px 14px rgba(139,92,246,0.4);">
+                <i class="fas fa-shield-alt"></i> Открыть админ-панель
+            </a>
         </div>
         <h4>Список пользователей</h4>
         <ul id="user-list" class="user-list"><li>Загрузка пользователей...</li></ul>
@@ -309,9 +274,6 @@
 </div>
 
 <script>
-    // ============================================================
-    // 1. ИНИЦИАЛИЗАЦИЯ SUPABASE
-    // ============================================================
     const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -321,7 +283,6 @@
     let currentTopicId = null;
     let editingTopicId = null;
 
-    // DOM-элементы
     const authForms = document.getElementById('auth-forms');
     const userInfo = document.getElementById('user-info');
     const userName = document.getElementById('user-name');
@@ -352,18 +313,8 @@
     const commentSubmitBtn = document.getElementById('comment-submit-btn');
     const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
 
-    // --------------------------------------------
-    // 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // --------------------------------------------
-    function showAuthForms() {
-        authForms.style.display = 'flex';
-        userInfo.style.display = 'none';
-    }
-    function showUserInfo(user) {
-        authForms.style.display = 'none';
-        userInfo.style.display = 'flex';
-        userName.textContent = user.email || user.username;
-    }
+    function showAuthForms() { authForms.style.display = 'flex'; userInfo.style.display = 'none'; }
+    function showUserInfo(user) { authForms.style.display = 'none'; userInfo.style.display = 'flex'; userName.textContent = user.email || user.username; }
     async function getCurrentUser() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) return null;
@@ -371,13 +322,10 @@
     }
     async function loadUserProfile(userId) {
         const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
-        if (error) { console.error('Ошибка загрузки профиля:', error); return null; }
+        if (error) { console.error(error); return null; }
         return data;
     }
 
-    // --------------------------------------------
-    // 3. АВТОРИЗАЦИЯ (существующая)
-    // --------------------------------------------
     async function login(email, password) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) { alert('Ошибка входа: ' + error.message); return; }
@@ -388,7 +336,7 @@
         checkAdmin();
         updateVisitCounter();
         loadStats();
-        renderAuthWidget(); // обновить виджет
+        renderAuthWidget();
     }
     async function register(email, password) {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -401,18 +349,12 @@
         showAuthForms();
         await loadTopics();
         adminPanel.style.display = 'none';
-        renderAuthWidget(); // обновить виджет
+        renderAuthWidget();
     }
 
-    // --------------------------------------------
-    // 4. ЗАГРУЗКА ТЕМ
-    // --------------------------------------------
     async function loadTopics() {
         topicsList.innerHTML = '<p style="color:#6b7280;">Загрузка тем...</p>';
-        const { data, error } = await supabaseClient
-            .from('topics')
-            .select('*, profiles(username)')
-            .order('created_at', { ascending: false });
+        const { data, error } = await supabaseClient.from('topics').select('*, profiles(username)').order('created_at', { ascending: false });
         if (error) { topicsList.innerHTML = '<p style="color:red;">Ошибка загрузки тем</p>'; console.error(error); return; }
         if (data.length === 0) { topicsList.innerHTML = '<p style="color:#6b7280;">Пока нет тем. Будьте первым!</p>'; return; }
         let html = '';
@@ -423,23 +365,15 @@
         });
         topicsList.innerHTML = html;
         document.querySelectorAll('.topic-card').forEach(el => {
-            el.addEventListener('click', () => {
-                const id = parseInt(el.dataset.id);
-                openTopicView(id);
-            });
+            el.addEventListener('click', () => openTopicView(parseInt(el.dataset.id)));
         });
     }
 
-    // --------------------------------------------
-    // 5. ТЕМЫ И КОММЕНТАРИИ (без изменений)
-    // --------------------------------------------
     function openCreateTopic() {
         if (!currentUser) { alert('Войдите, чтобы создать тему.'); return; }
         editingTopicId = null;
         modalTitle.textContent = 'Создать новую тему';
-        topicTitle.value = '';
-        topicCategory.value = 'Общее';
-        topicContent.value = '';
+        topicTitle.value = ''; topicCategory.value = 'Общее'; topicContent.value = '';
         topicModal.style.display = 'flex';
     }
     async function saveTopic() {
@@ -460,108 +394,82 @@
     }
     async function openTopicView(topicId) {
         currentTopicId = topicId;
-        const { data: topic, error: topicError } = await supabaseClient.from('topics').select('*, profiles(username)').eq('id', topicId).single();
-        if (topicError || !topic) { alert('Тема не найдена.'); return; }
+        const { data: topic, error } = await supabaseClient.from('topics').select('*, profiles(username)').eq('id', topicId).single();
+        if (error || !topic) { alert('Тема не найдена.'); return; }
         viewTopicTitle.textContent = topic.title;
         viewTopicContent.textContent = topic.content;
-        const { data: comments, error: commentsError } = await supabaseClient.from('comments').select('*, profiles(username), attachments(*)').eq('topic_id', topicId).order('created_at', { ascending: true });
-        let commentsHtml = '';
+        const { data: comments } = await supabaseClient.from('comments').select('*, profiles(username), attachments(*)').eq('topic_id', topicId).order('created_at', { ascending: true });
+        let html = '';
         if (comments && comments.length > 0) {
             comments.forEach(c => {
                 const author = c.profiles?.username || 'Неизвестный';
                 const date = new Date(c.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(c.created_at).toLocaleTimeString('ru-RU');
-                let attachmentsHtml = '';
-                if (c.attachments && c.attachments.length > 0) {
-                    c.attachments.forEach(att => {
-                        attachmentsHtml += `<span class="attachment">📎 <a href="${att.file_url}" target="_blank">${att.file_name}</a></span> `;
-                    });
-                }
-                commentsHtml += `<div class="comment"><div><strong>${author}</strong> <span class="meta">${date}</span></div><p>${c.content}</p>${attachmentsHtml}</div>`;
+                let att = '';
+                if (c.attachments) c.attachments.forEach(a => { att += `<span class="attachment">📎 <a href="${a.file_url}" target="_blank">${a.file_name}</a></span> `; });
+                html += `<div class="comment"><div><strong>${author}</strong> <span class="meta">${date}</span></div><p>${c.content}</p>${att}</div>`;
             });
-        } else {
-            commentsHtml = '<p style="color:#6b7280;">Нет комментариев. Будьте первым!</p>';
-        }
-        viewComments.innerHTML = commentsHtml;
+        } else html = '<p style="color:#6b7280;">Нет комментариев. Будьте первым!</p>';
+        viewComments.innerHTML = html;
         viewModal.style.display = 'flex';
-        commentInput.value = '';
-        fileInput.value = '';
+        commentInput.value = ''; fileInput.value = '';
     }
     async function addComment() {
         const content = commentInput.value.trim();
         if (!content) { alert('Введите текст комментария.'); return; }
         if (!currentUser) { alert('Войдите, чтобы комментировать.'); return; }
         const { data: comment, error } = await supabaseClient.from('comments').insert([{ content, author_id: currentUser.id, topic_id: currentTopicId }]).select().single();
-        if (error) { alert('Ошибка отправки комментария: ' + error.message); return; }
+        if (error) { alert('Ошибка: ' + error.message); return; }
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `comments/${currentTopicId}/${fileName}`;
-            const { error: uploadError } = await supabaseClient.storage.from('attachments').upload(filePath, file);
-            if (uploadError) { console.error('Ошибка загрузки файла:', uploadError); } else {
-                const { data: urlData } = supabaseClient.storage.from('attachments').getPublicUrl(filePath);
+            const ext = file.name.split('.').pop();
+            const path = `comments/${currentTopicId}/${Date.now()}.${ext}`;
+            const { error: upErr } = await supabaseClient.storage.from('attachments').upload(path, file);
+            if (!upErr) {
+                const { data: urlData } = supabaseClient.storage.from('attachments').getPublicUrl(path);
                 await supabaseClient.from('attachments').insert([{ file_url: urlData.publicUrl, file_name: file.name, file_size: file.size, comment_id: comment.id, uploaded_by: currentUser.id }]);
             }
         }
         await openTopicView(currentTopicId);
     }
 
-    // --------------------------------------------
-    // 6. АДМИН-ПАНЕЛЬ
-    // --------------------------------------------
     async function checkAdmin() {
         if (currentUserProfile && currentUserProfile.role === 'admin') {
             adminPanel.style.display = 'block';
             await loadUsers();
             await loadStats();
-        } else {
-            adminPanel.style.display = 'none';
-        }
+        } else adminPanel.style.display = 'none';
     }
     async function loadUsers() {
         const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-        if (error) { userList.innerHTML = '<li>Ошибка загрузки пользователей</li>'; return; }
+        if (error) { userList.innerHTML = '<li>Ошибка загрузки</li>'; return; }
         let html = '';
         data.forEach(user => {
             html += `<li><span>${user.username} (${user.role || 'user'})</span><select class="role-select" data-id="${user.id}" ${user.id === currentUser?.id ? 'disabled' : ''}>
-                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>Пользователь</option>
-                        <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Модератор</option>
-                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Администратор</option>
-                    </select></li>`;
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>Пользователь</option>
+                <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Модератор</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Администратор</option>
+            </select></li>`;
         });
         userList.innerHTML = html;
-        document.querySelectorAll('.role-select').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                const userId = e.target.dataset.id;
-                const newRole = e.target.value;
-                const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
-                if (error) { alert('Ошибка обновления роли: ' + error.message); } else { alert('Роль обновлена!'); }
+        document.querySelectorAll('.role-select').forEach(sel => {
+            sel.addEventListener('change', async e => {
+                const { error } = await supabaseClient.from('profiles').update({ role: e.target.value }).eq('id', e.target.dataset.id);
+                if (error) alert('Ошибка: ' + error.message); else alert('Роль обновлена!');
             });
         });
     }
-
-    // --------------------------------------------
-    // 7. СЧЕТЧИК И СТАТИСТИКА
-    // --------------------------------------------
     async function updateVisitCounter() {
         if (currentUserProfile?.role === 'admin') {
-            const { data } = await supabaseClient.from('site_stats').select('visit_count').single();
-            if (data) visitCounter.textContent = data.visit_count;
+            const { data } = await supabaseClient.rpc('get_total_visit_count');
+            if (data) visitCounter.textContent = data;
             return;
         }
         const { data, error } = await supabaseClient.rpc('increment_visit_counter');
         if (error) {
-            const { data: stats } = await supabaseClient.from('site_stats').select('visit_count').single();
-            if (stats) {
-                const newCount = (stats.visit_count || 0) + 1;
-                await supabaseClient.from('site_stats').update({ visit_count: newCount }).eq('id', 1);
-                visitCounter.textContent = newCount;
-            }
-        } else {
-            visitCounter.textContent = data;
-        }
+            const { data: s } = await supabaseClient.rpc('get_total_visit_count');
+            if (s) visitCounter.textContent = s;
+        } else visitCounter.textContent = data;
     }
-
     async function loadStats() {
         try {
             const { data: total } = await supabaseClient.rpc('get_total_visitors');
@@ -574,31 +482,17 @@
             document.getElementById('stat-month').textContent = month || 0;
             document.getElementById('stat-week').textContent = week || 0;
             document.getElementById('stat-today').textContent = today || 0;
-        } catch (error) {
-            console.error('Ошибка загрузки статистики:', error);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // --------------------------------------------
-    // 8. ЗАПИСЬ ПОСЕЩЕНИЙ (на всех страницах)
-    // --------------------------------------------
     async function trackVisit() {
-        let visitorId = localStorage.getItem('visitor_id');
-        if (!visitorId) {
-            visitorId = crypto.randomUUID();
-            localStorage.setItem('visitor_id', visitorId);
-        }
+        let vid = localStorage.getItem('visitor_id');
+        if (!vid) { vid = crypto.randomUUID(); localStorage.setItem('visitor_id', vid); }
         const user = await getCurrentUser();
-        const userId = user?.id || null;
-        const { error } = await supabaseClient
-            .from('visits')
-            .insert([{ visitor_id: visitorId, user_id: userId, page: window.location.pathname }]);
-        if (error) console.error('Ошибка записи посещения:', error);
+        const { error } = await supabaseClient.from('visits').insert([{ visitor_id: vid, user_id: user?.id || null, page: window.location.pathname }]);
+        if (error) console.error(error);
     }
 
-    // --------------------------------------------
-    // 9. ПРОФИЛЬ
-    // --------------------------------------------
     async function openProfile() {
         if (!currentUser) return;
         const profile = await loadUserProfile(currentUser.id);
@@ -606,21 +500,15 @@
         const newUsername = prompt('Изменить имя пользователя:', profile.username);
         if (newUsername && newUsername !== profile.username) {
             const { error } = await supabaseClient.from('profiles').update({ username: newUsername }).eq('id', currentUser.id);
-            if (error) { alert('Ошибка обновления: ' + error.message); } else {
-                currentUserProfile = await loadUserProfile(currentUser.id);
-                showUserInfo(currentUser);
-                alert('Имя обновлено!');
-                renderAuthWidget(); // обновить виджет
-            }
+            if (error) alert('Ошибка: ' + error.message);
+            else { currentUserProfile = await loadUserProfile(currentUser.id); showUserInfo(currentUser); alert('Имя обновлено!'); renderAuthWidget(); }
         }
     }
 
-    // --------------------------------------------
-    // 10. ВИДЖЕТ АВТОРИЗАЦИИ (НОВЫЙ)
-    // --------------------------------------------
     function renderAuthWidget() {
         const widget = document.getElementById('forumAuthWidget');
         if (!widget) return;
+        const adminLink = document.getElementById('forumAdminPanelLink');
         if (!currentUser) {
             widget.innerHTML = `
                 <a href="login.html" class="auth-btn"><i class="fas fa-sign-in-alt"></i> Войти</a>
@@ -635,43 +523,32 @@
                 <a href="profile.html" class="auth-btn" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
                 <button id="logoutBtnWidget" class="auth-btn auth-btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
-            document.getElementById('logoutBtnWidget').addEventListener('click', async function() {
-                await logout();
-            });
+            document.getElementById('logoutBtnWidget').addEventListener('click', async () => { await logout(); });
         }
+        const isAdmin = currentUser && currentUserProfile && currentUserProfile.role === 'admin';
+        if (adminLink) adminLink.style.display = isAdmin ? 'inline-flex' : 'none';
     }
 
-    // --------------------------------------------
-    // 11. ОБРАБОТЧИКИ СОБЫТИЙ
-    // --------------------------------------------
     loginBtn.addEventListener('click', () => {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        if (email && password) login(email, password);
-        else alert('Введите email и пароль.');
+        const e = emailInput.value.trim(), p = passwordInput.value.trim();
+        if (e && p) login(e, p); else alert('Введите email и пароль.');
     });
     registerBtn.addEventListener('click', () => {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        if (email && password && password.length >= 6) register(email, password);
-        else alert('Введите email и пароль (мин. 6 символов).');
+        const e = emailInput.value.trim(), p = passwordInput.value.trim();
+        if (e && p && p.length >= 6) register(e, p); else alert('Введите email и пароль (мин. 6 символов).');
     });
-    // Переопределяем logoutBtn из старой секции, чтобы использовать новый logout
-    logoutBtn.addEventListener('click', () => { logout(); });
+    logoutBtn.addEventListener('click', () => logout());
     profileBtn.addEventListener('click', openProfile);
     newTopicBtn.addEventListener('click', openCreateTopic);
-    modalCloseBtn.addEventListener('click', () => { topicModal.style.display = 'none'; });
+    modalCloseBtn.addEventListener('click', () => topicModal.style.display = 'none');
     modalSaveBtn.addEventListener('click', saveTopic);
-    viewModalCloseBtn.addEventListener('click', () => { viewModal.style.display = 'none'; });
+    viewModalCloseBtn.addEventListener('click', () => viewModal.style.display = 'none');
     commentSubmitBtn.addEventListener('click', addComment);
-    window.addEventListener('click', (e) => {
+    window.addEventListener('click', e => {
         if (e.target === topicModal) topicModal.style.display = 'none';
         if (e.target === viewModal) viewModal.style.display = 'none';
     });
 
-    // --------------------------------------------
-    // 12. ЗАПУСК
-    // --------------------------------------------
     (async function init() {
         const user = await getCurrentUser();
         if (user) {
@@ -679,13 +556,11 @@
             currentUserProfile = await loadUserProfile(user.id);
             showUserInfo(user);
             await checkAdmin();
-        } else {
-            showAuthForms();
-        }
+        } else showAuthForms();
         await trackVisit();
         await loadTopics();
         await updateVisitCounter();
-        renderAuthWidget(); // отобразить виджет
+        renderAuthWidget();
     })();
 </script>
 </body>
