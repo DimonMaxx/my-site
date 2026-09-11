@@ -22,7 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install gspread pandas
+          pip install gspread pandas requests
+
+      - name: Sync from Yandex Disk
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python yandex_disk_sync.py
 
       - name: Run script
         env:
@@ -36,3 +41,4 @@ jobs:
           file_pattern: "_content/*.json _content/**/*.md"
           commit_user_name: "GitHub Actions Bot"
           commit_user_email: "actions@github.com"
+          skip_dirty_check: false
