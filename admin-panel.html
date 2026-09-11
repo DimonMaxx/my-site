@@ -93,7 +93,6 @@
 
         .main-layout { display: flex; flex: 1; }
 
-        /* ===== БОКОВОЕ МЕНЮ ===== */
         .sidebar {
             width: 240px;
             background: #f8fafc;
@@ -136,7 +135,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* ===== ОБЛАСТЬ КОНТЕНТА ===== */
         .content-area {
             flex: 1;
             padding: 25px 30px;
@@ -155,7 +153,6 @@
         }
         .section-title i { color: #8b5cf6; }
 
-        /* ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
         .toolbar {
             display: flex;
             gap: 10px;
@@ -182,34 +179,6 @@
         .toolbar .spacer { flex: 1; }
         .selected-info { color: #8b5cf6; font-weight: 700; font-size: 14px; }
 
-        /* Баннер токена */
-        .token-banner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            padding: 12px 18px;
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #92400e;
-        }
-        .token-banner.hidden { display: none; }
-        .token-banner button {
-            background: #f59e0b;
-            color: white;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* ===== ТАБЛИЦА ===== */
         .content-table-wrapper {
             overflow-x: auto;
             border-radius: 12px;
@@ -314,6 +283,34 @@
             font-weight: 600;
         }
 
+        /* Пользователи */
+        .user-role-select {
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid #d1d5db;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            background: white;
+            cursor: pointer;
+        }
+        .user-role-select:disabled {
+            background: #f1f5f9;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+        .role-admin { background: #fee2e2; color: #991b1b; }
+        .role-moderator { background: #fef3c7; color: #92400e; }
+        .role-user { background: #dbeafe; color: #1e40af; }
+
         @media (max-width: 900px) {
             .main-layout { flex-direction: column; }
             .sidebar { width: 100%; border-right: none; border-bottom: 2px solid #eef2ff; display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; }
@@ -332,8 +329,9 @@
             <span class="badge" id="adminName"></span>
         </div>
         <div class="header-actions">
+            <a href="admin/" class="btn-secondary"><i class="fas fa-cog"></i> Редактор</a>
             <a href="index.html" class="btn-primary"><i class="fas fa-home"></i> На сайт</a>
-            <button class="btn-secondary" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+            <button class="btn-danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
         </div>
     </header>
 
@@ -350,19 +348,12 @@
             <button class="nav-link" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</button>
 
             <div class="nav-divider">Управление</div>
+            <button class="nav-link" data-tab="users"><i class="fas fa-users"></i> Пользователи</button>
             <button class="nav-link" data-tab="downloads"><i class="fas fa-download"></i> История скачиваний</button>
             <button class="nav-link" data-tab="stats"><i class="fas fa-chart-simple"></i> Статистика</button>
         </aside>
 
         <div class="content-area">
-
-            <!-- Баннер токена -->
-            <div class="token-banner hidden" id="tokenBanner">
-                <span><i class="fas fa-key"></i> Для удаления контента нужен GitHub Personal Access Token.</span>
-                <button onclick="askToken()">Ввести токен</button>
-            </div>
-
-            <!-- Панель управления -->
             <div class="toolbar" id="toolbar">
                 <button class="btn-secondary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Обновить</button>
                 <span class="spacer"></span>
@@ -370,7 +361,6 @@
                 <button class="btn-danger" id="deleteSelectedBtn" disabled><i class="fas fa-trash"></i> Удалить выбранные</button>
             </div>
 
-            <!-- Контент вкладок -->
             <div id="tabContent">
                 <h2 class="section-title" id="sectionTitle"><i class="fas fa-spinner fa-spin"></i> Загрузка...</h2>
                 <div class="content-table-wrapper" id="tableWrapper">
@@ -380,7 +370,6 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -394,7 +383,6 @@
     const GITHUB_REPO = 'my-site';
     const DELETE_WORKFLOW = 'delete-content.yml';
 
-    // Разделы контента
     const SECTIONS = {
         programs: { file: '_content/programs.json', label: 'Программы', icon: 'fa-code', columns: ['title', 'description', 'version', 'size', 'download_link'] },
         books:    { file: '_content/books.json',    label: 'Книги',     icon: 'fa-book', columns: ['title', 'author', 'description', 'format', 'download_link'] },
@@ -416,13 +404,11 @@
     let currentTab = 'programs';
     let currentUser = null;
     let currentProfile = null;
-    let sectionData = {};        // { section: [items] }
-    let tableStates = {};        // { section: { sortKey, sortDir, searches } }
+    let sectionData = {};
+    let tableStates = {};
     let downloadsData = [];
+    let usersData = [];
 
-    // ============================================================
-    // Авторизация
-    // ============================================================
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) { window.location.href = 'login.html'; return; }
@@ -436,7 +422,6 @@
         }
         currentProfile = profile;
         document.getElementById('adminName').textContent = profile.username || currentUser.email;
-        updateTokenBanner();
         await loadSection('programs');
     }
 
@@ -445,12 +430,11 @@
         window.location.href = 'index.html';
     });
 
-    // ============================================================
-    // Загрузка разделов
-    // ============================================================
+    // ===== Загрузка разделов =====
     async function loadSection(section) {
         if (section === 'downloads') { await loadDownloads(); return; }
         if (section === 'stats') { await loadStats(); return; }
+        if (section === 'users') { await loadUsers(); return; }
 
         const info = SECTIONS[section];
         if (!info) return;
@@ -458,6 +442,9 @@
         document.getElementById('sectionTitle').innerHTML = `<i class="fas ${info.icon}"></i> ${info.label}`;
         document.getElementById('tableBody').innerHTML = `<tr><td colspan="20" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>`;
         document.getElementById('tableHead').innerHTML = '';
+        document.getElementById('tableWrapper').style.display = 'block';
+        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('deleteSelectedBtn').style.display = 'inline-flex';
 
         try {
             const resp = await fetch(info.file + '?t=' + Date.now());
@@ -468,15 +455,10 @@
             sectionData[section] = [];
         }
 
-        if (!tableStates[section]) {
-            tableStates[section] = { sortKey: null, sortDir: 'asc', searches: {} };
-        }
+        if (!tableStates[section]) tableStates[section] = { sortKey: null, sortDir: 'asc', searches: {} };
         renderContentTable(section);
     }
 
-    // ============================================================
-    // Рендер таблицы контента
-    // ============================================================
     function renderContentTable(section) {
         const info = SECTIONS[section];
         const state = tableStates[section];
@@ -491,7 +473,6 @@
                 return v !== undefined && String(v).toLowerCase().includes(q);
             });
         });
-
         if (state.sortKey) {
             const key = state.sortKey;
             const dir = state.sortDir === 'asc' ? 1 : -1;
@@ -499,23 +480,18 @@
                 const va = a[key], vb = b[key];
                 if (va === undefined) return 1;
                 if (vb === undefined) return -1;
-                if (!isNaN(va) && !isNaN(vb) && va !== '' && vb !== '') {
-                    return (parseFloat(va) - parseFloat(vb)) * dir;
-                }
+                if (!isNaN(va) && !isNaN(vb) && va !== '' && vb !== '') return (parseFloat(va) - parseFloat(vb)) * dir;
                 return String(va).localeCompare(String(vb), 'ru') * dir;
             });
         }
 
-        // Заголовок
         const columns = info.columns;
         let headHtml = '<tr>';
-        headHtml += `<th class="center"><input type="checkbox" id="selectAllCheckbox" title="Выбрать все"></th>`;
+        headHtml += `<th class="center"><input type="checkbox" id="selectAllCheckbox"></th>`;
         columns.forEach(col => {
             const isSorted = state.sortKey === col;
             let icon = '<i class="fas fa-sort sort-icon"></i>';
-            if (isSorted) icon = state.sortDir === 'asc'
-                ? '<i class="fas fa-sort-up sort-icon active"></i>'
-                : '<i class="fas fa-sort-down sort-icon active"></i>';
+            if (isSorted) icon = state.sortDir === 'asc' ? '<i class="fas fa-sort-up sort-icon active"></i>' : '<i class="fas fa-sort-down sort-icon active"></i>';
             headHtml += `<th>
                 <div class="th-label" data-sort-key="${col}">${COLUMN_LABELS[col] || col} ${icon}</div>
                 <input type="text" class="col-search" data-search-key="${col}" placeholder="Поиск..." value="${escapeAttr(state.searches[col] || '')}">
@@ -524,7 +500,6 @@
         headHtml += '</tr>';
         document.getElementById('tableHead').innerHTML = headHtml;
 
-        // Тело
         const tbody = document.getElementById('tableBody');
         if (filtered.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${columns.length + 1}" class="empty-block">Ничего не найдено</td></tr>`;
@@ -533,7 +508,7 @@
         }
 
         let bodyHtml = '';
-        filtered.forEach((item, idx) => {
+        filtered.forEach(item => {
             const rowIdx = data.indexOf(item);
             bodyHtml += `<tr data-row-index="${rowIdx}">`;
             bodyHtml += `<td class="center checkbox-cell"><input type="checkbox" class="row-checkbox" data-row-index="${rowIdx}"></td>`;
@@ -552,7 +527,6 @@
         });
         tbody.innerHTML = bodyHtml;
 
-        // Сортировка
         document.querySelectorAll('#tableHead .th-label').forEach(el => {
             el.addEventListener('click', function() {
                 const key = this.dataset.sortKey;
@@ -561,8 +535,6 @@
                 renderContentTable(section);
             });
         });
-
-        // Поиск
         document.querySelectorAll('#tableHead .col-search').forEach(input => {
             input.addEventListener('input', function() {
                 const key = this.dataset.searchKey;
@@ -570,32 +542,23 @@
                 clearTimeout(input._t);
                 input._t = setTimeout(() => {
                     renderContentTable(section);
-                    const newInput = document.querySelector(`#tableHead .col-search[data-search-key="${key}"]`);
-                    if (newInput) { newInput.focus(); newInput.setSelectionRange(newInput.value.length, newInput.value.length); }
+                    const ni = document.querySelector(`#tableHead .col-search[data-search-key="${key}"]`);
+                    if (ni) { ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length); }
                 }, 250);
             });
         });
-
-        // Чекбоксы
         const selectAll = document.getElementById('selectAllCheckbox');
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
-                updateDeleteButton();
-            });
-        }
-        document.querySelectorAll('.row-checkbox').forEach(cb => {
-            cb.addEventListener('change', updateDeleteButton);
+        if (selectAll) selectAll.addEventListener('change', function() {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+            updateDeleteButton();
         });
-
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.addEventListener('change', updateDeleteButton));
         updateDeleteButton();
     }
 
     function getSelectedRows() {
         const rows = [];
-        document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
-            rows.push(parseInt(cb.dataset.rowIndex));
-        });
+        document.querySelectorAll('.row-checkbox:checked').forEach(cb => rows.push(parseInt(cb.dataset.rowIndex)));
         return rows;
     }
 
@@ -603,28 +566,24 @@
         const selected = getSelectedRows();
         const btn = document.getElementById('deleteSelectedBtn');
         const info = document.getElementById('selectedInfo');
-        if (selected.length > 0 && (currentTab !== 'downloads' && currentTab !== 'stats')) {
+        const isContentTab = SECTIONS[currentTab];
+        if (selected.length > 0 && isContentTab) {
             btn.disabled = false;
-            btn.style.display = 'inline-flex';
             info.textContent = `Выбрано: ${selected.length}`;
             info.style.display = 'inline';
         } else {
             btn.disabled = true;
-            if (currentTab === 'downloads' || currentTab === 'stats') btn.style.display = 'none';
-            else btn.style.display = 'inline-flex';
             info.style.display = 'none';
         }
     }
 
-    // ============================================================
-    // История скачиваний
-    // ============================================================
+    // ===== История скачиваний =====
     async function loadDownloads() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-download"></i> История скачиваний`;
         document.getElementById('tableBody').innerHTML = `<tr><td colspan="10" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>`;
         document.getElementById('tableHead').innerHTML = '';
-        document.getElementById('toolbar').querySelector('.spacer').style.display = 'none';
-        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('tableWrapper').style.display = 'block';
+        document.getElementById('toolbar').style.display = 'none';
 
         const { data, error } = await supabaseClient
             .from('download_logs').select('*').order('downloaded_at', { ascending: false });
@@ -634,58 +593,96 @@
         }
         downloadsData = data || [];
 
-        let headHtml = '<tr>';
-        headHtml += `<th class="center"><input type="checkbox" id="selectAllCheckbox"></th>`;
-        ['file_name', 'username', 'downloaded_at'].forEach(col => {
-            headHtml += `<th><div class="th-label">${COLUMN_LABELS[col]}</div></th>`;
-        });
-        headHtml += '</tr>';
+        let headHtml = '<tr><th>Файл</th><th>Пользователь</th><th>Дата и время</th></tr>';
         document.getElementById('tableHead').innerHTML = headHtml;
 
         const tbody = document.getElementById('tableBody');
         if (downloadsData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="empty-block">Нет записей</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Нет записей</td></tr>`;
             return;
         }
         let bodyHtml = '';
         downloadsData.forEach(log => {
             const d = new Date(log.downloaded_at);
             const dateStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU');
-            bodyHtml += `<tr data-log-id="${log.id}">
-                <td class="center checkbox-cell"><input type="checkbox" class="log-checkbox" data-log-id="${log.id}"></td>
+            bodyHtml += `<tr>
                 <td>${escapeHtml(log.file_name || log.file_id || '')}</td>
                 <td>${escapeHtml(log.username || '')}</td>
                 <td>${dateStr}</td>
             </tr>`;
         });
         tbody.innerHTML = bodyHtml;
+    }
 
-        // Убираем чекбоксы из истории — здесь удаление через отдельный workflow не нужно
-        // Но можно оставить для совместимости
-        document.querySelectorAll('.log-checkbox').forEach(cb => {
-            cb.addEventListener('change', () => {
-                const selected = document.querySelectorAll('.log-checkbox:checked').length;
-                const info = document.getElementById('selectedInfo');
-                if (selected > 0) {
-                    info.textContent = `Выбрано: ${selected}`;
-                    info.style.display = 'inline';
+    // ===== Пользователи =====
+    async function loadUsers() {
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-users"></i> Пользователи`;
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="10" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>`;
+        document.getElementById('tableHead').innerHTML = '';
+        document.getElementById('tableWrapper').style.display = 'block';
+        document.getElementById('toolbar').style.display = 'none';
+
+        const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+        if (error) {
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="10" class="empty-block">Ошибка: ${error.message}</td></tr>`;
+            return;
+        }
+        usersData = data || [];
+
+        document.getElementById('tableHead').innerHTML = '<tr><th>#</th><th>Пользователь</th><th>Полное имя</th><th>Роль</th><th>Дата регистрации</th></tr>';
+
+        const tbody = document.getElementById('tableBody');
+        if (usersData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-block">Нет пользователей</td></tr>`;
+            return;
+        }
+        let bodyHtml = '';
+        usersData.forEach((user, idx) => {
+            const role = user.role || 'user';
+            const roleLabel = { user: 'Пользователь', moderator: 'Модератор', admin: 'Администратор' }[role];
+            const roleClass = { user: 'role-user', moderator: 'role-moderator', admin: 'role-admin' }[role];
+            const created = user.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : '—';
+            const isMe = user.id === currentUser?.id;
+            bodyHtml += `<tr>
+                <td>${idx + 1}</td>
+                <td><span class="role-badge ${roleClass}">${roleLabel}</span> <strong>${escapeHtml(user.username || '—')}</strong></td>
+                <td>${escapeHtml(user.full_name || '—')}</td>
+                <td>
+                    <select class="user-role-select" data-id="${user.id}" ${isMe ? 'disabled' : ''}>
+                        <option value="user" ${role === 'user' ? 'selected' : ''}>Пользователь</option>
+                        <option value="moderator" ${role === 'moderator' ? 'selected' : ''}>Модератор</option>
+                        <option value="admin" ${role === 'admin' ? 'selected' : ''}>Администратор</option>
+                    </select>
+                </td>
+                <td>${created}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = bodyHtml;
+
+        document.querySelectorAll('.user-role-select').forEach(sel => {
+            sel.addEventListener('change', async function() {
+                const userId = this.dataset.id;
+                const newRole = this.value;
+                const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
+                if (error) {
+                    alert('Ошибка: ' + error.message);
                 } else {
-                    info.style.display = 'none';
+                    alert('Роль обновлена!');
+                    await loadUsers();
                 }
             });
         });
     }
 
-    // ============================================================
-    // Статистика
-    // ============================================================
+    // ===== Статистика =====
     async function loadStats() {
-        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика посещений`;
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика`;
         document.getElementById('tableHead').innerHTML = '';
         document.getElementById('tableBody').innerHTML = '';
-        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('toolbar').style.display = 'none';
 
         const wrapper = document.getElementById('tableWrapper');
+        wrapper.style.display = 'block';
         wrapper.innerHTML = '<div class="stats-grid" id="statsGrid"><div class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div></div>';
 
         try {
@@ -694,9 +691,14 @@
             const { data: month } = await supabaseClient.rpc('get_visitors_last_month');
             const { data: week } = await supabaseClient.rpc('get_visitors_last_week');
             const { data: today } = await supabaseClient.rpc('get_visitors_today');
+            const { data: counter } = await supabaseClient.rpc('get_total_visit_count');
 
             document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><div class="stat-value">${total || 0}</div><div class="stat-label">Всего посетителей</div></div>
+                <div class="stat-card">
+                    <div class="stat-value">${counter || 0}</div>
+                    <div class="stat-label">Счётчик посещений (всего)</div>
+                </div>
+                <div class="stat-card"><div class="stat-value">${total || 0}</div><div class="stat-label">Уникальных посетителей</div></div>
                 <div class="stat-card"><div class="stat-value">${year || 0}</div><div class="stat-label">За год</div></div>
                 <div class="stat-card"><div class="stat-value">${month || 0}</div><div class="stat-label">За месяц</div></div>
                 <div class="stat-card"><div class="stat-value">${week || 0}</div><div class="stat-label">За неделю</div></div>
@@ -707,41 +709,23 @@
         }
     }
 
-    // ============================================================
-    // Токен GitHub
-    // ============================================================
+    // ===== Токен GitHub =====
     function getToken() { return localStorage.getItem('github_token') || ''; }
     function askToken() {
         const t = prompt('Вставьте GitHub Personal Access Token (права repo и workflow):');
-        if (t && t.trim()) {
-            localStorage.setItem('github_token', t.trim());
-            updateTokenBanner();
-        }
-    }
-    function updateTokenBanner() {
-        const banner = document.getElementById('tokenBanner');
-        if (getToken()) banner.classList.add('hidden');
-        else banner.classList.remove('hidden');
+        if (t && t.trim()) localStorage.setItem('github_token', t.trim());
     }
 
-    // ============================================================
-    // Удаление контента
-    // ============================================================
+    // ===== Удаление =====
     async function deleteSelected() {
         const token = getToken();
         if (!token) { askToken(); return; }
-
         const rows = getSelectedRows();
         if (rows.length === 0) return;
-
         const section = currentTab;
         const data = sectionData[section] || [];
-        const items = rows.map(idx => ({
-            section: section,
-            title: data[idx]?.title || ''
-        }));
-
-        if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты для обновления.`)) return;
+        const items = rows.map(idx => ({ section: section, title: data[idx]?.title || '' }));
+        if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты.`)) return;
 
         const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${DELETE_WORKFLOW}/dispatches`;
         try {
@@ -752,24 +736,15 @@
                     'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    ref: 'main',
-                    inputs: { delete_list: JSON.stringify(items) }
-                })
+                body: JSON.stringify({ ref: 'main', inputs: { delete_list: JSON.stringify(items) } })
             });
-            if (resp.status === 204) {
-                alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
-            } else {
-                alert('Ошибка GitHub API: ' + resp.status + '\n' + await resp.text());
-            }
+            if (resp.status === 204) alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
+            else alert('Ошибка GitHub API: ' + resp.status + '\n' + await resp.text());
         } catch (e) {
             alert('Ошибка: ' + e.message);
         }
     }
 
-    // ============================================================
-    // Вспомогательные
-    // ============================================================
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -780,27 +755,31 @@
         return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // ============================================================
-    // Обработчики
-    // ============================================================
     document.querySelectorAll('.sidebar .nav-link').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentTab = this.dataset.tab;
-            document.getElementById('toolbar').style.display = (currentTab === 'downloads' || currentTab === 'stats') ? 'none' : 'flex';
-            document.getElementById('tableWrapper').style.display = (currentTab === 'stats') ? 'none' : 'block';
-
+            // Восстанавливаем таблицу, если до этого была статистика/пользователи
+            const wrapper = document.getElementById('tableWrapper');
+            if (!wrapper.querySelector('table')) {
+                wrapper.innerHTML = `<table class="content-table" id="contentTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>`;
+            }
             if (currentTab === 'downloads') loadDownloads();
             else if (currentTab === 'stats') loadStats();
+            else if (currentTab === 'users') loadUsers();
             else loadSection(currentTab);
         });
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', () => loadSection(currentTab));
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+        if (currentTab === 'downloads') loadDownloads();
+        else if (currentTab === 'users') loadUsers();
+        else if (currentTab === 'stats') loadStats();
+        else loadSection(currentTab);
+    });
     document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
 
-    // Запуск
     checkAuth();
 </script>
 </body>
