@@ -57,16 +57,9 @@
             border-radius: 30px;
             transition: 0.2s;
         }
-        .admin-panel-link:hover {
-            background: #7c3aed;
-            transform: translateY(-2px);
-        }
+        .admin-panel-link:hover { background: #7c3aed; transform: translateY(-2px); }
         h1 { font-size: 28px; margin-bottom: 20px; color: #0a58ca; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        .auth-widget {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .auth-widget { display: flex; align-items: center; gap: 10px; }
         .auth-widget .auth-btn {
             padding: 6px 16px;
             border-radius: 30px;
@@ -89,12 +82,10 @@
         .auth-widget .auth-btn-danger:hover { background: #b91c1c; }
         .auth-widget .user-info { display: flex; align-items: center; gap: 8px; }
         .auth-widget .user-avatar {
-            width: 30px; height: 30px;
-            border-radius: 50%;
+            width: 30px; height: 30px; border-radius: 50%;
             background: #e2e8f0;
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            align-items: center; justify-content: center;
             overflow: hidden;
         }
         .auth-widget .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -157,19 +148,6 @@
             display: inline-block; background: #e5e7eb; padding: 4px 12px;
             border-radius: 30px; font-size: 13px; margin-top: 6px;
         }
-        .admin-panel {
-            background: #fef3c7; border: 1px solid #f59e0b;
-            border-radius: 12px; padding: 20px; margin-top: 30px;
-        }
-        .admin-panel h3 { color: #92400e; }
-        .user-list { list-style: none; }
-        .user-list li {
-            display: flex; justify-content: space-between;
-            padding: 8px 0; border-bottom: 1px solid #e5e7eb;
-        }
-        .user-list .role-select {
-            padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db;
-        }
         @media (max-width: 768px) {
             .container { padding: 15px; }
             #auth-section { flex-direction: column; align-items: stretch; }
@@ -213,26 +191,6 @@
             <button id="new-topic-btn" style="background:#0a58ca; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">➕ Новая тема</button>
         </div>
         <div id="topics-list"><p style="color:#6b7280;">Загрузка тем...</p></div>
-    </div>
-
-    <div id="admin-panel" class="admin-panel" style="display: none;">
-        <h3>👑 Панель администратора</h3>
-        <p><strong>Счетчик посещений (всего):</strong> <span id="visit-counter">0</span></p>
-        <div id="stats-section" style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:20px;">
-            <h4>📊 Статистика посещений (уникальные посетители)</h4>
-            <p><strong>Всего:</strong> <span id="stat-total">0</span></p>
-            <p><strong>За год:</strong> <span id="stat-year">0</span></p>
-            <p><strong>За месяц:</strong> <span id="stat-month">0</span></p>
-            <p><strong>За неделю:</strong> <span id="stat-week">0</span></p>
-            <p><strong>За сегодня:</strong> <span id="stat-today">0</span></p>
-        </div>
-        <div style="margin: 15px 0 10px;">
-            <a href="admin-panel.html" style="display:inline-block; background:#8b5cf6; color:white; padding:12px 24px; border-radius:60px; font-weight:700; font-size:16px; text-decoration:none; box-shadow:0 4px 14px rgba(139,92,246,0.4);">
-                <i class="fas fa-shield-alt"></i> Открыть админ-панель
-            </a>
-        </div>
-        <h4>Список пользователей</h4>
-        <ul id="user-list" class="user-list"><li>Загрузка пользователей...</li></ul>
     </div>
 
     <div id="topic-modal" class="modal">
@@ -294,9 +252,6 @@
     const passwordInput = document.getElementById('password-input');
     const topicsList = document.getElementById('topics-list');
     const newTopicBtn = document.getElementById('new-topic-btn');
-    const adminPanel = document.getElementById('admin-panel');
-    const userList = document.getElementById('user-list');
-    const visitCounter = document.getElementById('visit-counter');
     const topicModal = document.getElementById('topic-modal');
     const modalTitle = document.getElementById('modal-title');
     const topicTitle = document.getElementById('topic-title');
@@ -333,9 +288,7 @@
         currentUserProfile = await loadUserProfile(currentUser.id);
         showUserInfo(currentUser);
         await loadTopics();
-        checkAdmin();
         updateVisitCounter();
-        loadStats();
         renderAuthWidget();
     }
     async function register(email, password) {
@@ -348,7 +301,6 @@
         currentUser = null; currentUserProfile = null;
         showAuthForms();
         await loadTopics();
-        adminPanel.style.display = 'none';
         renderAuthWidget();
     }
 
@@ -432,57 +384,10 @@
         await openTopicView(currentTopicId);
     }
 
-    async function checkAdmin() {
-        if (currentUserProfile && currentUserProfile.role === 'admin') {
-            adminPanel.style.display = 'block';
-            await loadUsers();
-            await loadStats();
-        } else adminPanel.style.display = 'none';
-    }
-    async function loadUsers() {
-        const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-        if (error) { userList.innerHTML = '<li>Ошибка загрузки</li>'; return; }
-        let html = '';
-        data.forEach(user => {
-            html += `<li><span>${user.username} (${user.role || 'user'})</span><select class="role-select" data-id="${user.id}" ${user.id === currentUser?.id ? 'disabled' : ''}>
-                <option value="user" ${user.role === 'user' ? 'selected' : ''}>Пользователь</option>
-                <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Модератор</option>
-                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Администратор</option>
-            </select></li>`;
-        });
-        userList.innerHTML = html;
-        document.querySelectorAll('.role-select').forEach(sel => {
-            sel.addEventListener('change', async e => {
-                const { error } = await supabaseClient.from('profiles').update({ role: e.target.value }).eq('id', e.target.dataset.id);
-                if (error) alert('Ошибка: ' + error.message); else alert('Роль обновлена!');
-            });
-        });
-    }
     async function updateVisitCounter() {
-        if (currentUserProfile?.role === 'admin') {
-            const { data } = await supabaseClient.rpc('get_total_visit_count');
-            if (data) visitCounter.textContent = data;
-            return;
-        }
-        const { data, error } = await supabaseClient.rpc('increment_visit_counter');
-        if (error) {
-            const { data: s } = await supabaseClient.rpc('get_total_visit_count');
-            if (s) visitCounter.textContent = s;
-        } else visitCounter.textContent = data;
-    }
-    async function loadStats() {
-        try {
-            const { data: total } = await supabaseClient.rpc('get_total_visitors');
-            const { data: year } = await supabaseClient.rpc('get_visitors_last_year');
-            const { data: month } = await supabaseClient.rpc('get_visitors_last_month');
-            const { data: week } = await supabaseClient.rpc('get_visitors_last_week');
-            const { data: today } = await supabaseClient.rpc('get_visitors_today');
-            document.getElementById('stat-total').textContent = total || 0;
-            document.getElementById('stat-year').textContent = year || 0;
-            document.getElementById('stat-month').textContent = month || 0;
-            document.getElementById('stat-week').textContent = week || 0;
-            document.getElementById('stat-today').textContent = today || 0;
-        } catch (e) { console.error(e); }
+        if (currentUserProfile?.role === 'admin') return; // админ не увеличивает счётчик
+        const { error } = await supabaseClient.rpc('increment_visit_counter');
+        if (error) console.error(error);
     }
 
     async function trackVisit() {
@@ -555,7 +460,6 @@
             currentUser = user;
             currentUserProfile = await loadUserProfile(user.id);
             showUserInfo(user);
-            await checkAdmin();
         } else showAuthForms();
         await trackVisit();
         await loadTopics();
