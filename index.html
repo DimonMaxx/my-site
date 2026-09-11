@@ -397,6 +397,7 @@
     const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const YANDEX_FOLDER_URL = 'https://disk.yandex.ru/d/zMxF4nXHPkIVCQ';
     let currentUser = null;
     let currentProfile = null;
 
@@ -502,6 +503,7 @@
             el.textContent = downloadCounts[el.dataset.countFileId] || 0;
         });
     }
+
     async function incrementDownload(fileId, downloadUrl, fileName) {
         if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
         try {
@@ -509,17 +511,47 @@
             if (error) throw error;
             downloadCounts[fileId] = data;
             updateDownloadCountsDisplay();
+
             const { error: logError } = await supabaseClient.from('download_logs').insert([{
                 file_id: fileId, file_name: fileName || null,
                 user_id: currentUser.id,
                 username: currentProfile?.username || currentUser.email
             }]);
-            if (logError) console.error(logError);
-            if (downloadUrl && downloadUrl !== '#') window.open(downloadUrl, '_blank');
+            if (logError) console.error('Ошибка записи лога скачивания:', logError);
+
+            // Открываем конкретный файл через Edge Function
+            if (downloadUrl && downloadUrl !== '#') {
+                try {
+                    const parsed = new URL(downloadUrl);
+                    const path = parsed.searchParams.get('path');
+                    if (path) {
+                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
+                        window.open(proxyUrl, '_blank');
+                    } else {
+                        window.open(downloadUrl, '_blank');
+                    }
+                } catch (e) {
+                    console.error('Ошибка парсинга URL:', e);
+                    window.open(downloadUrl, '_blank');
+                }
+            }
         } catch (e) {
-            console.error(e);
-            alert('Не удалось обновить счётчик.');
-            if (downloadUrl && downloadUrl !== '#') window.open(downloadUrl, '_blank');
+            console.error('Ошибка увеличения счётчика:', e);
+            alert('Не удалось обновить счётчик, но вы можете попробовать скачать позже.');
+            if (downloadUrl && downloadUrl !== '#') {
+                try {
+                    const parsed = new URL(downloadUrl);
+                    const path = parsed.searchParams.get('path');
+                    if (path) {
+                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
+                        window.open(proxyUrl, '_blank');
+                    } else {
+                        window.open(downloadUrl, '_blank');
+                    }
+                } catch (err) {
+                    window.open(downloadUrl, '_blank');
+                }
+            }
         }
     }
 
