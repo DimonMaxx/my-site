@@ -66,11 +66,13 @@
             font-weight: 600;
             border-bottom: 2px solid #e2e8f0;
         }
+        th.center { text-align: center; width: 40px; }
         td {
             padding: 10px;
             border-bottom: 1px solid #e5e7eb;
             vertical-align: middle;
         }
+        td.center { text-align: center; }
         tr:hover td { background: #f8fafc; }
         .empty {
             text-align: center;
@@ -96,6 +98,29 @@
             background: #1d4ed8;
             transform: translateY(-2px);
         }
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .delete-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        .delete-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
         .filters {
             display: flex;
             gap: 15px;
@@ -110,11 +135,28 @@
             font-size: 14px;
             background: white;
         }
+        .filters .spacer { flex: 1; }
+        .checkbox-cell {
+            text-align: center;
+        }
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #2563eb;
+        }
+        .selected-info {
+            color: #2563eb;
+            font-weight: 600;
+            font-size: 14px;
+        }
         @media (max-width: 768px) {
             .container { padding: 20px; }
-            table { font-size: 13px; }
-            td, th { padding: 8px 6px; }
+            table { font-size: 12px; }
+            td, th { padding: 6px 4px; }
             .nav-links { flex-direction: column; gap: 10px; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .filters .spacer { display: none; }
         }
     </style>
 </head>
@@ -137,19 +179,24 @@
             <option value="month">За месяц</option>
         </select>
         <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Обновить</button>
+        <span class="spacer"></span>
+        <span class="selected-info" id="selectedInfo" style="display:none;"></span>
+        <button class="delete-btn" id="deleteSelectedBtn" disabled><i class="fas fa-trash"></i> Удалить выбранные</button>
+        <button class="delete-btn" id="deleteAllBtn"><i class="fas fa-trash-alt"></i> Удалить все</button>
     </div>
 
     <div id="logsContainer">
         <table>
             <thead>
                 <tr>
+                    <th class="center"><input type="checkbox" id="selectAllCheckbox" title="Выбрать все"></th>
                     <th>Название файла</th>
                     <th>Пользователь</th>
                     <th>Дата и время</th>
                 </tr>
             </thead>
             <tbody id="logsTableBody">
-                <tr><td colspan="3" class="empty"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>
+                <tr><td colspan="4" class="empty"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>
             </tbody>
         </table>
     </div>
@@ -161,6 +208,7 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allLogs = [];
+    let filteredLogs = [];
     let currentUser = null;
     let currentProfile = null;
 
@@ -178,7 +226,7 @@
             .single();
         if (profError || profile?.role !== 'admin') {
             alert('Доступ запрещён. Только администраторы могут видеть эту страницу.');
-            window.location.href = '/';
+            window.location.href = 'index.html';
             return;
         }
         currentProfile = profile;
@@ -193,10 +241,13 @@
                 .order('downloaded_at', { ascending: false });
             if (error) throw error;
             allLogs = data || [];
+            // Сброс выделений при загрузке
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (selectAll) selectAll.checked = false;
             applyFilters();
         } catch (error) {
             console.error('Ошибка загрузки логов:', error);
-            document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="3" class="empty">Ошибка загрузки. Попробуйте позже.</td></tr>';
+            document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="4" class="empty">Ошибка загрузки. Попробуйте позже.</td></tr>';
         }
     }
 
@@ -205,8 +256,7 @@
         const period = document.getElementById('filterPeriod').value;
         const now = new Date();
 
-        let filtered = allLogs.filter(log => {
-            // Поиск по названию файла (file_name) или ID, или пользователю
+        filteredLogs = allLogs.filter(log => {
             if (search) {
                 const fileName = (log.file_name || '').toLowerCase();
                 const fileId = (log.file_id || '').toLowerCase();
@@ -215,7 +265,6 @@
                     return false;
                 }
             }
-            // Фильтр по периоду
             if (period !== 'all') {
                 const logDate = new Date(log.downloaded_at);
                 let diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
@@ -226,13 +275,14 @@
             return true;
         });
 
-        renderTable(filtered);
+        renderTable(filteredLogs);
     }
 
     function renderTable(logs) {
         const tbody = document.getElementById('logsTableBody');
         if (!logs || logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="empty">Нет записей о скачиваниях</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="empty">Нет записей о скачиваниях</td></tr>';
+            updateDeleteButton();
             return;
         }
         let html = '';
@@ -241,17 +291,106 @@
             const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU');
             const displayName = log.file_name || log.file_id || 'Без названия';
             html += `<tr>
-                <td><strong>${displayName}</strong></td>
-                <td>${log.username || 'Неизвестный'}</td>
+                <td class="center"><input type="checkbox" class="log-checkbox" data-id="${log.id}"></td>
+                <td><strong>${escapeHtml(displayName)}</strong></td>
+                <td>${escapeHtml(log.username || 'Неизвестный')}</td>
                 <td>${dateStr}</td>
             </tr>`;
         });
         tbody.innerHTML = html;
+
+        // Обработчики чекбоксов
+        document.querySelectorAll('.log-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateDeleteButton);
+        });
+
+        updateDeleteButton();
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getSelectedIds() {
+        const ids = [];
+        document.querySelectorAll('.log-checkbox:checked').forEach(cb => {
+            ids.push(parseInt(cb.dataset.id));
+        });
+        return ids;
+    }
+
+    function updateDeleteButton() {
+        const selected = getSelectedIds();
+        const btn = document.getElementById('deleteSelectedBtn');
+        const info = document.getElementById('selectedInfo');
+        if (selected.length > 0) {
+            btn.disabled = false;
+            info.textContent = `Выбрано: ${selected.length}`;
+            info.style.display = 'inline';
+        } else {
+            btn.disabled = true;
+            info.style.display = 'none';
+        }
+
+        // Обновляем состояние "выбрать все"
+        const allCheckboxes = document.querySelectorAll('.log-checkbox');
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (allCheckboxes.length > 0 && selectAll) {
+            selectAll.checked = selected.length === allCheckboxes.length;
+        }
+    }
+
+    async function deleteSelected() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) return;
+        if (!confirm(`Удалить ${ids.length} записей?`)) return;
+        try {
+            const { error } = await supabaseClient
+                .from('download_logs')
+                .delete()
+                .in('id', ids);
+            if (error) throw error;
+            await loadLogs();
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('Не удалось удалить записи: ' + error.message);
+        }
+    }
+
+    async function deleteAll() {
+        if (!confirm('Удалить ВСЕ записи истории скачиваний? Это действие необратимо.')) return;
+        try {
+            const { error } = await supabaseClient
+                .from('download_logs')
+                .delete()
+                .neq('id', 0); // удаляем всё, кроме несуществующего id=0
+            if (error) throw error;
+            await loadLogs();
+        } catch (error) {
+            console.error('Ошибка удаления всех записей:', error);
+            alert('Не удалось удалить все записи: ' + error.message);
+        }
     }
 
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('filterPeriod').addEventListener('change', applyFilters);
     document.getElementById('refreshBtn').addEventListener('click', loadLogs);
+    document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+    document.getElementById('deleteAllBtn').addEventListener('click', deleteAll);
+
+    document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+        const checked = this.checked;
+        document.querySelectorAll('.log-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        updateDeleteButton();
+    });
 
     checkAuth();
 </script>
