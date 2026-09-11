@@ -13,7 +13,7 @@ YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 SHEET_TITLE = "Книги"
 
 # Обновлять все строки или только те, где есть пустые поля
-ONLY_EMPTY = False
+ONLY_EMPTY = False  # True — обновлять только пустые поля, False — перезаписывать все
 
 # Максимальная длина описания
 MAX_DESC_LEN = 2000
@@ -39,13 +39,14 @@ def extract_public_key(url):
     m = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
     return m.group(1) if m else None
 
-def get_yandex_files_with_download(public_key):
-    """Получает список файлов с прямой ссылкой на скачивание каждого."""
+def get_yandex_files_with_download(public_url):
+    """Получает список FB2-файлов с прямой ссылкой на скачивание каждого."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     }
+    # Список файлов — передаём полную ссылку (это работает!)
     api_url = "https://cloud-api.yandex.net/v1/disk/public/resources"
-    params = {"public_key": public_key, "limit": 1000, "sort": "name"}
+    params = {"public_key": public_url, "limit": 1000, "sort": "name"}
     resp = requests.get(api_url, params=params, headers=headers, timeout=30)
     if resp.status_code != 200:
         print(f"Ошибка при получении списка файлов: {resp.status_code} — {resp.text}")
@@ -57,14 +58,13 @@ def get_yandex_files_with_download(public_key):
     for idx, item in enumerate(items, start=1):
         if item.get('type') != 'file':
             continue
-        # Пропускаем не-FB2 файлы (нам нужны только они для парсинга)
         fname = item.get('name', '')
         if not fname.lower().endswith('.fb2'):
             continue
 
-        # Получаем прямую ссылку на скачивание
+        # Получаем прямую ссылку на скачивание — передаём полную ссылку и path
         dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
-        dl_params = {"public_key": public_key, "path": item['path']}
+        dl_params = {"public_key": public_url, "path": item['path']}
         try:
             dl_resp = requests.get(dl_api, params=dl_params, headers=headers, timeout=30)
             if dl_resp.status_code == 200:
@@ -78,24 +78,15 @@ def get_yandex_files_with_download(public_key):
                 print(f"  Не удалось получить ссылку для {fname}: {dl_resp.status_code}")
         except Exception as e:
             print(f"  Ошибка при получении ссылки для {fname}: {e}")
-        # Небольшая пауза, чтобы не спамить API
         if idx % 20 == 0:
             time.sleep(1)
     print(f"Получено прямых ссылок на FB2: {len(result)}")
     return result
 
 def parse_fb2(content_bytes):
-    """
-    Парсит FB2 и возвращает словарь:
-    {
-      'title': '...',
-      'author': '...',
-      'description': '...',
-    }
-    """
+    """Парсит FB2 и возвращает {'title', 'author', 'description'}."""
     result = {'title': '', 'author': '', 'description': ''}
 
-    # Пробуем разные кодировки
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
         try:
@@ -111,7 +102,6 @@ def parse_fb2(content_bytes):
     try:
         root = ET.fromstring(text)
     except ET.ParseError:
-        # Пробуем найти начало FictionBook
         for marker in ('<FictionBook', '<fictionbook'):
             idx = text.find(marker)
             if idx >= 0:
@@ -123,7 +113,6 @@ def parse_fb2(content_bytes):
         else:
             return result
 
-    # Возможные пространства имён
     ns_candidates = [
         'http://www.gribuser.ru/xml/fictionbook/2.0',
         'http://www.fictionbook.org/FictionBook2/Encodings',
@@ -142,29 +131,15 @@ def parse_fb2(content_bytes):
                     return el
         return None
 
-    def get_text(el):
-        if el is None:
-            return ''
-        # Собираем текст со всех потомков
-        parts = []
-        for sub in el.iter():
-            if sub.text and sub.text.strip():
-                parts.append(sub.text.strip())
-            if sub.tail and sub.tail.strip():
-                parts.append(sub.tail.strip())
-        return ' '.join(parts).strip()
-
     # === Название книги (book-title) ===
     title_el = find_el(root, 'book-title')
     if title_el is not None and title_el.text:
         result['title'] = title_el.text.strip()
 
     # === Автор ===
-    # Ищем первый author в title-info
     title_info = find_el(root, 'title-info')
     author_el = None
     if title_info is not None:
-        # Первый author внутри title-info
         for ns in ns_candidates:
             if ns:
                 author_el = title_info.find(f'{{{ns}}}author')
@@ -172,15 +147,11 @@ def parse_fb2(content_bytes):
                 author_el = title_info.find('author')
             if author_el is not None:
                 break
-
     if author_el is None:
         author_el = find_el(root, 'author')
 
     if author_el is not None:
-        first = ''
-        last = ''
-        middle = ''
-        nickname = ''
+        first = last = middle = nickname = ''
         for ns in ns_candidates:
             prefix = f'{{{ns}}}' if ns else ''
             f = author_el.find(f'{prefix}first-name')
@@ -197,7 +168,6 @@ def parse_fb2(content_bytes):
                 nickname = n.text.strip()
             if first or last or middle or nickname:
                 break
-
         parts = []
         if last:
             parts.append(last)
@@ -212,7 +182,6 @@ def parse_fb2(content_bytes):
     # === Описание (annotation) ===
     ann_el = find_el(root, 'annotation')
     if ann_el is not None:
-        # Собираем текст, пропуская subtitle и заголовки
         parts = []
         for sub in ann_el.iter():
             tag = sub.tag.split('}')[-1]
@@ -221,7 +190,6 @@ def parse_fb2(content_bytes):
             if sub.text and sub.text.strip():
                 parts.append(sub.text.strip())
         description = ' '.join(parts)
-        # Обрезаем
         if len(description) > MAX_DESC_LEN:
             description = description[:MAX_DESC_LEN] + '...'
         result['description'] = description
@@ -229,7 +197,6 @@ def parse_fb2(content_bytes):
     return result
 
 def normalize(name):
-    """Нормализация для сравнения названий (убираем расширение, скобки, приводим к нижнему регистру)."""
     if not name:
         return ''
     name = os.path.splitext(name)[0]
@@ -241,11 +208,6 @@ def normalize(name):
 def main():
     if not YANDEX_PUBLIC_FOLDER_URL:
         print("YANDEX_PUBLIC_FOLDER_URL не задан.")
-        return
-
-    public_key = extract_public_key(YANDEX_PUBLIC_FOLDER_URL)
-    if not public_key:
-        print("Не удалось извлечь public_key.")
         return
 
     print("Подключение к Google Sheets...")
@@ -261,7 +223,6 @@ def main():
     headers = all_values[0]
     print(f"Заголовки: {headers}")
 
-    # Индексы нужных колонок
     try:
         col_title = headers.index("Название")
         col_author = headers.index("Автор")
@@ -270,8 +231,7 @@ def main():
         print(f"Не найдены нужные колонки: {e}")
         return
 
-    # Строим карту: нормализованное имя файла -> номер строки в таблице
-    # (берём из колонки "Название", чтобы не сбиться)
+    # Карта нормализованных названий из таблицы -> номер строки
     name_to_row = {}
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
@@ -281,8 +241,8 @@ def main():
 
     print(f"Строк с названиями в таблице: {len(name_to_row)}")
 
-    # Получаем файлы с Яндекс.Диска
-    files = get_yandex_files_with_download(public_key)
+    # Получаем FB2-файлы (передаём полную ссылку)
+    files = get_yandex_files_with_download(YANDEX_PUBLIC_FOLDER_URL)
     if not files:
         print("FB2-файлы не получены.")
         return
@@ -301,7 +261,6 @@ def main():
         row_num = name_to_row[norm]
         row = all_values[row_num - 1]
 
-        # Текущие значения
         current_title = row[col_title] if col_title < len(row) else ''
         current_author = row[col_author] if col_author < len(row) else ''
         current_desc = row[col_desc] if col_desc < len(row) else ''
@@ -313,23 +272,22 @@ def main():
 
         # Скачиваем FB2
         try:
-            print(f"Скачиваем: {f['name']}")
             file_resp = requests.get(f['download_url'], timeout=60)
             if file_resp.status_code != 200:
-                print(f"  Ошибка скачивания: {file_resp.status_code}")
+                print(f"  {f['name']}: ошибка скачивания {file_resp.status_code}")
                 failed += 1
                 continue
             content = file_resp.content
         except Exception as e:
-            print(f"  Ошибка скачивания: {e}")
+            print(f"  {f['name']}: {e}")
             failed += 1
             continue
 
-        # Парсим FB2
+        # Парсим
         try:
             parsed = parse_fb2(content)
         except Exception as e:
-            print(f"  Ошибка парсинга: {e}")
+            print(f"  {f['name']}: ошибка парсинга {e}")
             failed += 1
             continue
 
@@ -337,16 +295,20 @@ def main():
         fb2_author = parsed.get('author', '').strip()
         fb2_desc = parsed.get('description', '').strip()
 
-        # Если в FB2 совсем ничего нет — пропускаем
         if not fb2_title and not fb2_author and not fb2_desc:
-            print(f"  Пусто в FB2")
+            print(f"  {f['name']}: FB2 пуст")
             skipped += 1
             continue
 
-        # Обновляем ТОЛЬКО пустые поля текущими значениями из FB2
-        final_title = current_title.strip() or fb2_title
-        final_author = current_author.strip() or fb2_author
-        final_desc = current_desc.strip() or fb2_desc
+        # Применяем: только пустые поля или все
+        if ONLY_EMPTY:
+            final_title = current_title.strip() or fb2_title
+            final_author = current_author.strip() or fb2_author
+            final_desc = current_desc.strip() or fb2_desc
+        else:
+            final_title = fb2_title or current_title.strip()
+            final_author = fb2_author or current_author.strip()
+            final_desc = fb2_desc or current_desc.strip()
 
         updates.append({
             'row': row_num,
@@ -355,9 +317,7 @@ def main():
             'description': final_desc
         })
         processed += 1
-        print(f"  ✓ Название: {fb2_title[:60]}")
-        print(f"    Автор: {fb2_author[:60]}")
-        print(f"    Описание: {fb2_desc[:60]}...")
+        print(f"  ✓ {fb2_title[:60]} | {fb2_author[:60]}")
 
         time.sleep(0.3)
 
@@ -372,13 +332,11 @@ def main():
 
     print(f"\nОбновляем таблицу ({len(updates)} строк)...")
 
-    # Формируем batch_update по каждой строке
-    # Колонки могут быть несоседние, поэтому обновляем каждую колонку своим диапазоном
     title_data = []
     author_data = []
     desc_data = []
 
-    col_letter_title = chr(65 + col_title)   # A, B, C...
+    col_letter_title = chr(65 + col_title)
     col_letter_author = chr(65 + col_author)
     col_letter_desc = chr(65 + col_desc)
 
@@ -387,7 +345,6 @@ def main():
         author_data.append({'range': f'{col_letter_author}{u["row"]}', 'values': [[u['author']]]})
         desc_data.append({'range': f'{col_letter_desc}{u["row"]}', 'values': [[u['description']]]})
 
-    # Отправляем батчами, чтобы не превысить лимит 60 запросов в минуту
     print("Обновляем колонку 'Название'...")
     for i in range(0, len(title_data), 50):
         worksheet.batch_update(title_data[i:i+50])
