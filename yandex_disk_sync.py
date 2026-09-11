@@ -4,6 +4,7 @@ import json
 import sys
 import re
 import time
+import base64
 import requests
 import xml.etree.ElementTree as ET
 from urllib.parse import quote
@@ -12,6 +13,11 @@ from urllib.parse import quote
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 SHEET_TITLE = "Книги"
+
+SUPABASE_URL = "https://rmoonebbvpmvthvpcmpt.supabase.co"
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+COVERS_BUCKET = "covers"
+
 MAX_DESC_LEN = 2000
 # ==============================
 
@@ -31,42 +37,7 @@ def get_gspread_client():
             print("Файл credentials.json не найден.")
             sys.exit(1)
 
-def normalize(name):
-    """Нормализация для сравнения."""
-    if not name:
-        return ''
-    name = os.path.splitext(name)[0]
-    name = re.sub(r'\s*\([^)]*\)\s*$', '', name)
-    name = name.strip().lower()
-    name = re.sub(r'\s+', ' ', name)
-    name = re.sub(r'[—–]', '-', name)
-    name = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', name)
-    # Убираем знаки препинания, оставляем только буквы, цифры, пробелы и дефисы
-    name = re.sub(r'[^\w\s\-]', ' ', name)
-    name = re.sub(r'\s+', ' ', name).strip()
-    return name
-
-def titles_match(db_title, fb2_title):
-    """
-    Проверяет, соответствует ли название из таблицы названию из FB2.
-    Возвращает True, если одно содержится в другом (по нормализованным строкам).
-    """
-    n1 = normalize(db_title)
-    n2 = normalize(fb2_title)
-    if not n1 or not n2:
-        return False
-    # Точное совпадение
-    if n1 == n2:
-        return True
-    # Одно содержится в другом (длина >= 10, чтобы не было ложных срабатываний на коротких названиях)
-    if len(n2) >= 10 and n2 in n1:
-        return True
-    if len(n1) >= 10 and n1 in n2:
-        return True
-    return False
-
 def get_yandex_files_with_download(public_url):
-    """Получает список FB2-файлов с прямой ссылкой на скачивание."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     }
@@ -74,11 +45,9 @@ def get_yandex_files_with_download(public_url):
     params = {"public_key": public_url, "limit": 1000, "sort": "name"}
     resp = requests.get(api_url, params=params, headers=headers, timeout=30)
     if resp.status_code != 200:
-        print(f"Ошибка при получении списка файлов: {resp.status_code} — {resp.text}")
+        print(f"Ошибка списка файлов: {resp.status_code}")
         return []
     items = resp.json().get('_embedded', {}).get('items', [])
-    print(f"Найдено {len(items)} элементов на Яндекс.Диске.")
-
     result = []
     for idx, item in enumerate(items, start=1):
         if item.get('type') != 'file':
@@ -86,30 +55,25 @@ def get_yandex_files_with_download(public_url):
         fname = item.get('name', '')
         if not fname.lower().endswith('.fb2'):
             continue
-
         dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
         dl_params = {"public_key": public_url, "path": item['path']}
         try:
             dl_resp = requests.get(dl_api, params=dl_params, headers=headers, timeout=30)
             if dl_resp.status_code == 200:
-                download_url = dl_resp.json().get('href')
                 result.append({
                     'name': fname,
-                    'download_url': download_url
+                    'download_url': dl_resp.json().get('href')
                 })
-            else:
-                print(f"  {fname}: не удалось получить ссылку ({dl_resp.status_code})")
         except Exception as e:
-            print(f"  {fname}: ошибка {e}")
+            print(f"  Ошибка {fname}: {e}")
         if idx % 20 == 0:
             time.sleep(0.5)
-    print(f"Получено прямых ссылок на FB2: {len(result)}")
+    print(f"Получено файлов: {len(result)}")
     return result
 
 def parse_fb2(content_bytes):
-    """Парсит FB2 и возвращает {'title', 'author', 'description'}."""
-    result = {'title': '', 'author': '', 'description': ''}
-
+    """Возвращает словарь {title, author, description, cover_data, cover_ext}."""
+    result = {'title': '', 'author': '', 'description': '', 'cover_data': None, 'cover_ext': ''}
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
         try:
@@ -119,9 +83,7 @@ def parse_fb2(content_bytes):
             continue
     if text is None:
         return result
-
     text = text.lstrip('\ufeff')
-
     try:
         root = ET.fromstring(text)
     except ET.ParseError:
@@ -146,93 +108,124 @@ def parse_fb2(content_bytes):
         for ns in ns_candidates:
             if ns:
                 el = parent.find(f'.//{{{ns}}}{tag}')
-                if el is not None:
-                    return el
+                if el is not None: return el
             else:
                 el = parent.find(f'.//{tag}')
-                if el is not None:
-                    return el
+                if el is not None: return el
         return None
 
-    # Название книги
-    title_el = find_el(root, 'book-title')
-    if title_el is not None and title_el.text:
-        result['title'] = title_el.text.strip()
+    # Название
+    t_el = find_el(root, 'book-title')
+    if t_el is not None and t_el.text:
+        result['title'] = t_el.text.strip()
 
     # Автор
-    title_info = find_el(root, 'title-info')
-    author_el = None
-    if title_info is not None:
+    ti = find_el(root, 'title-info')
+    a_el = None
+    if ti is not None:
         for ns in ns_candidates:
-            if ns:
-                author_el = title_info.find(f'{{{ns}}}author')
-            else:
-                author_el = title_info.find('author')
-            if author_el is not None:
-                break
-    if author_el is None:
-        author_el = find_el(root, 'author')
-
-    if author_el is not None:
-        first = last = middle = nickname = ''
-        for ns in ns_candidates:
-            prefix = f'{{{ns}}}' if ns else ''
-            f = author_el.find(f'{prefix}first-name')
-            l = author_el.find(f'{prefix}last-name')
-            m = author_el.find(f'{prefix}middle-name')
-            n = author_el.find(f'{prefix}nickname')
-            if f is not None and f.text:
-                first = f.text.strip()
-            if l is not None and l.text:
-                last = l.text.strip()
-            if m is not None and m.text:
-                middle = m.text.strip()
-            if n is not None and n.text:
-                nickname = n.text.strip()
-            if first or last or middle or nickname:
-                break
+            a_el = ti.find(f'{{{ns}}}author') if ns else ti.find('author')
+            if a_el is not None: break
+    if a_el is None:
+        a_el = find_el(root, 'author')
+    if a_el is not None:
         parts = []
-        if last:
-            parts.append(last)
-        if first:
-            parts.append(first)
-        if middle:
-            parts.append(middle)
-        if not parts and nickname:
-            parts.append(nickname)
+        for tag in ('last-name', 'first-name', 'middle-name'):
+            for ns in ns_candidates:
+                prefix = f'{{{ns}}}' if ns else ''
+                el = a_el.find(f'{prefix}{tag}')
+                if el is not None and el.text:
+                    parts.append(el.text.strip())
+                    break
         result['author'] = ' '.join(parts)
 
     # Описание
-    ann_el = find_el(root, 'annotation')
-    if ann_el is not None:
+    ann = find_el(root, 'annotation')
+    if ann is not None:
         parts = []
-        for sub in ann_el.iter():
+        for sub in ann.iter():
             tag = sub.tag.split('}')[-1]
-            if tag in ('subtitle', 'title', 'section', 'image'):
-                continue
+            if tag in ('subtitle', 'title', 'section', 'image'): continue
             if sub.text and sub.text.strip():
                 parts.append(sub.text.strip())
-        description = ' '.join(parts)
-        if len(description) > MAX_DESC_LEN:
-            description = description[:MAX_DESC_LEN] + '...'
-        result['description'] = description
+        desc = ' '.join(parts)
+        if len(desc) > MAX_DESC_LEN:
+            desc = desc[:MAX_DESC_LEN] + '...'
+        result['description'] = desc
 
+    # Обложка
+    cover = find_el(root, 'coverpage')
+    if cover is not None:
+        # Ищем тег <image> внутри coverpage
+        img_el = None
+        for ns in ns_candidates:
+            prefix = f'{{{ns}}}' if ns else ''
+            img_el = cover.find(f'.//{prefix}image')
+            if img_el is not None: break
+        if img_el is not None:
+            # Атрибут l:href или href
+            href = None
+            for attr in img_el.attrib:
+                if attr.endswith('href'):
+                    href = img_el.attrib[attr]
+                    break
+            if href and href.startswith('#'):
+                binary_id = href[1:]
+                # Ищем <binary id="...">
+                for ns in ns_candidates:
+                    prefix = f'{{{ns}}}' if ns else ''
+                    for b_el in root.iter(f'{prefix}binary'):
+                        if b_el.attrib.get('id') == binary_id:
+                            content_type = b_el.attrib.get('content-type', 'image/jpeg')
+                            ext = 'jpg'
+                            if 'png' in content_type: ext = 'png'
+                            elif 'gif' in content_type: ext = 'gif'
+                            elif 'webp' in content_type: ext = 'webp'
+                            try:
+                                data = base64.b64decode(b_el.text.strip())
+                                result['cover_data'] = data
+                                result['cover_ext'] = ext
+                            except Exception as e:
+                                print(f"  Ошибка декодирования обложки: {e}")
+                            break
+                    if result['cover_data']:
+                        break
     return result
 
-def build_download_link(public_url, file_name):
-    """Формирует ссылку на файл в публичной папке."""
-    public_key_match = re.search(r'/d/([a-zA-Z0-9_-]+)', public_url)
-    if not public_key_match:
-        return public_url
-    public_key = public_key_match.group(1)
-    encoded = quote(file_name, safe='')
-    return f"https://disk.yandex.ru/d/{public_key}?path=/{encoded}"
+def normalize(name):
+    if not name: return ''
+    name = os.path.splitext(name)[0]
+    name = re.sub(r'\s*\([^)]*\)\s*$', '', name)
+    name = name.strip().lower()
+    name = re.sub(r'\s+', ' ', name)
+    name = re.sub(r'[—–]', '-', name)
+    name = re.sub(r'[^\w\s\-]', ' ', name)
+    return re.sub(r'\s+', ' ', name).strip()
+
+def upload_cover_to_supabase(cover_data, ext, book_slug):
+    """Загружает обложку в Supabase Storage, возвращает публичный URL."""
+    if not SUPABASE_SERVICE_KEY:
+        print("  SUPABASE_SERVICE_ROLE_KEY не задан — пропускаем загрузку обложки.")
+        return None
+    filename = f"{book_slug}.{ext}"
+    url = f"{SUPABASE_URL}/storage/v1/object/{COVERS_BUCKET}/{filename}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": f"image/{ext}",
+        "x-upsert": "true"
+    }
+    try:
+        resp = requests.put(url, headers=headers, data=cover_data, timeout=30)
+        if resp.status_code in (200, 201):
+            public_url = f"{SUPABASE_URL}/storage/v1/object/public/{COVERS_BUCKET}/{filename}"
+            return public_url
+        else:
+            print(f"  Ошибка загрузки обложки: {resp.status_code} — {resp.text[:100]}")
+    except Exception as e:
+        print(f"  Ошибка загрузки обложки: {e}")
+    return None
 
 def main():
-    if not YANDEX_PUBLIC_FOLDER_URL:
-        print("YANDEX_PUBLIC_FOLDER_URL не задан.")
-        return
-
     print("Подключение к Google Sheets...")
     gc = get_gspread_client()
     sh = gc.open_by_key(SPREADSHEET_ID)
@@ -249,177 +242,79 @@ def main():
         col_desc = headers.index("Описание")
         col_format = headers.index("Формат")
         col_link = headers.index("Ссылка для скачивания")
+        col_cover = headers.index("Обложка") if "Обложка" in headers else -1
     except ValueError as e:
-        print(f"Не найдены нужные колонки: {e}")
+        print(f"Не найдены колонки: {e}")
         return
 
-    # Список всех существующих названий в таблице с номерами строк
-    existing_titles = []  # [(row_num, title), ...]
+    if col_cover == -1:
+        print("Колонка 'Обложка' не найдена. Добавьте её в таблицу.")
+        return
+
+    # Собираем существующие книги
+    name_to_row = {}
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
-            t = row[col_title].strip()
-            if t:
-                existing_titles.append((i, t))
+            n = normalize(row[col_title])
+            if n: name_to_row[n] = i
 
-    print(f"Всего строк с названиями в таблице: {len(existing_titles)}")
-
-    # Получаем файлы с Яндекс.Диска
     files = get_yandex_files_with_download(YANDEX_PUBLIC_FOLDER_URL)
     if not files:
         print("Файлы не получены.")
         return
 
-    new_rows = []          # для добавления
-    updated_rows = []      # для обновления существующих
-    already_exists = 0
+    updated = 0
+    added = 0
+    skipped = 0
 
-    for idx, f in enumerate(files, start=1):
-        fname = f['name']
-
+    for f in files:
+        norm = normalize(f['name'])
+        fb2_title = ''
         # Скачиваем FB2
         try:
-            file_resp = requests.get(f['download_url'], timeout=60)
-            if file_resp.status_code != 200:
-                print(f"  {fname}: ошибка скачивания {file_resp.status_code}")
+            resp = requests.get(f['download_url'], timeout=60)
+            if resp.status_code != 200:
                 continue
-            content = file_resp.content
+            parsed = parse_fb2(resp.content)
+            fb2_title = parsed.get('title', '').strip()
         except Exception as e:
-            print(f"  {fname}: ошибка {e}")
+            print(f"  Ошибка парсинга {f['name']}: {e}")
             continue
 
-        # Парсим FB2
-        try:
-            parsed = parse_fb2(content)
-        except Exception as e:
-            print(f"  {fname}: ошибка парсинга {e}")
-            continue
+        # Ищем строку в таблице
+        row_num = None
+        for db_title, rnum in name_to_row.items():
+            if db_title == norm: 
+                row_num = rnum; break
+        if row_num is None and fb2_title:
+            norm2 = normalize(fb2_title)
+            if norm2 in name_to_row:
+                row_num = name_to_row[norm2]
 
-        fb2_title = parsed.get('title', '').strip()
-        fb2_author = parsed.get('author', '').strip()
-        fb2_desc = parsed.get('description', '').strip()
-
-        # Если title из FB2 пуст — используем имя файла без расширения
-        if not fb2_title:
-            fb2_title = os.path.splitext(fname)[0]
-            fb2_title = re.sub(r'\s*\([^)]*\)\s*$', '', fb2_title).strip()
-
-        ext = os.path.splitext(fname)[1].lstrip('.').lower()
-        download_link = build_download_link(YANDEX_PUBLIC_FOLDER_URL, fname)
-
-        # Ищем совпадение среди существующих названий
-        found_row = None
-        found_db_title = None
-        for row_num, db_title in existing_titles:
-            if titles_match(db_title, fb2_title):
-                found_row = row_num
-                found_db_title = db_title
-                break
-
-        if found_row:
-            # Книга уже есть в таблице
-            already_exists += 1
-            row = all_values[found_row - 1]
-            current_author = row[col_author] if col_author < len(row) else ''
-            current_desc = row[col_desc] if col_desc < len(row) else ''
-            current_link = row[col_link] if col_link < len(row) else ''
-
-            # Обновляем только пустые поля
-            need_update_author = not current_author.strip() and fb2_author
-            need_update_desc = not current_desc.strip() and fb2_desc
-            need_update_link = not current_link.strip() and download_link
-
-            if need_update_author or need_update_desc or need_update_link:
-                updated_rows.append({
-                    'row': found_row,
-                    'author': fb2_author if need_update_author else '',
-                    'description': fb2_desc if need_update_desc else '',
-                    'link': download_link if need_update_link else '',
-                    'set_author': need_update_author,
-                    'set_desc': need_update_desc,
-                    'set_link': need_update_link,
-                    'title': found_db_title
-                })
-                print(f"  [ОБНОВЛЕНИЕ] {found_db_title[:50]}")
-            else:
-                print(f"  [ПРОПУСК] {found_db_title[:50]} — уже заполнено")
+        if row_num:
+            # Обновляем только обложку, если пуста
+            row = all_values[row_num - 1]
+            current_cover = row[col_cover] if col_cover < len(row) else ''
+            if current_cover.strip():
+                skipped += 1
+                continue
+            cover_data = parsed.get('cover_data')
+            cover_ext = parsed.get('cover_ext', 'jpg')
+            if not cover_data:
+                skipped += 1
+                continue
+            slug = re.sub(r'[^\w\-]+', '-', normalize(fb2_title or f['name']))[:80]
+            url = upload_cover_to_supabase(cover_data, cover_ext, slug)
+            if url:
+                col_letter = chr(65 + col_cover)
+                worksheet.update(f'{col_letter}{row_num}', [[url]], value_input_option='RAW')
+                print(f"  ✓ Обложка для: {fb2_title or f['name'][:40]}")
+                updated += 1
+                time.sleep(0.3)
         else:
-            # Новый файл — добавляем
-            new_rows.append({
-                'title': fb2_title,
-                'author': fb2_author,
-                'description': fb2_desc,
-                'format': ext,
-                'link': download_link
-            })
-            print(f"  [НОВОЕ] {fb2_title[:60]} | {fb2_author[:40]}")
+            skipped += 1
 
-        if idx % 10 == 0:
-            time.sleep(0.3)
-
-    print(f"\nИтого:")
-    print(f"  Уже есть в таблице: {already_exists}")
-    print(f"  Новых книг: {len(new_rows)}")
-    print(f"  Строк с обновлениями: {len(updated_rows)}")
-
-    # Записываем новые строки
-    if new_rows:
-        print(f"\nДобавляем {len(new_rows)} новых строк...")
-        rows_to_append = []
-        for r in new_rows:
-            row = []
-            for header in headers:
-                if header == "Название":
-                    row.append(r['title'])
-                elif header == "Автор":
-                    row.append(r['author'])
-                elif header == "Описание":
-                    row.append(r['description'])
-                elif header == "Формат":
-                    row.append(r['format'])
-                elif header == "Ссылка для скачивания":
-                    row.append(r['link'])
-                else:
-                    row.append("")
-            rows_to_append.append(row)
-        try:
-            worksheet.append_rows(rows_to_append, value_input_option='RAW')
-            print(f"  ✓ Добавлено {len(rows_to_append)} строк.")
-        except gspread.exceptions.APIError as e:
-            if '429' in str(e):
-                print("  Превышена квота, ждём 60 секунд...")
-                time.sleep(60)
-                worksheet.append_rows(rows_to_append, value_input_option='RAW')
-                print(f"  ✓ Добавлено {len(rows_to_append)} строк (со 2-й попытки).")
-            else:
-                raise
-
-    # Обновляем существующие строки
-    if updated_rows:
-        print(f"\nОбновляем {len(updated_rows)} существующих строк...")
-        col_letter_author = chr(65 + col_author)
-        col_letter_desc = chr(65 + col_desc)
-        col_letter_link = chr(65 + col_link)
-
-        author_batch = []
-        desc_batch = []
-        link_batch = []
-        for u in updated_rows:
-            if u['set_author']:
-                author_batch.append({'range': f'{col_letter_author}{u["row"]}', 'values': [[u['author']]]})
-            if u['set_desc']:
-                desc_batch.append({'range': f'{col_letter_desc}{u["row"]}', 'values': [[u['description']]]})
-            if u['set_link']:
-                link_batch.append({'range': f'{col_letter_link}{u["row"]}', 'values': [[u['link']]]})
-
-        for name, batch in [("авторов", author_batch), ("описаний", desc_batch), ("ссылок", link_batch)]:
-            if batch:
-                print(f"  Обновляем {name} ({len(batch)} строк)...")
-                for i in range(0, len(batch), 50):
-                    worksheet.batch_update(batch[i:i+50])
-                    time.sleep(1)
-        print(f"  ✓ Обновлено {len(updated_rows)} строк.")
-
-    print("\nГотово!")
+    print(f"\nИтого: обновлено обложек: {updated}, пропущено: {skipped}")
 
 if __name__ == "__main__":
     main()
