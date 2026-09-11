@@ -82,16 +82,8 @@
         .header-actions .btn-update:hover { background: #d97706; color: white; transform: translateY(-2px); }
         .header-actions .btn-danger { background: #dc2626; color: white; }
         .header-actions .btn-danger:hover { background: #b91c1c; }
-        .header-actions .btn-admin-panel {
-            background: #8b5cf6;
-            color: white;
-        }
-        .header-actions .btn-admin-panel:hover {
-            background: #7c3aed;
-            transform: translateY(-2px);
-        }
-        .header-actions .btn-admin-cms { background: #1e293b; color: white; }
-        .header-actions .btn-admin-cms:hover { background: #0f172a; transform: translateY(-2px); }
+        .header-actions .btn-admin-panel { background: #8b5cf6; color: white; }
+        .header-actions .btn-admin-panel:hover { background: #7c3aed; transform: translateY(-2px); }
         .user-info { display: flex; align-items: center; gap: 10px; }
         .user-avatar {
             width: 32px; height: 32px;
@@ -337,10 +329,6 @@
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
-            <!-- Decap CMS (видна только админам) -->
-            <a href="admin/" class="btn-admin-cms" id="adminCmsLink" style="display:none;">
-                <i class="fas fa-cog"></i> Редактор
-            </a>
             <!-- Обновить контент (видна только админам) -->
             <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
                target="_blank" 
@@ -477,10 +465,8 @@
             });
         }
         const isAdmin = isLoggedIn && currentProfile && currentProfile.role === 'admin';
-        const cmsLink = document.getElementById('adminCmsLink');
         const panelLink = document.getElementById('adminPanelLink');
         const updateBtn = document.getElementById('adminUpdateBtn');
-        if (cmsLink) cmsLink.style.display = isAdmin ? 'inline-flex' : 'none';
         if (panelLink) panelLink.style.display = isAdmin ? 'inline-flex' : 'none';
         if (updateBtn) updateBtn.style.display = isAdmin ? 'inline-flex' : 'none';
     }
