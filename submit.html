@@ -3,47 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Предложить материал — Мой сайт</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Предложить материал — MyFiles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Дополнительные стили специально для этой страницы */
-        .form-container {
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 30px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4ff;
+            color: #1a202c;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0,20,80,0.08);
+            padding: 40px 45px 45px;
         }
-        .form-container h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        .form-container p.description {
-            color: #64748b;
-            margin-bottom: 30px;
-        }
-        .form-group {
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
             margin-bottom: 20px;
+            transition: 0.2s;
         }
+        .back-link:hover { text-decoration: underline; }
+        h1 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #0f172a;
+        }
+        h1 i { color: #f59e0b; }
+        .description {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eef2ff;
+        }
+
+        /* Информационный блок */
+        .info-block {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 14px;
+            color: #78350f;
+        }
+        .info-block i {
+            color: #d97706;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
             font-weight: 600;
-            margin-bottom: 6px;
             font-size: 14px;
+            margin-bottom: 8px;
             color: #1e293b;
         }
+        .form-group label .required { color: #dc2626; }
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 13px 16px;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-            transition: border 0.2s;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
             background: #f8fafc;
+            transition: border 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus,
         .form-group select:focus,
@@ -51,220 +100,342 @@
             outline: none;
             border-color: #2563eb;
             background: white;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
         }
         .form-group textarea {
-            min-height: 120px;
+            min-height: 130px;
             resize: vertical;
         }
         .form-group .hint {
             font-size: 13px;
             color: #94a3b8;
-            margin-top: 4px;
+            margin-top: 6px;
         }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
         .btn-submit {
+            width: 100%;
+            padding: 15px 32px;
+            border-radius: 40px;
+            border: none;
             background: #2563eb;
             color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: background 0.2s;
-            width: 100%;
+            transition: 0.2s;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.3);
         }
         .btn-submit:hover {
             background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.4);
         }
         .btn-submit:disabled {
-            opacity: 0.6;
+            background: #94a3b8;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
+
         .success-message {
             display: none;
             background: #dcfce7;
             border: 1px solid #86efac;
             color: #166534;
-            padding: 20px;
+            padding: 30px;
             border-radius: 16px;
             margin-top: 20px;
             text-align: center;
         }
-        .success-message.show {
-            display: block;
+        .success-message.show { display: block; }
+        .success-message i {
+            font-size: 48px;
+            color: #16a34a;
+            margin-bottom: 12px;
         }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #2563eb;
-            text-decoration: none;
+        .success-message h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
         }
-        .back-link:hover {
+        .success-message p {
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+        .success-message .back-link {
+            color: #166534;
             text-decoration: underline;
+            margin: 0;
         }
-        /* Адаптив */
+
+        .field-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #8b5cf6;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
         @media (max-width: 600px) {
-            .form-container {
-                padding: 20px;
-                margin: 20px 10px;
-            }
+            .container { padding: 25px 20px 30px; border-radius: 20px; }
+            h1 { font-size: 24px; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Шапка (используем ту же, что и на основном сайте) -->
-        <header>
-            <div class="logo">
-                <a href="index.html">Мой <span>Сайт</span></a>
+<div class="container">
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
+
+    <h1><i class="fas fa-upload"></i> Предложить материал</h1>
+    <p class="description">
+        Хотите поделиться полезной программой, книгой, музыкой, игрой или статьёй?
+        Заполните форму ниже. После проверки администратором материал появится на сайте.
+    </p>
+
+    <div class="info-block">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <strong>Обратите внимание:</strong> все поля со звёздочкой <span style="color:#dc2626;">*</span> обязательны.
+            Ссылка должна вести на файл в публичном облаке (Яндекс.Диск, Google Drive и т.п.).
+            Скачивание материалов доступно только зарегистрированным пользователям.
+        </div>
+    </div>
+
+    <!-- Сама форма. Атрибуты Netlify Forms + новый набор полей -->
+    <form id="submitForm" name="submitForm" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="submitForm">
+
+        <!-- Поле-ловушка для ботов -->
+        <div style="display: none;">
+            <label>Не заполняйте это поле, если вы человек: <input name="bot-field" /></label>
+        </div>
+
+        <!-- ===== Автор заявки ===== -->
+        <div class="field-group-title">Контактные данные</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Ваше имя <span class="required">*</span></label>
+                <input type="text" id="name" name="name" placeholder="Например: Иван Петров" required>
             </div>
-            <nav>
-                <a href="index.html">Главная</a>
-                <a href="/news/">Новости</a>
-                <a href="/programs/">Программы</a>
-                <a href="/books/">Книги</a>
-                <a href="/articles/">Статьи</a>
-                <a href="/misc/">Разное</a>
-                <a href="admin/" class="admin-link">⚙️ Админка</a>
-            </nav>
-        </header>
-
-        <!-- Форма -->
-        <div class="form-container">
-            <h1>📤 Предложить материал</h1>
-            <p class="description">
-                Хотите поделиться полезной программой, книгой или статьёй? Заполните форму ниже.
-                После проверки материал появится на сайте.
-            </p>
-
-            <!-- Сама форма. Атрибут data-netlify="true" включает обработку Netlify Forms -->
-            <form id="submitForm" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-                <!-- Скрытое поле для защиты от ботов -->
-                <input type="hidden" name="form-name" value="submitForm">
-
-                <!-- Поле-ловушка для ботов (honeypot) -->
-                <div style="display: none;">
-                    <label>Не заполняйте это поле, если вы человек: <input name="bot-field" /></label>
-                </div>
-
-                <!-- Поля формы -->
-                <div class="form-group">
-                    <label for="name">Ваше имя *</label>
-                    <input type="text" id="name" name="name" placeholder="Например: Иван Петров" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Ваш Email *</label>
-                    <input type="email" id="email" name="email" placeholder="ivan@example.com" required>
-                    <div class="hint">На этот адрес мы пришлём уведомление о решении.</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="category">Категория *</label>
-                    <select id="category" name="category" required>
-                        <option value="">Выберите категорию</option>
-                        <option value="programs">Программы</option>
-                        <option value="books">Книги</option>
-                        <option value="articles">Статьи</option>
-                        <option value="misc">Разное</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="title">Название материала *</label>
-                    <input type="text" id="title" name="title" placeholder="Например: Супер-программа v2.0" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Описание *</label>
-                    <textarea id="description" name="description" placeholder="Краткое описание, что это за материал и чем он полезен..." required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="download_link">Ссылка для скачивания *</label>
-                    <input type="url" id="download_link" name="download_link" placeholder="https://disk.yandex.ru/d/..." required>
-                    <div class="hint">Ссылка должна вести на ваш файл в облаке (Яндекс.Диск, Google Drive и т.п.).</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="comment">Дополнительная информация (необязательно)</label>
-                    <textarea id="comment" name="comment" placeholder="Что-то ещё, что мы должны знать..."></textarea>
-                </div>
-
-                <button type="submit" class="btn-submit" id="submitBtn">📩 Отправить на модерацию</button>
-            </form>
-
-            <!-- Блок с сообщением об успешной отправке -->
-            <div class="success-message" id="successMessage">
-                <strong>✅ Спасибо!</strong>
-                <p>Ваша заявка отправлена на модерацию. Мы свяжемся с вами в ближайшее время.</p>
-                <a href="index.html" class="back-link">← Вернуться на главную</a>
+            <div class="form-group">
+                <label for="email">Ваш Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="ivan@example.com" required>
+                <div class="hint">На этот адрес придёт уведомление о решении.</div>
             </div>
         </div>
 
-        <!-- Подвал (такой же, как на основном сайте) -->
-        <footer>
-            <p>&copy; 2026 Мой сайт. Все материалы распространяются бесплатно.</p>
-        </footer>
+        <!-- ===== Категория и название ===== -->
+        <div class="field-group-title">Материал</div>
+
+        <div class="form-group">
+            <label for="category">Категория <span class="required">*</span></label>
+            <select id="category" name="category" required>
+                <option value="">Выберите категорию</option>
+                <option value="programs">💻 Программы</option>
+                <option value="books">📚 Книги</option>
+                <option value="music">🎵 Музыка</option>
+                <option value="games">🎮 Игры</option>
+                <option value="movies">🎬 Фильмы</option>
+                <option value="articles">✍️ Статьи</option>
+                <option value="misc">📦 Разное</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="title">Название материала <span class="required">*</span></label>
+            <input type="text" id="title" name="title" placeholder="Например: Супер-программа v2.0" required>
+        </div>
+
+        <!-- ===== Общие поля для медиа ===== -->
+        <div class="form-group">
+            <label for="description">Краткое описание <span class="required">*</span></label>
+            <textarea id="description" name="description" placeholder="Что это за материал и чем он полезен..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="download_link">Ссылка для скачивания <span class="required">*</span></label>
+            <input type="url" id="download_link" name="download_link" placeholder="https://disk.yandex.ru/d/..." required>
+            <div class="hint">Ссылка на файл в облаке (Яндекс.Диск, Google Drive и т.п.).</div>
+        </div>
+
+        <!-- ===== Поля для книг ===== -->
+        <div class="section-fields" id="fields-books" style="display:none;">
+            <div class="field-group-title">Поля для книг</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="author">Автор</label>
+                    <input type="text" id="author" name="author" placeholder="Например: Анджей Ясинский">
+                </div>
+                <div class="form-group">
+                    <label for="format">Формат</label>
+                    <input type="text" id="format" name="format" placeholder="fb2, pdf, epub">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Поля для программ ===== -->
+        <div class="section-fields" id="fields-programs" style="display:none;">
+            <div class="field-group-title">Поля для программ</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="version">Версия</label>
+                    <input type="text" id="version" name="version" placeholder="Например: 2.0">
+                </div>
+                <div class="form-group">
+                    <label for="size">Размер (МБ)</label>
+                    <input type="text" id="size" name="size" placeholder="Например: 479">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Поля для музыки ===== -->
+        <div class="section-fields" id="fields-music" style="display:none;">
+            <div class="field-group-title">Поля для музыки</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="artist">Исполнитель</label>
+                    <input type="text" id="artist" name="artist" placeholder="Например: Кино">
+                </div>
+                <div class="form-group">
+                    <label for="music_year">Год</label>
+                    <input type="number" id="music_year" name="music_year" placeholder="Например: 1990">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Поля для игр ===== -->
+        <div class="section-fields" id="fields-games" style="display:none;">
+            <div class="field-group-title">Поля для игр</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="platform">Платформа</label>
+                    <input type="text" id="platform" name="platform" placeholder="PC, PS5, Xbox">
+                </div>
+                <div class="form-group">
+                    <label for="game_year">Год</label>
+                    <input type="number" id="game_year" name="game_year" placeholder="Например: 2024">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Поля для фильмов ===== -->
+        <div class="section-fields" id="fields-movies" style="display:none;">
+            <div class="field-group-title">Поля для фильмов</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="movie_year">Год</label>
+                    <input type="number" id="movie_year" name="movie_year" placeholder="Например: 1999">
+                </div>
+                <div class="form-group">
+                    <label for="movie_format">Формат</label>
+                    <input type="text" id="movie_format" name="movie_format" placeholder="mp4, mkv, avi">
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Дополнительная информация ===== -->
+        <div class="form-group" style="margin-top: 25px;">
+            <label for="comment">Дополнительная информация</label>
+            <textarea id="comment" name="comment" placeholder="Что-то ещё, что мы должны знать..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+            <i class="fas fa-paper-plane"></i> Отправить на модерацию
+        </button>
+    </form>
+
+    <!-- Сообщение об успехе -->
+    <div class="success-message" id="successMessage">
+        <i class="fas fa-check-circle"></i>
+        <h3>Спасибо за заявку!</h3>
+        <p>Ваш материал отправлен на модерацию. Мы свяжемся с вами по указанному email.</p>
+        <a href="index.html" class="back-link">← Вернуться на главную</a>
     </div>
 
-    <!-- ====== JAVASCRIPT ДЛЯ ОБРАБОТКИ ФОРМЫ ====== -->
-    <script>
-        (function() {
-            const form = document.getElementById('submitForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const successMessage = document.getElementById('successMessage');
+    <footer style="text-align:center; font-size:13px; color:#94a3b8; margin-top:30px; padding-top:20px; border-top:1px solid #eef2ff;">
+        <i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны
+    </footer>
+</div>
 
-            // Проверяем, что форма существует
-            if (!form) return;
+<script>
+    // Показ полей в зависимости от выбранной категории
+    const categorySelect = document.getElementById('category');
+    const allSections = document.querySelectorAll('.section-fields');
 
-            // Функция для показа сообщения об успехе
-            function showSuccess() {
-                form.style.display = 'none';  // Скрываем форму
-                successMessage.classList.add('show');
-                // Прокручиваем страницу вверх, чтобы пользователь увидел сообщение
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+    categorySelect.addEventListener('change', function() {
+        // Скрываем все секции
+        allSections.forEach(sec => sec.style.display = 'none');
+        // Показываем нужную
+        const val = this.value;
+        if (val) {
+            const target = document.getElementById('fields-' + val);
+            if (target) target.style.display = 'block';
+        }
+    });
 
-            // Обработка отправки формы через fetch (чтобы не перезагружать страницу)
-            form.addEventListener('submit', function(e) {
-                 e.preventDefault();  // Отменяем стандартную отправку
+    // Обработка отправки формы
+    (function() {
+        const form = document.getElementById('submitForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const successMessage = document.getElementById('successMessage');
+        if (!form) return;
 
-                // Отключаем кнопку, чтобы избежать двойной отправки
-                submitBtn.disabled = true;
-                submitBtn.textContent = '⏳ Отправка...';
+        function showSuccess() {
+            form.style.display = 'none';
+            document.querySelector('.info-block').style.display = 'none';
+            successMessage.classList.add('show');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-                // Собираем данные формы
-                const formData = new FormData(form);
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
 
-                // Отправляем данные на Netlify Forms через fetch
-                fetch('/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(formData).toString()
-                })
-                .then(response => {
-                    // Если ответ успешный (даже если 200 OK), показываем успех
-                    if (response.ok) {
-                        showSuccess();
-                    } else {
-                        throw new Error('Ошибка при отправке. Попробуйте позже.');
-                    }
-                })
-                .catch(error => {
-                    alert('Произошла ошибка: ' + error.message);
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = '📩 Отправить на модерацию';
-                });
+            const formData = new FormData(form);
+
+            // Отправка в Netlify Forms
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
+            })
+            .then(response => {
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    throw new Error('Ошибка при отправке. Попробуйте позже.');
+                }
+            })
+            .catch(error => {
+                alert('Произошла ошибка: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить на модерацию';
             });
+        });
 
-            // Если на странице уже есть параметр success=1 (например, после редиректа)
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('success') === '1') {
-                showSuccess();
-            }
-        })();
-    </script>
+        // Если вернулись со страницы подтверждения (Netlify)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === '1') {
+            showSuccess();
+        }
+    })();
+</script>
 </body>
 </html>
