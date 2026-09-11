@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ (без изменений) ===== */
+        /* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -108,6 +108,14 @@
         }
         .header-actions .btn-admin-downloads:hover {
             background: #7c3aed;
+            transform: translateY(-2px);
+        }
+        .header-actions .btn-admin-cms {
+            background: #1e293b;
+            color: white;
+        }
+        .header-actions .btn-admin-cms:hover {
+            background: #0f172a;
             transform: translateY(-2px);
         }
         .user-info {
@@ -233,129 +241,118 @@
             gap: 12px;
         }
         .section-title i { color: #2563eb; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .card {
+
+        /* ===== ТАБЛИЦА КОНТЕНТА ===== */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
             background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 18px 20px 22px;
-            transition: 0.25s;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(37,99,235,0.06);
-            border-color: #b1c5f0;
-        }
-        .card h3 {
-            font-size: 17px;
+        .content-table thead th {
+            background: #f1f5f9;
+            color: #1e293b;
             font-weight: 700;
-            margin-bottom: 4px;
-            color: #0f172a;
-        }
-        .card p {
             font-size: 14px;
-            color: #475569;
-            margin-bottom: 10px;
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
         }
-        .card .meta {
+        .content-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #334155;
+            vertical-align: top;
+        }
+        .content-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        .content-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .content-table .col-title {
+            font-weight: 600;
+            color: #0f172a;
+            max-width: 200px;
+        }
+        .content-table .col-desc {
+            max-width: 400px;
+        }
+        .content-table .col-center {
+            text-align: center;
+            white-space: nowrap;
+        }
+        .content-table .col-num {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Разворачивающееся описание */
+        .desc-short {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+        }
+        .desc-full {
+            display: none;
+            word-break: break-word;
+        }
+        .desc-toggle {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
             font-size: 13px;
-            color: #94a3b8;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 6px;
+            margin-top: 4px;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
         }
-        .btn-download {
-            display: inline-block;
+        .desc-toggle:hover {
+            text-decoration: underline;
+        }
+
+        /* Маленькая кнопка скачивания в таблице */
+        .btn-download-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             background: #2563eb;
             color: white;
-            padding: 6px 18px;
-            border-radius: 40px;
+            padding: 6px 14px;
+            border-radius: 30px;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            transition: 0.2s;
-            margin-top: 10px;
-            cursor: pointer;
             border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
         }
-        .btn-download:hover {
+        .btn-download-sm:hover {
             background: #1d4ed8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37,99,235,0.25);
         }
-        .btn-download.disabled {
+        .btn-download-sm.disabled {
             background: #94a3b8;
             cursor: not-allowed;
         }
-        .btn-download i { margin-right: 6px; }
-        .download-count {
-            display: inline-block;
-            margin-left: 8px;
-            font-size: 13px;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 2px 10px;
-            border-radius: 30px;
-            font-weight: 500;
-        }
-        .download-count i {
-            margin-right: 4px;
-            font-size: 12px;
-        }
 
-        .news-item {
+        .empty-block {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 20px;
+            font-style: italic;
             background: #f8fafc;
-            border-left: 4px solid #2563eb;
-            padding: 14px 18px;
-            margin: 12px 0;
-            border-radius: 0 12px 12px 0;
-        }
-        .news-item time {
-            font-size: 13px;
-            color: #64748b;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .news-item h4 {
-            font-size: 17px;
-            font-weight: 700;
-        }
-        .news-item p { color: #334155; margin-top: 4px; }
-
-        .article-item {
-            padding: 14px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .article-item:last-child { border-bottom: none; }
-        .article-item h4 {
-            font-size: 17px;
-            font-weight: 700;
-        }
-        .article-item p {
-            color: #475569;
-            margin: 4px 0 8px;
-        }
-        .article-item a {
-            color: #2563eb;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .article-item a:hover { text-decoration: underline; }
-
-        .tag {
-            display: inline-block;
-            background: #e5e7eb;
-            border-radius: 30px;
-            padding: 4px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1e293b;
-            margin: 3px 6px 3px 0;
+            border-radius: 12px;
         }
 
         @media (max-width: 1024px) {
@@ -384,7 +381,10 @@
                 gap: 8px;
             }
             .content-area { padding: 16px; }
-            .grid { grid-template-columns: 1fr; }
+            .content-table { font-size: 12px; }
+            .content-table thead th,
+            .content-table tbody td { padding: 8px 6px; }
+            .content-table .col-desc { max-width: 200px; }
             .stats-panel { width: 100%; }
         }
         @media (max-width: 480px) {
@@ -404,8 +404,11 @@
         <div class="header-actions">
             <a href="forum.html" class="btn-primary"><i class="fas fa-comments"></i> Форум</a>
             <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить</a>
-            <a href="admin/" class="btn-primary" style="background:#1e293b;"><i class="fas fa-cog"></i> Админка</a>
-            <a href="admin-downloads.html" class="btn-admin-downloads" id="adminDownloadsLink" style="display:none;"><i class="fas fa-download"></i> Скачивания</a>
+            <!-- Кнопка админки Decap CMS -->
+            <a href="admin/" class="btn-admin-cms" id="adminCmsLink"><i class="fas fa-cog"></i> Админка</a>
+            <!-- Кнопка истории скачиваний (видна только админам) -->
+            <a href="admin-downloads.html" class="btn-admin-downloads" id="adminDownloadsLink" style="display:none;"><i class="fas fa-download"></i> История скачиваний</a>
+            <!-- Кнопка обновления контента (видна только админам) -->
             <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
                target="_blank" 
                class="btn-update" 
@@ -447,42 +450,42 @@
 
                 <div id="news" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2>
-                    <div id="news-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="news-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="programs" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-code"></i> Программы</h2>
-                    <div id="programs-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="programs-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="books" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-book"></i> Книги</h2>
-                    <div id="books-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="books-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="articles" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-pen-fancy"></i> Статьи</h2>
-                    <div id="articles-container"><p style="color:#94a3b8; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="articles-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="movies" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-film"></i> Фильмы</h2>
-                    <div id="movies-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="movies-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="music" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-music"></i> Музыка</h2>
-                    <div id="music-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="music-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="games" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-gamepad"></i> Игры</h2>
-                    <div id="games-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="games-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
                 <div id="misc" class="tab-content">
                     <h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2>
-                    <div id="misc-container" class="grid"><p style="color:#94a3b8; grid-column:1/-1; text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
+                    <div id="misc-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div>
                 </div>
 
             </div>
@@ -518,7 +521,52 @@
     let currentProfile = null;
 
     // ============================================================
-    // 2. АВТОРИЗАЦИЯ И ВИДЖЕТ
+    // 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================================
+    function slugify(text) {
+        if (!text) return '';
+        let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
+        slug = slug.replace(/[\s\-]+/g, '-');
+        return slug;
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Разворачивание/сворачивание описания
+    window.toggleDesc = function(btn) {
+        const cell = btn.closest('td');
+        const shortEl = cell.querySelector('.desc-short');
+        const fullEl = cell.querySelector('.desc-full');
+        if (!shortEl || !fullEl) return;
+        if (fullEl.style.display === 'block') {
+            fullEl.style.display = 'none';
+            shortEl.style.display = '-webkit-box';
+            btn.textContent = 'Развернуть';
+        } else {
+            fullEl.style.display = 'block';
+            shortEl.style.display = 'none';
+            btn.textContent = 'Свернуть';
+        }
+    };
+
+    // ============================================================
+    // 3. АВТОРИЗАЦИЯ И ВИДЖЕТ
     // ============================================================
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
@@ -550,8 +598,8 @@
             const avatarUrl = currentProfile?.avatar_url || '';
             const username = currentProfile?.username || currentUser.email;
             widget.innerHTML = `
-                <span class="username">${username}</span>
-                <div class="user-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
+                <span class="username">${escapeHtml(username)}</span>
+                <div class="user-avatar">${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
                 <a href="profile.html" class="btn-primary" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
                 <button id="logoutBtnMain" class="btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
@@ -569,7 +617,7 @@
     }
 
     // ============================================================
-    // 3. СТАТИСТИКА
+    // 4. СТАТИСТИКА
     // ============================================================
     async function loadStats() {
         try {
@@ -589,7 +637,7 @@
     }
 
     // ============================================================
-    // 4. СЧЁТЧИКИ СКАЧИВАНИЙ И ЛОГИРОВАНИЕ
+    // 5. СЧЁТЧИКИ СКАЧИВАНИЙ
     // ============================================================
     let downloadCounts = {};
 
@@ -611,19 +659,13 @@
     }
 
     function updateDownloadCountsDisplay() {
-        document.querySelectorAll('[data-file-id]').forEach(el => {
-            const fileId = el.dataset.fileId;
-            const countSpan = document.getElementById('download-count-' + fileId);
-            if (countSpan) {
-                countSpan.textContent = downloadCounts[fileId] || 0;
-            }
+        document.querySelectorAll('[data-count-file-id]').forEach(el => {
+            const fileId = el.dataset.countFileId;
+            el.textContent = downloadCounts[fileId] || 0;
         });
     }
 
     async function incrementDownload(fileId, downloadUrl, fileName) {
-        console.log('[incrementDownload] fileId:', fileId);
-        console.log('[incrementDownload] downloadUrl:', downloadUrl);
-        console.log('[incrementDownload] fileName:', fileName);
         if (!currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
             return;
@@ -632,8 +674,7 @@
             const { data, error } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
             if (error) throw error;
             downloadCounts[fileId] = data;
-            const countSpan = document.getElementById('download-count-' + fileId);
-            if (countSpan) countSpan.textContent = data;
+            updateDownloadCountsDisplay();
 
             const { error: logError } = await supabaseClient
                 .from('download_logs')
@@ -646,10 +687,7 @@
             if (logError) console.error('Ошибка записи лога скачивания:', logError);
 
             if (downloadUrl && downloadUrl !== '#') {
-                console.log('[incrementDownload] Открываем ссылку:', downloadUrl);
                 window.open(downloadUrl, '_blank');
-            } else {
-                console.warn('[incrementDownload] Ссылка пуста или равна #');
             }
         } catch (error) {
             console.error('Ошибка увеличения счётчика скачиваний:', error);
@@ -660,25 +698,10 @@
         }
     }
 
-    function handleDownloadClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const btn = this;
-        const fileId = btn.dataset.fileId;
-        const downloadUrl = btn.dataset.downloadUrl;
-        const fileName = btn.dataset.fileName || '';
-        incrementDownload(fileId, downloadUrl, fileName);
-    }
-
-    function attachDownloadHandler(btn) {
-        btn.removeEventListener('click', handleDownloadClick);
-        btn.addEventListener('click', handleDownloadClick);
-    }
-
     // ============================================================
-    // 5. ЗАГРУЗКА КОНТЕНТА ИЗ СТАТИЧЕСКИХ JSON (без GitHub API)
+    // 6. ЗАГРУЗКА КОНТЕНТА ИЗ JSON
     // ============================================================
-    async function loadCollection(containerId, jsonPath, renderItem) {
+    async function loadCollection(containerId, jsonPath, renderFn) {
         const container = document.getElementById(containerId);
         if (!container) return;
         try {
@@ -686,111 +709,215 @@
             if (!response.ok) throw new Error(`Ошибка загрузки ${jsonPath}: ${response.status}`);
             const items = await response.json();
             if (!items || items.length === 0) {
-                container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:30px;">Пока нет материалов в этом разделе.</p>`;
+                container.innerHTML = `<p class="empty-block">Пока нет материалов в этом разделе.</p>`;
                 return;
             }
-            let html = '';
-            items.forEach(item => {
-                html += renderItem(item);
-            });
-            container.innerHTML = html;
+            container.innerHTML = renderFn(items);
 
             // Привязываем обработчики скачивания
-            document.querySelectorAll('.btn-download[data-file-id]').forEach(btn => {
-                attachDownloadHandler(btn);
+            container.querySelectorAll('.btn-download-sm[data-file-id]').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const fileId = this.dataset.fileId;
+                    const downloadUrl = this.dataset.downloadUrl;
+                    const fileName = this.dataset.fileName || '';
+                    incrementDownload(fileId, downloadUrl, fileName);
+                });
             });
 
             // Обновляем счётчики
-            if (Object.keys(downloadCounts).length > 0) {
-                updateDownloadCountsDisplay();
-            }
+            updateDownloadCountsDisplay();
         } catch (error) {
             console.error(`Ошибка загрузки ${jsonPath}:`, error);
-            container.innerHTML = `<p style="color:#ef4444; text-align:center; padding:30px;">Не удалось загрузить раздел. Попробуйте позже.</p>`;
+            container.innerHTML = `<p class="empty-block" style="color:#ef4444;">Не удалось загрузить раздел. Попробуйте позже.</p>`;
         }
     }
 
     // ============================================================
-    // 6. РЕНДЕР-ФУНКЦИИ (работают с объектами из JSON)
+    // 7. УНИВЕРСАЛЬНАЯ ФУНКЦИЯ РЕНДЕРА ТАБЛИЦЫ
     // ============================================================
-    function escapeHtmlLink(url) {
-        if (!url) return '';
-        return url.replace(/&/g, '&amp;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/'/g, '&#39;');
-    }
+    // columns: массив объектов {key, label, type}
+    // type: 'text' | 'description' | 'download' | 'count'
+    function renderTable(items, columns) {
+        // Проверяем, нужны ли колонки скачивания/количества
+        const hasDownloadColumn = columns.some(c => c.type === 'download');
 
-    function renderNews(item) {
-        const date = item.date ? new Date(item.date).toLocaleDateString('ru-RU') : '';
-        return `<div class="news-item">${date ? `<time>${date}</time>` : ''}<h4>${item.title || 'Без названия'}</h4><p>${item.body ? item.body.slice(0,200)+(item.body.length>200?'...':'') : ''}</p></div>`;
-    }
+        // Заголовок
+        let thead = '<tr>';
+        columns.forEach(col => {
+            let cls = '';
+            if (col.type === 'download') cls = 'col-center';
+            if (col.type === 'count') cls = 'col-num';
+            thead += `<th class="${cls}">${escapeHtml(col.label)}</th>`;
+        });
+        thead += '</tr>';
 
-    function renderCard(item, extraMeta = '') {
-        const isLoggedIn = currentUser !== null;
-        const downloadLink = isLoggedIn ? item.download_link : '#';
-        const fileId = item.title ? item.title.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\-]/g, '-').toLowerCase() : '';
-        const fileTitle = item.title || 'Без названия';
-        const btnClass = isLoggedIn ? 'btn-download' : 'btn-download disabled';
-        const countHtml = (isLoggedIn && fileId) ? `<span class="download-count" id="download-count-${fileId}"><i class="fas fa-download"></i> <span>${downloadCounts[fileId] || 0}</span></span>` : '';
-        const onclickAttr = isLoggedIn ? '' : ' onclick="alert(\'Для скачивания необходимо зарегистрироваться.\'); return false;"';
-        const downloadLinkEscaped = escapeHtmlLink(downloadLink);
-        return `<div class="card">
-            <h3>${fileTitle}</h3>
-            <p>${item.description || ''}</p>
-            <div class="meta">${extraMeta}</div>
-            ${isLoggedIn ? 
-                `<a href="#" class="${btnClass}" data-file-id="${fileId}" data-download-url="${downloadLinkEscaped}" data-file-name="${fileTitle}" ${onclickAttr}><i class="fas fa-download"></i> Скачать ${countHtml}</a>` :
-                `<a href="#" class="${btnClass}" ${onclickAttr}><i class="fas fa-download"></i> Скачать</a>`
-            }
-        </div>`;
-    }
+        // Тело
+        let tbody = '';
+        items.forEach(item => {
+            tbody += '<tr>';
+            columns.forEach(col => {
+                if (col.type === 'description') {
+                    const text = item[col.key] || '';
+                    if (!text) {
+                        tbody += `<td class="col-desc">—</td>`;
+                    } else {
+                        const full = escapeHtml(text);
+                        // Короткая версия для отображения (2 строки через CSS)
+                        tbody += `<td class="col-desc">
+                            <div class="desc-short">${full}</div>
+                            <div class="desc-full">${full}</div>
+                            <button class="desc-toggle" onclick="toggleDesc(this)">Развернуть</button>
+                        </td>`;
+                    }
+                } else if (col.type === 'download') {
+                    // Если у элемента нет ссылки на скачивание — пустая ячейка
+                    if (!item.download_link) {
+                        tbody += `<td class="col-center">—</td>`;
+                    } else {
+                        const isLoggedIn = currentUser !== null;
+                        const fileId = slugify(item.title || '');
+                        const fileTitle = item.title || 'Без названия';
+                        const downloadLink = item.download_link;
+                        const btnClass = isLoggedIn ? 'btn-download-sm' : 'btn-download-sm disabled';
+                        const onclickAttr = isLoggedIn
+                            ? ''
+                            : `onclick="event.preventDefault(); alert('Для скачивания необходимо зарегистрироваться.'); return false;"`;
+                        tbody += `<td class="col-center">
+                            <a href="#" class="${btnClass}" 
+                               data-file-id="${escapeAttr(fileId)}" 
+                               data-download-url="${escapeAttr(downloadLink)}" 
+                               data-file-name="${escapeAttr(fileTitle)}"
+                               ${onclickAttr}>
+                               <i class="fas fa-download"></i> Скачать
+                            </a>
+                        </td>`;
+                    }
+                } else if (col.type === 'count') {
+                    if (!item.download_link) {
+                        tbody += `<td class="col-num">—</td>`;
+                    } else {
+                        const fileId = slugify(item.title || '');
+                        const count = downloadCounts[fileId] || 0;
+                        tbody += `<td class="col-num" data-count-file-id="${escapeAttr(fileId)}">${count}</td>`;
+                    }
+                } else {
+                    // Обычное текстовое поле
+                    const value = item[col.key];
+                    if (col.key === 'title') {
+                        tbody += `<td class="col-title">${escapeHtml(value || '')}</td>`;
+                    } else {
+                        tbody += `<td>${escapeHtml(value || '')}</td>`;
+                    }
+                }
+            });
+            tbody += '</tr>';
+        });
 
-    function renderProgram(item) {
-        const size = item.size ? `${item.size} МБ` : '';
-        const version = item.version ? `Версия: ${item.version}` : '';
-        const meta = `${version ? `<span>${version}</span>` : ''}${size ? `<span>${size}</span>` : ''}`;
-        return renderCard(item, meta);
-    }
-
-    function renderBook(item) {
-        const author = item.author ? `<strong>Автор:</strong> ${item.author}` : '';
-        const format = item.format ? item.format : 'PDF';
-        const meta = `${author ? `<span>${author}</span>` : ''}<span><i class="fas fa-file-pdf"></i> ${format}</span>`;
-        return renderCard(item, meta);
-    }
-
-    function renderArticle(item) {
-        const date = item.date ? new Date(item.date).toLocaleDateString('ru-RU') : '';
-        return `<div class="article-item"><h4>${item.title || 'Без названия'}</h4>${date ? `<span style="font-size:13px; color:#94a3b8;">${date}</span>` : ''}<p>${item.body ? item.body.slice(0,150)+(item.body.length>150?'...':'') : ''}</p><a href="#">Читать далее <i class="fas fa-arrow-right"></i></a></div>`;
-    }
-
-    function renderMovie(item) {
-        const year = item.year ? `Год: ${item.year}` : '';
-        return renderCard(item, year);
-    }
-
-    function renderMusic(item) {
-        const year = item.year ? `Год: ${item.year}` : '';
-        const artist = item.artist ? `Исполнитель: ${item.artist}` : '';
-        const meta = `${artist ? `<span>${artist}</span>` : ''}${year ? `<span>${year}</span>` : ''}`;
-        return renderCard(item, meta);
-    }
-
-    function renderGame(item) {
-        const platform = item.platform ? `Платформа: ${item.platform}` : '';
-        const year = item.year ? `Год: ${item.year}` : '';
-        const meta = `${platform ? `<span>${platform}</span>` : ''}${year ? `<span>${year}</span>` : ''}`;
-        return renderCard(item, meta);
-    }
-
-    function renderMisc(item) {
-        return renderCard(item, '');
+        return `<table class="content-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
     }
 
     // ============================================================
-    // 7. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // 8. ФУНКЦИИ РЕНДЕРА ДЛЯ КАЖДОГО РАЗДЕЛА
+    // ============================================================
+
+    // Новости: Название | Дата | Описание (без скачивания)
+    function renderNews(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'date', label: 'Дата', type: 'text' },
+            { key: 'body', label: 'Описание', type: 'description' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Программы: Название | Описание | Версия | Размер | Скачать | Количество
+    function renderProgram(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'version', label: 'Версия', type: 'text' },
+            { key: 'size', label: 'Размер (МБ)', type: 'text' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Книги: Название | Автор | Описание | Формат | Скачать | Количество
+    function renderBook(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'author', label: 'Автор', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'format', label: 'Формат', type: 'text' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Статьи: Название | Дата | Описание (без скачивания)
+    function renderArticle(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'date', label: 'Дата', type: 'text' },
+            { key: 'body', label: 'Описание', type: 'description' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Фильмы: Название | Год | Описание | Скачать | Количество
+    function renderMovie(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'year', label: 'Год', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Музыка: Название | Исполнитель | Год | Описание | Скачать | Количество
+    function renderMusic(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'artist', label: 'Исполнитель', type: 'text' },
+            { key: 'year', label: 'Год', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Игры: Название | Платформа | Год | Описание | Скачать | Количество
+    function renderGame(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'platform', label: 'Платформа', type: 'text' },
+            { key: 'year', label: 'Год', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // Разное: Название | Описание | Скачать | Количество
+    function renderMisc(items) {
+        const columns = [
+            { key: 'title', label: 'Название', type: 'text' },
+            { key: 'description', label: 'Описание', type: 'description' },
+            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Скачиваний', type: 'count' }
+        ];
+        return renderTable(items, columns);
+    }
+
+    // ============================================================
+    // 9. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     // ============================================================
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -808,8 +935,7 @@
 
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            const tabId = this.dataset.tab;
-            switchTab(tabId);
+            switchTab(this.dataset.tab);
         });
     });
 
@@ -819,7 +945,7 @@
     }
 
     // ============================================================
-    // 8. ЗАПИСЬ ПОСЕЩЕНИЙ
+    // 10. ЗАПИСЬ ПОСЕЩЕНИЙ
     // ============================================================
     async function trackVisit() {
         let visitorId = localStorage.getItem('visitor_id');
@@ -836,16 +962,13 @@
     }
 
     // ============================================================
-    // 9. ИНИЦИАЛИЗАЦИЯ
+    // 11. ИНИЦИАЛИЗАЦИЯ
     // ============================================================
     (async function init() {
         await checkAuth();
         await trackVisit();
-
-        // Загружаем счётчики скачиваний
         await loadDownloadCounts();
 
-        // Загружаем контент из JSON-файлов
         loadCollection('news-container', '_content/news.json', renderNews);
         loadCollection('programs-container', '_content/programs.json', renderProgram);
         loadCollection('books-container', '_content/books.json', renderBook);
