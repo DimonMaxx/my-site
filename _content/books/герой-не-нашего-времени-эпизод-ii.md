@@ -4,5 +4,6 @@ description: "В жизни всегда есть место подвигу, н�
 download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9F%D0%BE%D0%BB%D0%BA%D0%BE%D0%B2%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2.%20%D0%93%D0%B5%D1%80%D0%BE%D0%B9%20%D0%BD%D0%B5%20%D0%BD%D0%B0%D1%88%D0%B5%D0%B3%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%B8.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2"
 author: "Полковников Дмитрий"
 format: "fb2"
+cover: "https://rmoonebbvpmvthvpcmpt.supabase.co/storage/v1/object/public/covers/0cf5ba3eae3cad326d938de589b36b2b.jpg"
 ---
 

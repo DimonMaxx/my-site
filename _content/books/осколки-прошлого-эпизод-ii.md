@@ -4,5 +4,6 @@ description: "...И снова Хелли в вихре чьих-то козне
 download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%9E%D1%81%D0%BA%D0%BE%D0%BB%D0%BA%D0%B8%20%D0%BF%D1%80%D0%BE%D1%88%D0%BB%D0%BE%D0%B3%D0%BE.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2"
 author: "Кувайкова Анна"
 format: "fb2"
+cover: "https://rmoonebbvpmvthvpcmpt.supabase.co/storage/v1/object/public/covers/71b3280e6ab953372e9c2b896ba25af6.jpg"
 ---
 

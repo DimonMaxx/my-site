@@ -4,5 +4,6 @@ description: "Сколько секретов может быть спрятан
 download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%9C%D0%B0%D0%B3%D0%B8%D1%8F%20%D0%B1%D0%B5%D0%B7%D0%BC%D0%BE%D0%BB%D0%B2%D0%B8%D1%8F.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2"
 author: "Кувайкова Анна Александровна"
 format: "fb2"
+cover: "https://rmoonebbvpmvthvpcmpt.supabase.co/storage/v1/object/public/covers/43262d1e947b030823fc8e711ebdca85.jpg"
 ---
 
