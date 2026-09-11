@@ -6,17 +6,16 @@ import re
 import time
 import requests
 import xml.etree.ElementTree as ET
-from urllib.parse import quote
 
 # ========== НАСТРОЙКИ ==========
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 SHEET_TITLE = "Книги"
 
-# Скачивать только те файлы, у которых в таблице пуст "Автор" ИЛИ "Описание"
+# Обновлять все строки или только те, где есть пустые поля
 ONLY_EMPTY = True
 
-# Максимальная длина описания в ячейке (Google Sheets имеет лимит 50000, но для удобства ограничим)
+# Максимальная длина описания
 MAX_DESC_LEN = 2000
 # ==============================
 
@@ -45,7 +44,6 @@ def get_yandex_files_with_download(public_key):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     }
-    # Список файлов
     api_url = "https://cloud-api.yandex.net/v1/disk/public/resources"
     params = {"public_key": public_key, "limit": 1000, "sort": "name"}
     resp = requests.get(api_url, params=params, headers=headers, timeout=30)
@@ -59,6 +57,11 @@ def get_yandex_files_with_download(public_key):
     for idx, item in enumerate(items, start=1):
         if item.get('type') != 'file':
             continue
+        # Пропускаем не-FB2 файлы (нам нужны только они для парсинга)
+        fname = item.get('name', '')
+        if not fname.lower().endswith('.fb2'):
+            continue
+
         # Получаем прямую ссылку на скачивание
         dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
         dl_params = {"public_key": public_key, "path": item['path']}
@@ -67,26 +70,32 @@ def get_yandex_files_with_download(public_key):
             if dl_resp.status_code == 200:
                 download_url = dl_resp.json().get('href')
                 result.append({
-                    'name': item.get('name', ''),
+                    'name': fname,
                     'path': item.get('path', ''),
                     'download_url': download_url
                 })
             else:
-                print(f"  Не удалось получить ссылку для {item.get('name')}: {dl_resp.status_code}")
+                print(f"  Не удалось получить ссылку для {fname}: {dl_resp.status_code}")
         except Exception as e:
-            print(f"  Ошибка при получении ссылки для {item.get('name')}: {e}")
+            print(f"  Ошибка при получении ссылки для {fname}: {e}")
         # Небольшая пауза, чтобы не спамить API
         if idx % 20 == 0:
             time.sleep(1)
-    print(f"Получено прямых ссылок: {len(result)}")
+    print(f"Получено прямых ссылок на FB2: {len(result)}")
     return result
 
 def parse_fb2(content_bytes):
-    """Парсит FB2 и возвращает (author, description)."""
-    author = ''
-    description = ''
+    """
+    Парсит FB2 и возвращает словарь:
+    {
+      'title': '...',
+      'author': '...',
+      'description': '...',
+    }
+    """
+    result = {'title': '', 'author': '', 'description': ''}
 
-    # FB2 может быть в UTF-8 или Windows-1251
+    # Пробуем разные кодировки
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
         try:
@@ -95,27 +104,26 @@ def parse_fb2(content_bytes):
         except UnicodeDecodeError:
             continue
     if text is None:
-        return '', ''
+        return result
 
-    # Убираем BOM
     text = text.lstrip('\ufeff')
 
     try:
         root = ET.fromstring(text)
-    except ET.ParseError as e:
-        # Попробуем ещё раз, убрав всё до первого <FictionBook
-        idx = text.find('<FictionBook')
-        if idx == -1:
-            idx = text.find('<fictionbook')
-        if idx > 0:
-            try:
-                root = ET.fromstring(text[idx:])
-            except ET.ParseError:
-                return '', ''
+    except ET.ParseError:
+        # Пробуем найти начало FictionBook
+        for marker in ('<FictionBook', '<fictionbook'):
+            idx = text.find(marker)
+            if idx >= 0:
+                try:
+                    root = ET.fromstring(text[idx:])
+                    break
+                except ET.ParseError:
+                    continue
         else:
-            return '', ''
+            return result
 
-    # Пространство имён может быть, может не быть
+    # Возможные пространства имён
     ns_candidates = [
         'http://www.gribuser.ru/xml/fictionbook/2.0',
         'http://www.fictionbook.org/FictionBook2/Encodings',
@@ -134,42 +142,94 @@ def parse_fb2(content_bytes):
                     return el
         return None
 
-    def find_text(parent, tag):
-        el = find_el(parent, tag)
-        return el.text.strip() if (el is not None and el.text) else ''
+    def get_text(el):
+        if el is None:
+            return ''
+        # Собираем текст со всех потомков
+        parts = []
+        for sub in el.iter():
+            if sub.text and sub.text.strip():
+                parts.append(sub.text.strip())
+            if sub.tail and sub.tail.strip():
+                parts.append(sub.tail.strip())
+        return ' '.join(parts).strip()
+
+    # === Название книги (book-title) ===
+    title_el = find_el(root, 'book-title')
+    if title_el is not None and title_el.text:
+        result['title'] = title_el.text.strip()
 
     # === Автор ===
-    author_el = find_el(root, 'author')
+    # Ищем первый author в title-info
+    title_info = find_el(root, 'title-info')
+    author_el = None
+    if title_info is not None:
+        # Первый author внутри title-info
+        for ns in ns_candidates:
+            if ns:
+                author_el = title_info.find(f'{{{ns}}}author')
+            else:
+                author_el = title_info.find('author')
+            if author_el is not None:
+                break
+
+    if author_el is None:
+        author_el = find_el(root, 'author')
+
     if author_el is not None:
-        first = find_text(author_el, 'first-name')
-        last = find_text(author_el, 'last-name')
-        middle = find_text(author_el, 'middle-name')
-        nickname = find_text(author_el, 'nickname')
-        parts = [p for p in [last, first, middle] if p]
+        first = ''
+        last = ''
+        middle = ''
+        nickname = ''
+        for ns in ns_candidates:
+            prefix = f'{{{ns}}}' if ns else ''
+            f = author_el.find(f'{prefix}first-name')
+            l = author_el.find(f'{prefix}last-name')
+            m = author_el.find(f'{prefix}middle-name')
+            n = author_el.find(f'{prefix}nickname')
+            if f is not None and f.text:
+                first = f.text.strip()
+            if l is not None and l.text:
+                last = l.text.strip()
+            if m is not None and m.text:
+                middle = m.text.strip()
+            if n is not None and n.text:
+                nickname = n.text.strip()
+            if first or last or middle or nickname:
+                break
+
+        parts = []
+        if last:
+            parts.append(last)
+        if first:
+            parts.append(first)
+        if middle:
+            parts.append(middle)
         if not parts and nickname:
-            parts = [nickname]
-        author = ' '.join(parts)
+            parts.append(nickname)
+        result['author'] = ' '.join(parts)
 
     # === Описание (annotation) ===
     ann_el = find_el(root, 'annotation')
     if ann_el is not None:
-        # Собираем все текстовые узлы
-        texts = []
-        for el in ann_el.iter():
-            # Пропускаем служебные теги
-            if el.tag.split('}')[-1] in ('section', 'title', 'subtitle'):
+        # Собираем текст, пропуская subtitle и заголовки
+        parts = []
+        for sub in ann_el.iter():
+            tag = sub.tag.split('}')[-1]
+            if tag in ('subtitle', 'title', 'section'):
                 continue
-            if el.text and el.text.strip():
-                texts.append(el.text.strip())
-        description = ' '.join(texts)
+            if sub.text and sub.text.strip():
+                parts.append(sub.text.strip())
+        description = ' '.join(parts)
+        # Обрезаем
+        if len(description) > MAX_DESC_LEN:
+            description = description[:MAX_DESC_LEN] + '...'
+        result['description'] = description
 
-    # Обрезаем описание
-    if len(description) > MAX_DESC_LEN:
-        description = description[:MAX_DESC_LEN] + '...'
-
-    return author, description
+    return result
 
 def normalize(name):
+    """Нормализация для сравнения названий (убираем расширение, скобки, приводим к нижнему регистру)."""
     if not name:
         return ''
     name = os.path.splitext(name)[0]
@@ -194,7 +254,6 @@ def main():
     worksheet = sh.worksheet(SHEET_TITLE)
     print(f"Лист '{SHEET_TITLE}' открыт.")
 
-    # Читаем все данные
     all_values = worksheet.get_all_values()
     if len(all_values) < 2:
         print("Таблица пустая.")
@@ -202,6 +261,7 @@ def main():
     headers = all_values[0]
     print(f"Заголовки: {headers}")
 
+    # Индексы нужных колонок
     try:
         col_title = headers.index("Название")
         col_author = headers.index("Автор")
@@ -210,9 +270,10 @@ def main():
         print(f"Не найдены нужные колонки: {e}")
         return
 
-    # Индекс норм. названия -> номер строки (в all_values, где 0 — заголовок)
+    # Строим карту: нормализованное имя файла -> номер строки в таблице
+    # (берём из колонки "Название", чтобы не сбиться)
     name_to_row = {}
-    for i, row in enumerate(all_values[1:], start=2):  # start=2 — реальный номер строки в листе
+    for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
             n = normalize(row[col_title])
             if n:
@@ -220,14 +281,13 @@ def main():
 
     print(f"Строк с названиями в таблице: {len(name_to_row)}")
 
-    # Получаем список файлов с Яндекс.Диска
+    # Получаем файлы с Яндекс.Диска
     files = get_yandex_files_with_download(public_key)
     if not files:
-        print("Файлы не получены.")
+        print("FB2-файлы не получены.")
         return
 
-    # Определяем, какие файлы нужно обогатить
-    updates = []  # список (row_number, author, description)
+    updates = []
     processed = 0
     skipped = 0
     failed = 0
@@ -241,14 +301,17 @@ def main():
         row_num = name_to_row[norm]
         row = all_values[row_num - 1]
 
-        # Если ONLY_EMPTY — пропускаем строки, где уже заполнены автор И описание
+        # Текущие значения
+        current_title = row[col_title] if col_title < len(row) else ''
         current_author = row[col_author] if col_author < len(row) else ''
         current_desc = row[col_desc] if col_desc < len(row) else ''
-        if ONLY_EMPTY and current_author.strip() and current_desc.strip():
+
+        # Если ONLY_EMPTY и все поля заполнены — пропускаем
+        if ONLY_EMPTY and current_author.strip() and current_desc.strip() and current_title.strip():
             skipped += 1
             continue
 
-        # Скачиваем файл
+        # Скачиваем FB2
         try:
             print(f"Скачиваем: {f['name']}")
             file_resp = requests.get(f['download_url'], timeout=60)
@@ -258,41 +321,48 @@ def main():
                 continue
             content = file_resp.content
         except Exception as e:
-            print(f"  Ошибка: {e}")
+            print(f"  Ошибка скачивания: {e}")
             failed += 1
             continue
 
         # Парсим FB2
         try:
-            author, description = parse_fb2(content)
+            parsed = parse_fb2(content)
         except Exception as e:
             print(f"  Ошибка парсинга: {e}")
             failed += 1
             continue
 
-        # Если автор или описание не найдены — пропускаем
-        if not author and not description:
+        fb2_title = parsed.get('title', '').strip()
+        fb2_author = parsed.get('author', '').strip()
+        fb2_desc = parsed.get('description', '').strip()
+
+        # Если в FB2 совсем ничего нет — пропускаем
+        if not fb2_title and not fb2_author and not fb2_desc:
             print(f"  Пусто в FB2")
             skipped += 1
             continue
 
-        # Обновляем только пустые поля
-        final_author = current_author.strip() or author
-        final_desc = current_desc.strip() or description
+        # Обновляем ТОЛЬКО пустые поля текущими значениями из FB2
+        final_title = current_title.strip() or fb2_title
+        final_author = current_author.strip() or fb2_author
+        final_desc = current_desc.strip() or fb2_desc
 
         updates.append({
             'row': row_num,
+            'title': final_title,
             'author': final_author,
             'description': final_desc
         })
         processed += 1
-        print(f"  ✓ Автор: {author[:60]}... | Описание: {description[:60]}...")
+        print(f"  ✓ Название: {fb2_title[:60]}")
+        print(f"    Автор: {fb2_author[:60]}")
+        print(f"    Описание: {fb2_desc[:60]}...")
 
-        # Пауза, чтобы не перегревать Яндекс.Диск
         time.sleep(0.3)
 
     print(f"\nИтого:")
-    print(f"  Обработано и подготовлено к записи: {processed}")
+    print(f"  Обработано: {processed}")
     print(f"  Пропущено: {skipped}")
     print(f"  Ошибок: {failed}")
 
@@ -300,35 +370,38 @@ def main():
         print("Нечего записывать.")
         return
 
-    # Формируем batch_update
     print(f"\nОбновляем таблицу ({len(updates)} строк)...")
-    batch_data = []
-    for u in updates:
-        # Автор — колонка B (2), Описание — колонка C (3)
-        # Учитываем, что индексы заголовков могут отличаться — используем реальные колонки
-        col_letter_author = chr(65 + col_author)  # A=65
-        col_letter_desc = chr(65 + col_desc)
-        batch_data.append({
-            'range': f'{col_letter_author}{u["row"]}:{col_letter_desc}{u["row"]}',
-            'values': [[u['author'], u['description']]]
-        })
 
-    # gspread позволяет обновлять пачкой через batch_update
-    # Но если колонки Автор и Описание не соседние, нужно два запроса
-    if col_author == col_desc - 1:
-        # Соседние — одним диапазоном
-        worksheet.batch_update(batch_data)
-    else:
-        # Не соседние — обновляем по одной колонке
-        author_data = []
-        desc_data = []
-        col_letter_author = chr(65 + col_author)
-        col_letter_desc = chr(65 + col_desc)
-        for u in updates:
-            author_data.append({'range': f'{col_letter_author}{u["row"]}', 'values': [[u['author']]]})
-            desc_data.append({'range': f'{col_letter_desc}{u["row"]}', 'values': [[u['description']]]})
-        worksheet.batch_update(author_data)
-        worksheet.batch_update(desc_data)
+    # Формируем batch_update по каждой строке
+    # Колонки могут быть несоседние, поэтому обновляем каждую колонку своим диапазоном
+    title_data = []
+    author_data = []
+    desc_data = []
+
+    col_letter_title = chr(65 + col_title)   # A, B, C...
+    col_letter_author = chr(65 + col_author)
+    col_letter_desc = chr(65 + col_desc)
+
+    for u in updates:
+        title_data.append({'range': f'{col_letter_title}{u["row"]}', 'values': [[u['title']]]})
+        author_data.append({'range': f'{col_letter_author}{u["row"]}', 'values': [[u['author']]]})
+        desc_data.append({'range': f'{col_letter_desc}{u["row"]}', 'values': [[u['description']]]})
+
+    # Отправляем батчами, чтобы не превысить лимит 60 запросов в минуту
+    print("Обновляем колонку 'Название'...")
+    for i in range(0, len(title_data), 50):
+        worksheet.batch_update(title_data[i:i+50])
+        time.sleep(1)
+
+    print("Обновляем колонку 'Автор'...")
+    for i in range(0, len(author_data), 50):
+        worksheet.batch_update(author_data[i:i+50])
+        time.sleep(1)
+
+    print("Обновляем колонку 'Описание'...")
+    for i in range(0, len(desc_data), 50):
+        worksheet.batch_update(desc_data[i:i+50])
+        time.sleep(1)
 
     print("Готово! Таблица обновлена.")
 
