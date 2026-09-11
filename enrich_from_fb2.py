@@ -13,7 +13,7 @@ YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 SHEET_TITLE = "Книги"
 
 # Обновлять все строки или только те, где есть пустые поля
-ONLY_EMPTY = True
+ONLY_EMPTY = False
 
 # Максимальная длина описания
 MAX_DESC_LEN = 2000
