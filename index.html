@@ -325,11 +325,9 @@
         <div class="header-actions">
             <a href="forum.html" class="btn-primary"><i class="fas fa-comments"></i> Форум</a>
             <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить</a>
-            <!-- Админ-панель (видна только админам) -->
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
-            <!-- Обновить контент (видна только админам) -->
             <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
                target="_blank" 
                class="btn-update" 
@@ -504,6 +502,17 @@
         });
     }
 
+    // Вспомогательная функция: скачивание через скрытую ссылку
+    function triggerDownload(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     async function incrementDownload(fileId, downloadUrl, fileName) {
         if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
         try {
@@ -519,20 +528,19 @@
             }]);
             if (logError) console.error('Ошибка записи лога скачивания:', logError);
 
-            // Открываем конкретный файл через Edge Function
             if (downloadUrl && downloadUrl !== '#') {
                 try {
                     const parsed = new URL(downloadUrl);
                     const path = parsed.searchParams.get('path');
                     if (path) {
                         const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
-                        window.open(proxyUrl, '_blank');
+                        triggerDownload(proxyUrl);
                     } else {
-                        window.open(downloadUrl, '_blank');
+                        triggerDownload(downloadUrl);
                     }
                 } catch (e) {
                     console.error('Ошибка парсинга URL:', e);
-                    window.open(downloadUrl, '_blank');
+                    triggerDownload(downloadUrl);
                 }
             }
         } catch (e) {
@@ -544,12 +552,12 @@
                     const path = parsed.searchParams.get('path');
                     if (path) {
                         const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
-                        window.open(proxyUrl, '_blank');
+                        triggerDownload(proxyUrl);
                     } else {
-                        window.open(downloadUrl, '_blank');
+                        triggerDownload(downloadUrl);
                     }
                 } catch (err) {
-                    window.open(downloadUrl, '_blank');
+                    triggerDownload(downloadUrl);
                 }
             }
         }
