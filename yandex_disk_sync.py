@@ -10,7 +10,7 @@ SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 
 # Публичная ссылка на папку Яндекс.Диска, например: https://disk.yandex.ru/d/XXXXX
 # Оставьте пустым, если не используете автосинхронизацию
-YANDEX_PUBLIC_FOLDER_URL = ""  # например: "https://disk.yandex.ru/d/abc123"
+YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"  # например: "https://disk.yandex.ru/d/abc123"
 
 # Какие поля добавлять для новых файлов
 # Ключи должны совпадать с названиями колонок в Google Sheets
