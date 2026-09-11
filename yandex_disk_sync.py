@@ -32,18 +32,38 @@ def get_gspread_client():
             sys.exit(1)
 
 def normalize(name):
-    """Нормализует название для сравнения (убирает расширение, скобки, лишние пробелы, нижний регистр)."""
+    """Нормализация для сравнения."""
     if not name:
         return ''
     name = os.path.splitext(name)[0]
     name = re.sub(r'\s*\([^)]*\)\s*$', '', name)
     name = name.strip().lower()
     name = re.sub(r'\s+', ' ', name)
-    # Убираем все виды тире/дефисов в один символ
     name = re.sub(r'[—–]', '-', name)
-    # Убираем возможные невидимые символы
     name = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', name)
+    # Убираем знаки препинания, оставляем только буквы, цифры, пробелы и дефисы
+    name = re.sub(r'[^\w\s\-]', ' ', name)
+    name = re.sub(r'\s+', ' ', name).strip()
     return name
+
+def titles_match(db_title, fb2_title):
+    """
+    Проверяет, соответствует ли название из таблицы названию из FB2.
+    Возвращает True, если одно содержится в другом (по нормализованным строкам).
+    """
+    n1 = normalize(db_title)
+    n2 = normalize(fb2_title)
+    if not n1 or not n2:
+        return False
+    # Точное совпадение
+    if n1 == n2:
+        return True
+    # Одно содержится в другом (длина >= 10, чтобы не было ложных срабатываний на коротких названиях)
+    if len(n2) >= 10 and n2 in n1:
+        return True
+    if len(n1) >= 10 and n1 in n2:
+        return True
+    return False
 
 def get_yandex_files_with_download(public_url):
     """Получает список FB2-файлов с прямой ссылкой на скачивание."""
@@ -233,27 +253,15 @@ def main():
         print(f"Не найдены нужные колонки: {e}")
         return
 
-    # Карта: нормализованное название -> номер строки (1-based)
-    name_to_row = {}
-    # Запоминаем строки, у которых пустой автор или описание
-    rows_need_update = {}  # row_num -> {'title': ..., 'author_empty': bool, 'desc_empty': bool}
+    # Список всех существующих названий в таблице с номерами строк
+    existing_titles = []  # [(row_num, title), ...]
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
-            title = row[col_title].strip()
-            if title:
-                n = normalize(title)
-                name_to_row[n] = i
-                author_empty = not (col_author < len(row) and row[col_author].strip())
-                desc_empty = not (col_desc < len(row) and row[col_desc].strip())
-                if author_empty or desc_empty:
-                    rows_need_update[i] = {
-                        'title': title,
-                        'author_empty': author_empty,
-                        'desc_empty': desc_empty
-                    }
+            t = row[col_title].strip()
+            if t:
+                existing_titles.append((i, t))
 
-    print(f"Строк с названиями в таблице: {len(name_to_row)}")
-    print(f"Строк, требующих заполнения автора/описания: {len(rows_need_update)}")
+    print(f"Всего строк с названиями в таблице: {len(existing_titles)}")
 
     # Получаем файлы с Яндекс.Диска
     files = get_yandex_files_with_download(YANDEX_PUBLIC_FOLDER_URL)
@@ -262,27 +270,21 @@ def main():
         return
 
     new_rows = []          # для добавления
-    updates_by_row = {}    # row_num -> {'title': ..., 'author': ..., 'description': ...}
-
-    processed_new = 0
-    processed_update = 0
-    failed = 0
+    updated_rows = []      # для обновления существующих
+    already_exists = 0
 
     for idx, f in enumerate(files, start=1):
         fname = f['name']
-        norm = normalize(fname)
 
         # Скачиваем FB2
         try:
             file_resp = requests.get(f['download_url'], timeout=60)
             if file_resp.status_code != 200:
                 print(f"  {fname}: ошибка скачивания {file_resp.status_code}")
-                failed += 1
                 continue
             content = file_resp.content
         except Exception as e:
             print(f"  {fname}: ошибка {e}")
-            failed += 1
             continue
 
         # Парсим FB2
@@ -290,7 +292,6 @@ def main():
             parsed = parse_fb2(content)
         except Exception as e:
             print(f"  {fname}: ошибка парсинга {e}")
-            failed += 1
             continue
 
         fb2_title = parsed.get('title', '').strip()
@@ -305,24 +306,42 @@ def main():
         ext = os.path.splitext(fname)[1].lstrip('.').lower()
         download_link = build_download_link(YANDEX_PUBLIC_FOLDER_URL, fname)
 
-        # Ищем в таблице
-        if norm in name_to_row:
-            # Файл уже есть в таблице — возможно, обновим поля
-            row_num = name_to_row[norm]
-            if row_num in rows_need_update:
-                info = rows_need_update[row_num]
-                new_author = info['author_empty'] and fb2_author
-                new_desc = info['desc_empty'] and fb2_desc
-                if new_author or new_desc:
-                    updates_by_row[row_num] = {
-                        'title': info['title'],   # оставляем как есть
-                        'author': fb2_author if new_author else '',
-                        'description': fb2_desc if new_desc else '',
-                        'set_author': new_author,
-                        'set_desc': new_desc
-                    }
-                    processed_update += 1
-                    print(f"  [ОБНОВЛЕНИЕ] {info['title'][:50]} | Автор: {fb2_author[:40]} | Описание: {fb2_desc[:40]}...")
+        # Ищем совпадение среди существующих названий
+        found_row = None
+        found_db_title = None
+        for row_num, db_title in existing_titles:
+            if titles_match(db_title, fb2_title):
+                found_row = row_num
+                found_db_title = db_title
+                break
+
+        if found_row:
+            # Книга уже есть в таблице
+            already_exists += 1
+            row = all_values[found_row - 1]
+            current_author = row[col_author] if col_author < len(row) else ''
+            current_desc = row[col_desc] if col_desc < len(row) else ''
+            current_link = row[col_link] if col_link < len(row) else ''
+
+            # Обновляем только пустые поля
+            need_update_author = not current_author.strip() and fb2_author
+            need_update_desc = not current_desc.strip() and fb2_desc
+            need_update_link = not current_link.strip() and download_link
+
+            if need_update_author or need_update_desc or need_update_link:
+                updated_rows.append({
+                    'row': found_row,
+                    'author': fb2_author if need_update_author else '',
+                    'description': fb2_desc if need_update_desc else '',
+                    'link': download_link if need_update_link else '',
+                    'set_author': need_update_author,
+                    'set_desc': need_update_desc,
+                    'set_link': need_update_link,
+                    'title': found_db_title
+                })
+                print(f"  [ОБНОВЛЕНИЕ] {found_db_title[:50]}")
+            else:
+                print(f"  [ПРОПУСК] {found_db_title[:50]} — уже заполнено")
         else:
             # Новый файл — добавляем
             new_rows.append({
@@ -332,16 +351,15 @@ def main():
                 'format': ext,
                 'link': download_link
             })
-            processed_new += 1
             print(f"  [НОВОЕ] {fb2_title[:60]} | {fb2_author[:40]}")
 
         if idx % 10 == 0:
             time.sleep(0.3)
 
     print(f"\nИтого:")
-    print(f"  Новых книг: {processed_new}")
-    print(f"  Обновлений существующих: {processed_update}")
-    print(f"  Ошибок: {failed}")
+    print(f"  Уже есть в таблице: {already_exists}")
+    print(f"  Новых книг: {len(new_rows)}")
+    print(f"  Строк с обновлениями: {len(updated_rows)}")
 
     # Записываем новые строки
     if new_rows:
@@ -376,31 +394,30 @@ def main():
                 raise
 
     # Обновляем существующие строки
-    if updates_by_row:
-        print(f"\nОбновляем {len(updates_by_row)} существующих строк...")
+    if updated_rows:
+        print(f"\nОбновляем {len(updated_rows)} существующих строк...")
         col_letter_author = chr(65 + col_author)
         col_letter_desc = chr(65 + col_desc)
+        col_letter_link = chr(65 + col_link)
 
         author_batch = []
         desc_batch = []
-        for row_num, u in updates_by_row.items():
+        link_batch = []
+        for u in updated_rows:
             if u['set_author']:
-                author_batch.append({'range': f'{col_letter_author}{row_num}', 'values': [[u['author']]]})
+                author_batch.append({'range': f'{col_letter_author}{u["row"]}', 'values': [[u['author']]]})
             if u['set_desc']:
-                desc_batch.append({'range': f'{col_letter_desc}{row_num}', 'values': [[u['description']]]})
+                desc_batch.append({'range': f'{col_letter_desc}{u["row"]}', 'values': [[u['description']]]})
+            if u['set_link']:
+                link_batch.append({'range': f'{col_letter_link}{u["row"]}', 'values': [[u['link']]]})
 
-        # Отправляем пачками по 50
-        if author_batch:
-            print(f"  Обновляем авторов ({len(author_batch)} строк)...")
-            for i in range(0, len(author_batch), 50):
-                worksheet.batch_update(author_batch[i:i+50])
-                time.sleep(1)
-        if desc_batch:
-            print(f"  Обновляем описания ({len(desc_batch)} строк)...")
-            for i in range(0, len(desc_batch), 50):
-                worksheet.batch_update(desc_batch[i:i+50])
-                time.sleep(1)
-        print(f"  ✓ Обновлено {len(updates_by_row)} строк.")
+        for name, batch in [("авторов", author_batch), ("описаний", desc_batch), ("ссылок", link_batch)]:
+            if batch:
+                print(f"  Обновляем {name} ({len(batch)} строк)...")
+                for i in range(0, len(batch), 50):
+                    worksheet.batch_update(batch[i:i+50])
+                    time.sleep(1)
+        print(f"  ✓ Обновлено {len(updated_rows)} строк.")
 
     print("\nГотово!")
 
