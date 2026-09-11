@@ -27,6 +27,7 @@ jobs:
       - name: Sync from Yandex Disk
         env:
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python yandex_disk_sync.py
 
       - name: Run script
