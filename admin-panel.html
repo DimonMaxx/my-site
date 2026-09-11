@@ -86,10 +86,6 @@
         .btn-danger { background: #dc2626; color: white; }
         .btn-danger:hover { background: #b91c1c; transform: translateY(-2px); }
         .btn-danger:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
-        .btn-warning { background: #f59e0b; color: #1e293b; }
-        .btn-warning:hover { background: #d97706; color: white; }
-        .btn-purple { background: #8b5cf6; color: white; }
-        .btn-purple:hover { background: #7c3aed; transform: translateY(-2px); }
 
         .main-layout { display: flex; flex: 1; }
 
@@ -311,9 +307,9 @@
         .role-admin { background: #fee2e2; color: #991b1b; }
         .role-moderator { background: #fef3c7; color: #92400e; }
         .role-user { background: #dbeafe; color: #1e40af; }
+        .role-anon { background: #e5e7eb; color: #374151; }
         .admin-note-cell { font-size: 12px; color: #7c3aed; font-style: italic; max-width: 200px; }
 
-        /* CMS Iframe */
         #cmsFrame {
             width: 100%;
             height: calc(100vh - 220px);
@@ -323,7 +319,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         }
 
-        /* Модальное окно редактирования пользователя */
         .modal-overlay {
             display: none;
             position: fixed; top: 0; left: 0;
@@ -429,6 +424,7 @@
 
             <div class="nav-divider">Управление</div>
             <button class="nav-link" data-tab="users"><i class="fas fa-users"></i> Пользователи</button>
+            <button class="nav-link" data-tab="visitors"><i class="fas fa-user-check"></i> Посетители</button>
             <button class="nav-link" data-tab="cms"><i class="fas fa-edit"></i> Редактор контента</button>
             <button class="nav-link" data-tab="downloads"><i class="fas fa-download"></i> История скачиваний</button>
             <button class="nav-link" data-tab="stats"><i class="fas fa-chart-simple"></i> Статистика</button>
@@ -455,7 +451,6 @@
     </div>
 </div>
 
-<!-- Модальное окно редактирования пользователя -->
 <div class="modal-overlay" id="userEditModal">
     <div class="modal-box">
         <h3><i class="fas fa-user-edit"></i> Редактирование пользователя</h3>
@@ -482,7 +477,7 @@
         </div>
         <div class="form-group">
             <label>Заметка администратора</label>
-            <textarea id="editAdminNote" placeholder="Например: 'Пётр из Москвы, заказывал программу X', 'Проверенный пользователь' и т.п."></textarea>
+            <textarea id="editAdminNote" placeholder="Например: 'Пётр из Москвы, заказывал программу X'"></textarea>
             <div class="hint">Видна только администраторам. Пользователь её не видит.</div>
         </div>
         <div class="modal-actions">
@@ -553,16 +548,14 @@
         if (section === 'downloads') { await loadDownloads(); return; }
         if (section === 'stats') { await loadStats(); return; }
         if (section === 'users') { await loadUsers(); return; }
+        if (section === 'visitors') { await loadVisitors(); return; }
         if (section === 'cms') { showCMS(); return; }
 
         const info = SECTIONS[section];
         if (!info) return;
 
         document.getElementById('sectionTitle').innerHTML = `<i class="fas ${info.icon}"></i> ${info.label}`;
-        document.getElementById('tableBody').innerHTML = `<tr><td colspan="20" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr>`;
-        document.getElementById('tableHead').innerHTML = '';
-        document.getElementById('tableWrapper').style.display = 'block';
-        document.getElementById('tableWrapper').innerHTML = `<table class="content-table" id="contentTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>`;
+        document.getElementById('tableWrapper').innerHTML = `<table class="content-table" id="contentTable"><thead id="tableHead"></thead><tbody id="tableBody"><tr><td colspan="20" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
         document.getElementById('toolbar').style.display = 'flex';
         document.getElementById('deleteSelectedBtn').style.display = 'inline-flex';
 
@@ -706,14 +699,8 @@
         const { data, error } = await supabaseClient
             .from('download_logs').select('*').order('downloaded_at', { ascending: false });
         const tbody = document.getElementById('tableBody');
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Ошибка: ${error.message}</td></tr>`;
-            return;
-        }
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Нет записей</td></tr>`;
-            return;
-        }
+        if (error) { tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Нет записей</td></tr>`; return; }
         let html = '';
         data.forEach(log => {
             const d = new Date(log.downloaded_at);
@@ -733,18 +720,12 @@
 
         const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
         const tbody = document.getElementById('tableBody');
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Ошибка: ${error.message}</td></tr>`;
-            return;
-        }
+        if (error) { tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
         usersData = data || [];
         usersDataMap = {};
         usersData.forEach(u => { usersDataMap[u.id] = u; });
 
-        if (usersData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Нет пользователей</td></tr>`;
-            return;
-        }
+        if (usersData.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Нет пользователей</td></tr>`; return; }
         let html = '';
         usersData.forEach((user, idx) => {
             const role = user.role || 'user';
@@ -779,32 +760,24 @@
                 const userId = this.dataset.id;
                 const newRole = this.value;
                 const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
-                if (error) {
-                    alert('Ошибка: ' + error.message);
-                    await loadUsers();
-                } else {
-                    alert('Роль обновлена!');
-                }
+                if (error) { alert('Ошибка: ' + error.message); await loadUsers(); }
+                else alert('Роль обновлена!');
             });
         });
     }
 
-    // ===== Модальное окно редактирования пользователя =====
     window.openUserEditModal = function(userId) {
         const user = usersDataMap[userId];
         if (!user) return;
         document.getElementById('editUserId').value = userId;
-        document.getElementById('editUserEmail').value = '';  // email у нас нет в profiles
+        document.getElementById('editUserEmail').value = '';
         document.getElementById('editUsername').value = user.username || '';
         document.getElementById('editFullName').value = user.full_name || '';
         document.getElementById('editRole').value = user.role || 'user';
         document.getElementById('editAdminNote').value = user.admin_note || '';
         document.getElementById('userEditModal').classList.add('active');
     };
-
-    window.closeUserEditModal = function() {
-        document.getElementById('userEditModal').classList.remove('active');
-    };
+    window.closeUserEditModal = function() { document.getElementById('userEditModal').classList.remove('active'); };
 
     document.getElementById('saveUserBtn').addEventListener('click', async function() {
         const userId = document.getElementById('editUserId').value;
@@ -812,38 +785,21 @@
         const fullName = document.getElementById('editFullName').value.trim();
         const role = document.getElementById('editRole').value;
         const adminNote = document.getElementById('editAdminNote').value.trim();
-
         if (!userId) return;
         if (!username) { alert('Ник не может быть пустым.'); return; }
-
         const { error } = await supabaseClient.from('profiles').update({
-            username: username,
-            full_name: fullName || null,
-            role: role,
-            admin_note: adminNote || null
+            username, full_name: fullName || null, role, admin_note: adminNote || null
         }).eq('id', userId);
-
-        if (error) {
-            alert('Ошибка сохранения: ' + error.message);
-        } else {
-            alert('Данные обновлены!');
-            closeUserEditModal();
-            await loadUsers();
-        }
+        if (error) alert('Ошибка сохранения: ' + error.message);
+        else { alert('Данные обновлены!'); closeUserEditModal(); await loadUsers(); }
     });
 
-    // ===== Удаление пользователя =====
     window.deleteUser = async function(userId, username) {
-        if (userId === currentUser?.id) {
-            alert('Нельзя удалить себя.');
-            return;
-        }
+        if (userId === currentUser?.id) { alert('Нельзя удалить себя.'); return; }
         if (!confirm(`Удалить пользователя "${username}"?\n\nЭто действие необратимо.`)) return;
-
         try {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { alert('Сессия истекла, войдите заново.'); return; }
-
+            if (!session) { alert('Сессия истекла.'); return; }
             const resp = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-user`, {
                 method: 'POST',
                 headers: {
@@ -852,18 +808,45 @@
                 },
                 body: JSON.stringify({ user_id: userId })
             });
-
             const data = await resp.json();
-            if (resp.ok && data.success) {
-                alert('Пользователь удалён.');
-                await loadUsers();
-            } else {
-                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-            }
-        } catch (e) {
-            alert('Ошибка: ' + e.message);
-        }
+            if (resp.ok && data.success) { alert('Пользователь удалён.'); await loadUsers(); }
+            else alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        } catch (e) { alert('Ошибка: ' + e.message); }
     };
+
+    // ===== Посетители =====
+    async function loadVisitors() {
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-user-check"></i> Посетители сайта`;
+        document.getElementById('tableWrapper').innerHTML = `<table class="content-table"><thead><tr>
+            <th>Тип</th><th>Ник / ID</th><th>Email</th><th>Последний визит</th><th>Посещений</th>
+        </tr></thead><tbody id="tableBody"><tr><td colspan="5" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
+        document.getElementById('toolbar').style.display = 'none';
+
+        const { data, error } = await supabaseClient.rpc('get_unique_visitors');
+        const tbody = document.getElementById('tableBody');
+        if (error) { tbody.innerHTML = `<tr><td colspan="5" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="empty-block">Пока нет данных о посетителях</td></tr>`; return; }
+
+        let html = '';
+        data.forEach(v => {
+            const last = new Date(v.last_visit);
+            const dateStr = last.toLocaleDateString('ru-RU') + ' ' + last.toLocaleTimeString('ru-RU');
+            const isReg = v.is_registered;
+            const typeBadge = isReg
+                ? '<span class="role-badge role-user">Пользователь</span>'
+                : '<span class="role-badge role-anon">Аноним</span>';
+            const idDisplay = isReg ? (v.username || '—') : ('ID: ' + (v.visitor_key || '').replace('anon_', '').slice(0, 12) + '...');
+            const emailDisplay = isReg ? (v.email || '—') : '—';
+            html += `<tr>
+                <td>${typeBadge}</td>
+                <td><strong>${escapeHtml(idDisplay)}</strong></td>
+                <td>${escapeHtml(emailDisplay)}</td>
+                <td>${dateStr}</td>
+                <td><strong>${v.visit_count}</strong></td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
 
     // ===== Редактор контента (CMS) =====
     function showCMS() {
@@ -900,14 +883,12 @@
         }
     }
 
-    // ===== Токен GitHub =====
     function getToken() { return localStorage.getItem('github_token') || ''; }
     function askToken() {
         const t = prompt('Вставьте GitHub Personal Access Token (права repo и workflow):');
         if (t && t.trim()) localStorage.setItem('github_token', t.trim());
     }
 
-    // ===== Удаление контента =====
     async function deleteSelected() {
         const token = getToken();
         if (!token) { askToken(); return; }
@@ -931,9 +912,7 @@
             });
             if (resp.status === 204) alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
             else alert('Ошибка GitHub API: ' + resp.status + '\n' + await resp.text());
-        } catch (e) {
-            alert('Ошибка: ' + e.message);
-        }
+        } catch (e) { alert('Ошибка: ' + e.message); }
     }
 
     function escapeHtml(str) {
@@ -956,6 +935,7 @@
             if (currentTab === 'downloads') loadDownloads();
             else if (currentTab === 'stats') loadStats();
             else if (currentTab === 'users') loadUsers();
+            else if (currentTab === 'visitors') loadVisitors();
             else if (currentTab === 'cms') showCMS();
             else loadSection(currentTab);
         });
@@ -964,6 +944,7 @@
     document.getElementById('refreshBtn').addEventListener('click', () => {
         if (currentTab === 'downloads') loadDownloads();
         else if (currentTab === 'users') loadUsers();
+        else if (currentTab === 'visitors') loadVisitors();
         else if (currentTab === 'stats') loadStats();
         else if (currentTab === 'cms') showCMS();
         else loadSection(currentTab);
