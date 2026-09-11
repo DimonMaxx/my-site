@@ -1,0 +1,46 @@
+name: Delete content
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete_list:
+        description: 'JSON-список удаляемых записей'
+        required: true
+
+jobs:
+  delete-content:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install gspread pandas requests
+
+      - name: Delete from Google Sheets
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+          DELETE_LIST: ${{ github.event.inputs.delete_list }}
+        run: python delete_content.py
+
+      - name: Regenerate JSON
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python generate_from_sheets.py
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Удаление контента через админ-панель [skip ci]"
+          file_pattern: "_content/*.json _content/**/*.md"
+          commit_user_name: "GitHub Actions Bot"
+          commit_user_email: "actions@github.com"
