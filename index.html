@@ -230,6 +230,42 @@
         .content-table .col-center { text-align: center; white-space: nowrap; }
         .content-table .col-num { text-align: right; font-weight: 600; }
 
+        /* Обложки книг */
+        .content-table .col-cover {
+            width: 70px;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .content-table .col-cover img {
+            width: 55px;
+            height: 78px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.2s;
+        }
+        .content-table .col-cover img:hover {
+            transform: scale(1.6);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            z-index: 10;
+            position: relative;
+        }
+        .content-table .no-cover {
+            width: 55px;
+            height: 78px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e1;
+            font-size: 24px;
+            margin: 0 auto;
+        }
+
         .desc-short {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -324,7 +360,7 @@
         </div>
         <div class="header-actions">
             <a href="forum.html" class="btn-primary"><i class="fas fa-comments"></i> Форум</a>
-            <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить материал</a>
+            <a href="submit.html" class="btn-primary"><i class="fas fa-upload"></i> Предложить</a>
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
@@ -502,7 +538,6 @@
         });
     }
 
-    // Вспомогательная функция: скачивание через скрытую ссылку
     function triggerDownload(url) {
         const a = document.createElement('a');
         a.href = url;
@@ -623,13 +658,15 @@
             let cls = '';
             if (col.type === 'download') cls = 'col-center';
             if (col.type === 'count') cls = 'col-num';
-            const isSorted = state.sortKey === col.key;
-            let icon = '<i class="fas fa-sort sort-icon"></i>';
+            if (col.type === 'cover') cls = 'col-cover';
+            const isSorted = state.sortKey === col.key && col.type !== 'cover';
+            let icon = (col.type === 'cover') ? '' : '<i class="fas fa-sort sort-icon"></i>';
             if (isSorted) icon = state.sortDir === 'asc' ? '<i class="fas fa-sort-up sort-icon active"></i>' : '<i class="fas fa-sort-down sort-icon active"></i>';
             const sv = state.searches[col.key] || '';
+            const searchField = (col.type === 'cover') ? '' : `<input type="text" class="col-search" data-search-key="${escapeAttr(col.key)}" placeholder="${escapeAttr(getSearchPlaceholder(col))}" value="${escapeAttr(sv)}">`;
             thead += `<th class="${cls}">
                 <div class="th-label" data-sort-key="${escapeAttr(col.key)}">${escapeHtml(col.label)} ${icon}</div>
-                <input type="text" class="col-search" data-search-key="${escapeAttr(col.key)}" placeholder="${escapeAttr(getSearchPlaceholder(col))}" value="${escapeAttr(sv)}">
+                ${searchField}
             </th>`;
         });
         thead += '</tr>';
@@ -641,7 +678,14 @@
             filtered.forEach(item => {
                 tbody += '<tr>';
                 cols.forEach(col => {
-                    if (col.type === 'description') {
+                    if (col.type === 'cover') {
+                        const cover = item[col.key];
+                        if (cover) {
+                            tbody += `<td class="col-cover"><img src="${escapeAttr(cover)}" alt="" loading="lazy"></td>`;
+                        } else {
+                            tbody += `<td class="col-cover"><div class="no-cover"><i class="fas fa-book"></i></div></td>`;
+                        }
+                    } else if (col.type === 'description') {
                         const text = item[col.key] || '';
                         if (!text) tbody += `<td class="col-desc">—</td>`;
                         else {
@@ -741,6 +785,7 @@
             { key: 'download_link', label: 'Скачиваний', type: 'count' }
         ]},
         'books-container': { columns: [
+            { key: 'cover', label: '', type: 'cover' },
             { key: 'title', label: 'Название', type: 'text' },
             { key: 'author', label: 'Автор', type: 'text' },
             { key: 'description', label: 'Описание', type: 'description' },
