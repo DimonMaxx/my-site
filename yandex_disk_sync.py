@@ -8,17 +8,15 @@ import requests
 # ========== НАСТРОЙКИ ==========
 SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 
-# Публичная ссылка на папку Яндекс.Диска, например: https://disk.yandex.ru/d/XXXXX
-# Оставьте пустым, если не используете автосинхронизацию
-YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"  # например: "https://disk.yandex.ru/d/abc123"
+# Публичная ссылка на папку Яндекс.Диска
+YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 
-# Какие поля добавлять для новых файлов
-# Ключи должны совпадать с названиями колонок в Google Sheets
+# Шаблон для новых файлов
 NEW_FILE_TEMPLATE = {
-    "Название": "",           # будет взято из имени файла (без расширения)
+    "Название": "",
     "Автор": "",
     "Описание": "",
-    "Формат": "",             # будет взято из расширения
+    "Формат": "",
     "Ссылка для скачивания": "",
 }
 # ==============================
@@ -41,23 +39,17 @@ def get_gspread_client():
 
 def get_yandex_public_files(public_url, limit=1000):
     """Получает список файлов из публичной папки Яндекс.Диска."""
-    # Извлекаем public_key из URL
-    # URL вида https://disk.yandex.ru/d/XXXXX или https://yadi.sk/d/XXXXX
-    match = re.search(r'/d/([a-zA-Z0-9_-]+)', public_url)
-    if not match:
-        print(f"Не удалось извлечь public_key из URL: {public_url}")
-        return []
-    public_key = match.group(1)
-
-    # Запрашиваем список файлов
     api_url = "https://cloud-api.yandex.net/v1/disk/public/resources"
     params = {
-        "public_key": public_key,
+        "public_key": public_url,   # передаём полную ссылку
         "limit": limit,
         "sort": "name"
     }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    }
     try:
-        response = requests.get(api_url, params=params, timeout=30)
+        response = requests.get(api_url, params=params, headers=headers, timeout=30)
         if response.status_code != 200:
             print(f"Ошибка Яндекс.Диска: {response.status_code} — {response.text}")
             return []
@@ -75,7 +67,6 @@ def get_existing_names(worksheet, name_column_index):
         all_values = worksheet.get_all_values()
         if len(all_values) < 2:
             return set()
-        # Пропускаем заголовок
         names = set()
         for row in all_values[1:]:
             if name_column_index < len(row):
@@ -103,7 +94,6 @@ def main():
         print(f"ОШИБКА: Таблица с ID '{SPREADSHEET_ID}' не найдена.")
         return
 
-    # Лист "Книги" — здесь хранятся книги
     sheet_title = "Книги"
     try:
         worksheet = sh.worksheet(sheet_title)
@@ -111,31 +101,26 @@ def main():
         print(f"ПРЕДУПРЕЖДЕНИЕ: Лист '{sheet_title}' не найден. Пропускаем синхронизацию.")
         return
 
-    # Получаем заголовки
     headers = worksheet.row_values(1)
     if not headers:
         print("ПРЕДУПРЕЖДЕНИЕ: На листе 'Книги' нет заголовков.")
         return
     print(f"Заголовки: {headers}")
 
-    # Индекс колонки "Название"
     try:
         name_col_index = headers.index("Название")
     except ValueError:
         print("ПРЕДУПРЕЖДЕНИЕ: На листе 'Книги' нет колонки 'Название'. Синхронизация невозможна.")
         return
 
-    # Существующие названия (в нижнем регистре для сравнения)
     existing_names = get_existing_names(worksheet, name_col_index)
     print(f"В таблице уже есть {len(existing_names)} названий.")
 
-    # Получаем файлы из Яндекс.Диска
     files = get_yandex_public_files(YANDEX_PUBLIC_FOLDER_URL)
     if not files:
         print("Не удалось получить список файлов. Синхронизация завершена.")
         return
 
-    # Формируем новые записи
     new_rows = []
     for item in files:
         if item.get('type') != 'file':
@@ -143,15 +128,12 @@ def main():
         file_name = item.get('name', '')
         if not file_name:
             continue
-        # Убираем расширение
         name_without_ext = os.path.splitext(file_name)[0]
         ext = os.path.splitext(file_name)[1].lstrip('.').lower()
 
-        # Проверяем, есть ли уже такая книга в таблице
         if name_without_ext.lower() in existing_names:
             continue
 
-        # Формируем строку по заголовкам таблицы
         row = []
         for header in headers:
             if header == "Название":
@@ -159,9 +141,6 @@ def main():
             elif header == "Формат":
                 row.append(ext)
             elif header == "Ссылка для скачивания":
-                # Можно взять публичную ссылку на файл, если знаем
-                # Но обычно Яндекс.Диск даёт ссылку только на папку.
-                # Оставим пустым — пользователь заполнит вручную или через другой механизм.
                 row.append("")
             else:
                 row.append("")
@@ -172,7 +151,6 @@ def main():
         print("Нет новых файлов для добавления.")
         return
 
-    # Добавляем строки в конец таблицы
     print(f"Добавляем {len(new_rows)} новых записей...")
     for row in new_rows:
         worksheet.append_row(row, value_input_option='USER_ENTERED')
