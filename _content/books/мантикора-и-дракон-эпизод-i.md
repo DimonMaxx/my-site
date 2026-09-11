@@ -1,8 +1,8 @@
 ---
 title: "Мантикора и Дракон. Эпизод I"
 description: "На что способна мать, защищая своего ребёнка, которая ни много ни мало лучший наёмный убийца в этом мире? Ответ прост: на всё. Но хватит ли этого, чтобы остаться в живых, когда очередной заказ даже ей грозит скорой и болезненной смертью? Из этой ситуации выхода нет. И легендарная, мифическая Мантикора решает покинуть ряды наёмников, разыграв одну ей известную партию. Сложно? Опасно? Невыполнимо? Да! Но ради тихой и мирной жизни с сыном она готова пойти и не на такое. А сын… За ним пока присмотрит его отец. И ничего, что он — наследник правящего рода золотых драконов, некромант и до недавнего времени даже и не подозревал, что у него вообще есть ребёнок…"
-download_link: "https://downloader.disk.yandex.ru/disk/9565818688b7170506cf397ea37a0557f80a285b24f5f6a8233330603fc2cf1e/6aa2d521/G64aXaQsNOQHLOfsXEK0gS4YPTats7AIuwwP175FwlyevgVfhaVI1SW9Qu4-xIwPk9ONWq2Om7j7WKswNyiklQ%3D%3D?uid=0&filename=%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0%2C%20%D0%A1%D0%BE%D0%B7%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0.%20%D0%9C%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%BE%D1%80%D0%B0%20%D0%B8%20%D0%94%D1%80%D0%B0%D0%BA%D0%BE%D0%BD.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2&disposition=attachment&hash=TDzNbGjmOewoob3DJ61vSsErGgWEZ6/jn6lpYsFYjQ590i86Tg0zKQOfqe/0%2BcA5q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0%2C%20%D0%A1%D0%BE%D0%B7%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0.%20%D0%9C%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%BE%D1%80%D0%B0%20%D0%B8%20%D0%94%D1%80%D0%B0%D0%BA%D0%BE%D0%BD.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2&limit=0&content_type=application%2Fx-fictionbook%2Bxml&owner_uid=92896035&fsize=1358134&hid=022d5e704a1288a2ff6aaa383c5f1c23&media_type=book&tknv=v3&is_direct_zip_experiment=1"
-author: "Анна Кувайкова"
-format: "FB2"
+download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0%2C%20%D0%A1%D0%BE%D0%B7%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0.%20%D0%9C%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%BE%D1%80%D0%B0%20%D0%B8%20%D0%94%D1%80%D0%B0%D0%BA%D0%BE%D0%BD.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2"
+author: "Кувайкова Анна"
+format: "fb2"
 ---
 

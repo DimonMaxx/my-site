@@ -1,8 +1,8 @@
 ---
 title: "Сайтаншесская роза. Эпизод II"
 description: "Не успела Хеллиана Валанди разобраться с вопросом, кем же она является на самом деле, как ворох новых неприятностей не заставил себя ждать. Юной принцессе лунных эльфов, в прошлом вздорной магички, придётся несладко и в этот раз. Ей нужно не только поскорее женить и посадить на трон собственного брата, вытащить из тюрьмы одного друга детства и отправить его на поиски другого, но и просто необходимо найти треклятый артефакт! Однако драконы темнят, друзья, как выяснилось, опять предают, уже знакомый вампир жаждет власти и даже большего… Теперь Хелли не до шуток. Особенно когда на кону стоит не только жизнь её близких, но и существование всего мира! Но стоит ли этот мир того, чтобы его спасать? Причина наведения порядка в Аранелле появится совсем скоро и будет стоить тысячи таких миров. Главное – не упустить своего счастья. А ответ на вопрос, где же Хелли так нагрешила, вот-вот раскроется сам собой…"
-download_link: "https://downloader.disk.yandex.ru/disk/e1668c6eaf169813cd3d5b0ac61b5098ef95d8a686ea4b7d76f9611e921650fd/6aa2d539/MewSv1MN5Up_9kyWrQrR4hLT4B1o5uHYdHiE3Q_ak-TTLn1CSByEY9GS0zXeex05gwOM1uENCHsKoN4VwwUvIg%3D%3D?uid=0&filename=%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%A1%D0%B0%D0%B9%D1%82%D0%B0%D0%BD%D1%88%D0%B5%D1%81%D1%81%D0%BA%D0%B0%D1%8F%20%D1%80%D0%BE%D0%B7%D0%B0.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2&disposition=attachment&hash=TDzNbGjmOewoob3DJ61vSsErGgWEZ6/jn6lpYsFYjQ590i86Tg0zKQOfqe/0%2BcA5q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%A1%D0%B0%D0%B9%D1%82%D0%B0%D0%BD%D1%88%D0%B5%D1%81%D1%81%D0%BA%D0%B0%D1%8F%20%D1%80%D0%BE%D0%B7%D0%B0.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2&limit=0&content_type=application%2Fx-fictionbook%2Bxml&owner_uid=92896035&fsize=1698768&hid=89c4b8485a8ac325f0fedf08ba2442b9&media_type=book&tknv=v3&is_direct_zip_experiment=1"
-author: "Анна Александровна Кувайкова"
-format: "FB2"
+download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%A1%D0%B0%D0%B9%D1%82%D0%B0%D0%BD%D1%88%D0%B5%D1%81%D1%81%D0%BA%D0%B0%D1%8F%20%D1%80%D0%BE%D0%B7%D0%B0.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%202.fb2"
+author: "Кувайкова Анна Александровна"
+format: "fb2"
 ---
 

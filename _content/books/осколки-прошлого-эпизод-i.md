@@ -1,8 +1,8 @@
 ---
 title: "Осколки прошлого. Эпизод I"
 description: "Что делать, если после предательства друзей юной магичке Хеллиане Валанди безумно хочется выть бешеным волкодлаком? Разве что, обзаведясь учеником – на удивление смышлёным эльфиком, осесть у князя Дин-танара, поступив к нему на службу в качестве ранхара. Но новый круговорот странных событий вновь зовёт героиню в дорогу уже в компании весьма опасного демона, безумно желающего придушить эту некромантку, выведав все её тайны. Так кому же можно доверять, на кого положиться, когда на тебя навешен маячок, чтобы постоянно следить за передвижениями и в конце концов убить?"
-download_link: "https://downloader.disk.yandex.ru/disk/7422989e1611348d56f04edada3068e29b21a3bce927b91a0d9f22e4b5d8bf0f/6aa2d531/JGFtecC7aFVnRgGhWEw1_OurXM_MyEh5M3S2qB4zZyjVKmfXxAE3y_p5e3UvARXynfArc4JL5QbQKB2llDuLmQ%3D%3D?uid=0&filename=%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%9E%D1%81%D0%BA%D0%BE%D0%BB%D0%BA%D0%B8%20%D0%BF%D1%80%D0%BE%D1%88%D0%BB%D0%BE%D0%B3%D0%BE.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2&disposition=attachment&hash=TDzNbGjmOewoob3DJ61vSsErGgWEZ6/jn6lpYsFYjQ590i86Tg0zKQOfqe/0%2BcA5q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%9E%D1%81%D0%BA%D0%BE%D0%BB%D0%BA%D0%B8%20%D0%BF%D1%80%D0%BE%D1%88%D0%BB%D0%BE%D0%B3%D0%BE.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2&limit=0&content_type=application%2Fx-fictionbook%2Bxml&owner_uid=92896035&fsize=1610934&hid=96e818bd5e543c6a1d2d780409d2df71&media_type=book&tknv=v3&is_direct_zip_experiment=1"
-author: "Анна Александровна Кувайкова"
-format: "FB2"
+download_link: "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ?path=/%D0%9A%D1%83%D0%B2%D0%B0%D0%B9%D0%BA%D0%BE%D0%B2%D0%B0.%20%D0%9E%D1%81%D0%BA%D0%BE%D0%BB%D0%BA%D0%B8%20%D0%BF%D1%80%D0%BE%D1%88%D0%BB%D0%BE%D0%B3%D0%BE.%20%D0%AD%D0%BF%D0%B8%D0%B7%D0%BE%D0%B4%201.fb2"
+author: "Кувайкова Анна Александровна"
+format: "fb2"
 ---
 
