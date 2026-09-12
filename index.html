@@ -293,11 +293,7 @@
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
-
-            header {
-                padding: 12px 16px;
-                gap: 10px;
-            }
+            header { padding: 12px 16px; gap: 10px; }
             .logo { font-size: 20px; }
             .logo i { font-size: 24px; }
             .header-actions { width: 100%; justify-content: center; gap: 5px; }
@@ -314,7 +310,6 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
-
             .main-layout { flex-direction: column; }
             .sidebar {
                 width: 100%;
@@ -342,148 +337,65 @@
                 border-radius: 30px;
             }
             .sidebar .nav-link i { font-size: 14px; width: auto; }
-
-            .content-area {
-                padding: 14px 12px;
-                gap: 16px;
-                flex-direction: column;
-            }
-
-            .stats-panel {
-                width: 100%;
-                align-self: stretch;
-                padding: 14px;
-            }
+            .content-area { padding: 14px 12px; gap: 16px; flex-direction: column; }
+            .stats-panel { width: 100%; align-self: stretch; padding: 14px; }
             .stats-panel h4 { font-size: 15px; margin-bottom: 10px; }
             .stats-panel table { font-size: 13px; }
             .stats-panel .value { font-size: 15px; }
-
-            .section-title {
-                font-size: 20px;
-                margin-bottom: 15px;
-                padding-bottom: 8px;
-            }
+            .section-title { font-size: 20px; margin-bottom: 15px; padding-bottom: 8px; }
             .section-title i { font-size: 18px; }
-
-            /* Таблицы */
-            .content-table-wrapper {
-                margin: 0 -12px;
-                padding: 0 12px;
-                border-radius: 0;
-            }
-            .content-table {
-                min-width: 620px;
-                font-size: 12px;
-            }
-            .content-table thead th {
-                padding: 8px 6px;
-                font-size: 11px;
-            }
-            .content-table tbody td {
-                padding: 8px 6px;
-                font-size: 12px;
-                max-width: 180px;
-            }
+            .content-table-wrapper { margin: 0 -12px; padding: 0 12px; border-radius: 0; }
+            .content-table { min-width: 620px; font-size: 12px; }
+            .content-table thead th { padding: 8px 6px; font-size: 11px; }
+            .content-table tbody td { padding: 8px 6px; font-size: 12px; max-width: 180px; }
             .content-table .col-cover { width: 50px; padding: 4px; }
             .content-table .col-cover img,
-            .content-table .no-cover {
-                width: 40px;
-                height: 56px;
-            }
+            .content-table .no-cover { width: 40px; height: 56px; }
             .content-table .col-cover img:hover { transform: none; }
             .content-table .col-title { max-width: 140px; }
             .content-table .col-desc { max-width: 220px; }
-
-            /* Пагинация */
-            .pagination-bar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-                padding: 10px 12px;
-                font-size: 12px;
-            }
-            .pagination-total {
-                font-size: 12px;
-                text-align: center;
-            }
+            .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; font-size: 12px; }
+            .pagination-total { font-size: 12px; text-align: center; }
             .pagination-total strong { font-size: 13px; }
-            .pagination-controls {
-                justify-content: center;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
+            .pagination-controls { justify-content: center; gap: 6px; flex-wrap: wrap; }
             .pagination-controls label { font-size: 12px; gap: 4px; }
             .page-size-select { padding: 5px 8px; font-size: 12px; }
             .page-btn { width: 32px; height: 32px; font-size: 12px; }
-            .page-num {
-                min-width: 32px;
-                height: 32px;
-                font-size: 12px;
-                padding: 0 6px;
-                border-radius: 6px;
-            }
+            .page-num { min-width: 32px; height: 32px; font-size: 12px; padding: 0 6px; border-radius: 6px; }
             .page-numbers { gap: 3px; }
-            .page-jump {
-                width: 100%;
-                justify-content: center;
-                font-size: 12px;
-                margin-top: 4px;
-            }
+            .page-jump { width: 100%; justify-content: center; font-size: 12px; margin-top: 4px; }
             .page-jump label { font-size: 12px; }
             .page-jump-input { width: 50px; padding: 5px 6px; font-size: 12px; }
             .page-jump-btn { padding: 5px 10px; font-size: 12px; }
-
             .btn-download-sm { padding: 5px 10px; font-size: 11px; gap: 4px; }
             .desc-short { -webkit-line-clamp: 3; }
             .desc-toggle { font-size: 11px; }
         }
-
         @media (max-width: 500px) {
             body { padding: 5px; }
             .container { border-radius: 16px; }
             header { padding: 10px 12px; gap: 8px; }
             .logo { font-size: 17px; }
             .logo i { font-size: 20px; }
-            .header-actions a, .header-actions button {
-                padding: 6px 10px;
-                font-size: 11px;
-                gap: 4px;
-            }
+            .header-actions a, .header-actions button { padding: 6px 10px; font-size: 11px; gap: 4px; }
             .header-actions a i, .header-actions button i { font-size: 11px; }
-
             .sidebar { padding: 8px 10px; gap: 5px; }
-            .sidebar .nav-link {
-                padding: 6px 10px;
-                font-size: 11px;
-                gap: 4px;
-            }
+            .sidebar .nav-link { padding: 6px 10px; font-size: 11px; gap: 4px; }
             .sidebar .nav-link i { font-size: 12px; }
-
             .content-area { padding: 10px 8px; gap: 12px; }
-
             .section-title { font-size: 16px; gap: 8px; }
             .section-title i { font-size: 15px; }
-
-            .content-table-wrapper {
-                margin: 0 -8px;
-                padding: 0 8px;
-            }
+            .content-table-wrapper { margin: 0 -8px; padding: 0 8px; }
             .content-table { min-width: 560px; font-size: 11px; }
             .content-table thead th { padding: 6px 5px; font-size: 10px; }
             .content-table tbody td { padding: 6px 5px; font-size: 11px; }
             .content-table .col-cover { width: 42px; padding: 3px; }
             .content-table .col-cover img,
-            .content-table .no-cover {
-                width: 34px;
-                height: 48px;
-                font-size: 18px;
-            }
-
+            .content-table .no-cover { width: 34px; height: 48px; font-size: 18px; }
             .stats-panel { padding: 10px; }
             .stats-panel h4 { font-size: 13px; }
             .stats-panel table { font-size: 12px; }
             .stats-panel .value { font-size: 13px; }
-
             .pagination-bar { padding: 8px 10px; gap: 8px; }
             .pagination-controls { gap: 4px; }
             .page-btn { width: 28px; height: 28px; font-size: 11px; }
@@ -861,22 +773,25 @@
         if (sizeSelect) sizeSelect.addEventListener('change', function() {
             state.pageSize = parseInt(this.value);
             state.currentPage = 1;
-            renderFn(containerId);
+            renderTableWithState(containerId, container, renderFn);
         });
         const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
         if (prevBtn) prevBtn.addEventListener('click', function() {
-            if (state.currentPage > 1) { state.currentPage--; renderFn(containerId); }
+            if (state.currentPage > 1) { state.currentPage--; renderTableWithState(containerId, container, renderFn); }
         });
         const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
         if (nextBtn) nextBtn.addEventListener('click', function() {
             const filtered = getFilteredSorted(state);
             const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-            if (state.currentPage < totalPages) { state.currentPage++; renderFn(containerId); }
+            if (state.currentPage < totalPages) { state.currentPage++; renderTableWithState(containerId, container, renderFn); }
         });
         container.querySelectorAll(`.page-num[data-page]`).forEach(btn => {
             btn.addEventListener('click', function() {
                 const p = parseInt(this.dataset.page, 10);
-                if (!isNaN(p) && p !== state.currentPage) { state.currentPage = p; renderFn(containerId); }
+                if (!isNaN(p) && p !== state.currentPage) {
+                    state.currentPage = p;
+                    renderTableWithState(containerId, container, renderFn);
+                }
             });
         });
         const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
@@ -890,7 +805,7 @@
                 if (p < 1) p = 1;
                 if (p > totalPages) p = totalPages;
                 state.currentPage = p;
-                renderFn(containerId);
+                renderTableWithState(containerId, container, renderFn);
             };
             jumpBtn.addEventListener('click', doJump);
             jumpInput.addEventListener('keydown', function(e) {
