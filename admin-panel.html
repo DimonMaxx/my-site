@@ -260,6 +260,33 @@
             margin-left: 4px;
             font-family: 'Inter', sans-serif;
         }
+        .content-table .col-cover {
+            width: 70px;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .content-table .col-cover img {
+            width: 55px;
+            height: 78px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: block;
+            margin: 0 auto;
+        }
+        .content-table .no-cover {
+            width: 55px;
+            height: 78px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e1;
+            font-size: 24px;
+            margin: 0 auto;
+        }
         .btn-edit { background: #2563eb; color: white; }
         .btn-edit:hover { background: #1d4ed8; }
         .btn-del-user { background: #dc2626; color: white; }
@@ -322,6 +349,70 @@
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         }
+
+        /* ===== ПАГИНАЦИЯ ===== */
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+            padding: 12px 18px;
+            background: #f8fafc;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .pagination-total { color: #64748b; font-weight: 500; }
+        .pagination-total strong { color: #0f172a; font-size: 16px; }
+        .pagination-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .pagination-controls label { display: flex; align-items: center; gap: 6px; color: #475569; font-weight: 500; }
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            color: #1e293b;
+        }
+        .page-size-select:focus { outline: none; border-color: #8b5cf6; }
+        .page-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 1px solid #cbd5e1;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            padding: 0;
+        }
+        .page-btn:hover:not(:disabled) {
+            background: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+            transform: translateY(-1px);
+        }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { color: #475569; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .page-input {
+            width: 55px;
+            padding: 6px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            text-align: center;
+            color: #1e293b;
+        }
+        .page-input:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139,92,246,0.1); }
+        .page-input::-webkit-outer-spin-button,
+        .page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         .modal-overlay {
             display: none;
@@ -397,6 +488,8 @@
             .sidebar .nav-link { width: auto; padding: 8px 14px; font-size: 13px; }
             .sidebar .nav-divider { display: none; }
             .content-area { padding: 16px; }
+            .pagination-bar { flex-direction: column; align-items: stretch; }
+            .pagination-controls { justify-content: center; }
         }
     </style>
 </head>
@@ -499,6 +592,7 @@
     const GITHUB_OWNER = 'DimonMaxx';
     const GITHUB_REPO = 'my-site';
     const DELETE_WORKFLOW = 'delete-content.yml';
+    const PAGE_SIZES = [5, 10, 15, 25, 50, 100];
 
     const SECTIONS = {
         programs: { file: '_content/programs.json', label: 'Программы', icon: 'fa-code', columns: ['title', 'description', 'version', 'size', 'download_link'] },
@@ -525,6 +619,12 @@
     let tableStates = {};
     let usersData = [];
     let usersDataMap = {};
+    let usersPage = 1;
+    let usersPageSize = 10;
+    let visitorsData = [];
+    let visitorsPage = 1;
+    let visitorsPageSize = 10;
+    let downloadCounts = {};
 
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
@@ -539,6 +639,7 @@
         }
         currentProfile = profile;
         document.getElementById('adminName').textContent = profile.username || currentUser.email;
+        await loadDownloadCounts();
         await loadSection('programs');
     }
 
@@ -546,6 +647,19 @@
         await supabaseClient.auth.signOut();
         window.location.href = 'index.html';
     });
+
+    async function loadDownloadCounts() {
+        try {
+            const { data } = await supabaseClient.from('downloads').select('file_id, count');
+            if (data) data.forEach(item => { downloadCounts[item.file_id] = item.count; });
+        } catch (e) { console.error(e); }
+    }
+
+    function slugify(text) {
+        if (!text) return '';
+        let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
+        return slug.replace(/[\s\-]+/g, '-');
+    }
 
     // ===== Контент =====
     async function loadSection(section) {
@@ -559,7 +673,6 @@
         if (!info) return;
 
         document.getElementById('sectionTitle').innerHTML = `<i class="fas ${info.icon}"></i> ${info.label}`;
-        document.getElementById('tableWrapper').innerHTML = `<table class="content-table" id="contentTable"><thead id="tableHead"></thead><tbody id="tableBody"><tr><td colspan="20" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
         document.getElementById('toolbar').style.display = 'flex';
         document.getElementById('deleteSelectedBtn').style.display = 'inline-flex';
 
@@ -572,16 +685,14 @@
             sectionData[section] = [];
         }
 
-        if (!tableStates[section]) tableStates[section] = { sortKey: null, sortDir: 'asc', searches: {} };
+        if (!tableStates[section]) {
+            tableStates[section] = { sortKey: null, sortDir: 'asc', searches: {}, pageSize: 10, currentPage: 1 };
+        }
         renderContentTable(section);
     }
 
-    function renderContentTable(section) {
-        const info = SECTIONS[section];
-        const state = tableStates[section];
-        const data = sectionData[section] || [];
-
-        let filtered = data.slice();
+    function getFilteredSorted(state) {
+        let filtered = state.data.slice();
         Object.keys(state.searches).forEach(key => {
             const q = (state.searches[key] || '').trim().toLowerCase();
             if (!q) return;
@@ -601,6 +712,95 @@
                 return String(va).localeCompare(String(vb), 'ru') * dir;
             });
         }
+        return filtered;
+    }
+
+    function renderPagination(containerId, totalItems, totalPages, state) {
+        const options = PAGE_SIZES.map(sz =>
+            `<option value="${sz}"${state.pageSize === sz ? ' selected' : ''}>${sz}</option>`
+        ).join('');
+        return `
+            <div class="pagination-bar" data-pagination-for="${escapeAttr(containerId)}">
+                <div class="pagination-total">Всего записей: <strong>${totalItems}</strong></div>
+                <div class="pagination-controls">
+                    <label>Показывать по:
+                        <select class="page-size-select" data-container="${escapeAttr(containerId)}">
+                            ${options}
+                        </select>
+                    </label>
+                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Предыдущая страница">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info">
+                        Страница
+                        <input type="number" class="page-input" data-container="${escapeAttr(containerId)}" value="${state.currentPage}" min="1" max="${totalPages}">
+                        из <strong>${totalPages}</strong>
+                    </span>
+                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Следующая страница">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function attachPaginationHandlers(container, containerId, renderFn) {
+        const state = tableStates[containerId];
+        if (!state) return;
+
+        const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
+        if (sizeSelect) {
+            sizeSelect.addEventListener('change', function() {
+                state.pageSize = parseInt(this.value);
+                state.currentPage = 1;
+                renderFn(containerId);
+            });
+        }
+        const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                if (state.currentPage > 1) { state.currentPage--; renderFn(containerId); }
+            });
+        }
+        const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                const filtered = getFilteredSorted(state);
+                const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+                if (state.currentPage < totalPages) { state.currentPage++; renderFn(containerId); }
+            });
+        }
+        const pageInput = container.querySelector(`.page-input[data-container="${containerId}"]`);
+        if (pageInput) {
+            const applyPage = () => {
+                const filtered = getFilteredSorted(state);
+                const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+                let p = parseInt(pageInput.value) || 1;
+                if (p < 1) p = 1;
+                if (p > totalPages) p = totalPages;
+                state.currentPage = p;
+                renderFn(containerId);
+            };
+            pageInput.addEventListener('change', applyPage);
+            pageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') applyPage();
+            });
+        }
+    }
+
+    function renderContentTable(section) {
+        const info = SECTIONS[section];
+        const state = tableStates[section];
+        const stateWrapper = { data: sectionData[section] || [], ...state };
+        state.data = stateWrapper.data;
+
+        const filtered = getFilteredSorted(state);
+        const totalItems = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+        if (state.currentPage > totalPages) state.currentPage = totalPages;
+        if (state.currentPage < 1) state.currentPage = 1;
+        const startIdx = (state.currentPage - 1) * state.pageSize;
+        const pageItems = filtered.slice(startIdx, startIdx + state.pageSize);
 
         const columns = info.columns;
         let headHtml = '<tr>';
@@ -618,15 +818,15 @@
         document.getElementById('tableHead').innerHTML = headHtml;
 
         const tbody = document.getElementById('tableBody');
-        if (filtered.length === 0) {
+        if (pageItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${columns.length + 1}" class="empty-block">Ничего не найдено</td></tr>`;
             updateDeleteButton();
             return;
         }
 
         let bodyHtml = '';
-        filtered.forEach(item => {
-            const rowIdx = data.indexOf(item);
+        pageItems.forEach(item => {
+            const rowIdx = state.data.indexOf(item);
             bodyHtml += `<tr data-row-index="${rowIdx}">`;
             bodyHtml += `<td class="center checkbox-cell"><input type="checkbox" class="row-checkbox" data-row-index="${rowIdx}"></td>`;
             columns.forEach(col => {
@@ -644,11 +844,24 @@
         });
         tbody.innerHTML = bodyHtml;
 
+        // Пагинация
+        const paginationContainer = document.getElementById('tableWrapper');
+        // вставляем pagination после таблицы
+        let paginationEl = document.getElementById('contentPagination');
+        if (!paginationEl) {
+            paginationEl = document.createElement('div');
+            paginationEl.id = 'contentPagination';
+            paginationContainer.parentNode.insertBefore(paginationEl, paginationContainer.nextSibling);
+        }
+        paginationEl.innerHTML = renderPagination('contentTable', totalItems, totalPages, state);
+
+        // Обработчики
         document.querySelectorAll('#tableHead .th-label').forEach(el => {
             el.addEventListener('click', function() {
                 const key = this.dataset.sortKey;
                 if (state.sortKey === key) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
                 else { state.sortKey = key; state.sortDir = 'asc'; }
+                state.currentPage = 1;
                 renderContentTable(section);
             });
         });
@@ -656,6 +869,7 @@
             input.addEventListener('input', function() {
                 const key = this.dataset.searchKey;
                 state.searches[key] = this.value;
+                state.currentPage = 1;
                 clearTimeout(input._t);
                 input._t = setTimeout(() => {
                     renderContentTable(section);
@@ -670,6 +884,7 @@
             updateDeleteButton();
         });
         document.querySelectorAll('.row-checkbox').forEach(cb => cb.addEventListener('change', updateDeleteButton));
+        attachPaginationHandlers(paginationEl, 'contentTable', () => renderContentTable(section));
         updateDeleteButton();
     }
 
@@ -697,41 +912,56 @@
     // ===== История скачиваний =====
     async function loadDownloads() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-download"></i> История скачиваний`;
-        document.getElementById('tableWrapper').innerHTML = `<table class="content-table"><thead><tr><th>Файл</th><th>Пользователь</th><th>Дата и время</th></tr></thead><tbody id="tableBody"><tr><td colspan="3" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
         document.getElementById('toolbar').style.display = 'none';
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
+        const pag = document.getElementById('contentPagination');
+        if (pag) pag.innerHTML = '';
 
         const { data, error } = await supabaseClient
             .from('download_logs').select('*').order('downloaded_at', { ascending: false });
-        const tbody = document.getElementById('tableBody');
-        if (error) { tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="empty-block">Нет записей</td></tr>`; return; }
-        let html = '';
+        if (error) { wrapper.innerHTML = `<p class="empty-block">Ошибка: ${error.message}</p>`; return; }
+        if (!data || data.length === 0) { wrapper.innerHTML = `<p class="empty-block">Нет записей</p>`; return; }
+
+        let html = `<table class="content-table"><thead><tr><th>Файл</th><th>Пользователь</th><th>Дата и время</th></tr></thead><tbody>`;
         data.forEach(log => {
             const d = new Date(log.downloaded_at);
             const dateStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU');
             html += `<tr><td>${escapeHtml(log.file_name || log.file_id || '')}</td><td>${escapeHtml(log.username || '')}</td><td>${dateStr}</td></tr>`;
         });
-        tbody.innerHTML = html;
+        html += '</tbody></table>';
+        wrapper.innerHTML = html;
     }
 
     // ===== Пользователи =====
     async function loadUsers() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-users"></i> Пользователи`;
-        document.getElementById('tableWrapper').innerHTML = `<table class="content-table"><thead><tr>
-            <th>#</th><th>Ник</th><th>Полное имя</th><th>Роль</th><th>Заметка админа</th><th>Дата регистрации</th><th>Действия</th>
-        </tr></thead><tbody id="tableBody"><tr><td colspan="7" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
         document.getElementById('toolbar').style.display = 'none';
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
+        const pag = document.getElementById('contentPagination');
+        if (pag) pag.innerHTML = '';
 
         const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-        const tbody = document.getElementById('tableBody');
-        if (error) { tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
+        if (error) { wrapper.innerHTML = `<p class="empty-block">Ошибка: ${error.message}</p>`; return; }
         usersData = data || [];
         usersDataMap = {};
         usersData.forEach(u => { usersDataMap[u.id] = u; });
 
-        if (usersData.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="empty-block">Нет пользователей</td></tr>`; return; }
-        let html = '';
-        usersData.forEach((user, idx) => {
+        if (usersData.length === 0) { wrapper.innerHTML = `<p class="empty-block">Нет пользователей</p>`; return; }
+
+        const totalItems = usersData.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / usersPageSize));
+        if (usersPage > totalPages) usersPage = totalPages;
+        if (usersPage < 1) usersPage = 1;
+        const startIdx = (usersPage - 1) * usersPageSize;
+        const pageUsers = usersData.slice(startIdx, startIdx + usersPageSize);
+
+        let html = `<table class="content-table"><thead><tr>
+            <th>#</th><th>Ник</th><th>Полное имя</th><th>Роль</th><th>Заметка админа</th><th>Дата регистрации</th><th>Действия</th>
+        </tr></thead><tbody>`;
+        pageUsers.forEach((user, i) => {
+            const idx = startIdx + i + 1;
             const role = user.role || 'user';
             const roleLabel = { user: 'Пользователь', moderator: 'Модератор', admin: 'Администратор' }[role];
             const roleClass = { user: 'role-user', moderator: 'role-moderator', admin: 'role-admin' }[role];
@@ -739,7 +969,7 @@
             const isMe = user.id === currentUser?.id;
             const note = user.admin_note || '';
             html += `<tr>
-                <td>${idx + 1}</td>
+                <td>${idx}</td>
                 <td><span class="role-badge ${roleClass}">${roleLabel}</span> <strong>${escapeHtml(user.username || '—')}</strong></td>
                 <td>${escapeHtml(user.full_name || '—')}</td>
                 <td>
@@ -757,7 +987,25 @@
                 </td>
             </tr>`;
         });
-        tbody.innerHTML = html;
+        html += '</tbody></table>';
+
+        const options = PAGE_SIZES.map(sz =>
+            `<option value="${sz}"${usersPageSize === sz ? ' selected' : ''}>${sz}</option>`
+        ).join('');
+        html += `
+            <div class="pagination-bar">
+                <div class="pagination-total">Всего пользователей: <strong>${totalItems}</strong></div>
+                <div class="pagination-controls">
+                    <label>Показывать по:
+                        <select class="page-size-select" id="usersPageSize">${options}</select>
+                    </label>
+                    <button class="page-btn" id="usersPrev" ${usersPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <span class="page-info">Страница <input type="number" class="page-input" id="usersPageInput" value="${usersPage}" min="1" max="${totalPages}"> из <strong>${totalPages}</strong></span>
+                    <button class="page-btn" id="usersNext" ${usersPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        `;
+        wrapper.innerHTML = html;
 
         document.querySelectorAll('.user-role-select').forEach(sel => {
             sel.addEventListener('change', async function() {
@@ -768,6 +1016,29 @@
                 else alert('Роль обновлена!');
             });
         });
+
+        const sizeSel = document.getElementById('usersPageSize');
+        if (sizeSel) sizeSel.addEventListener('change', function() {
+            usersPageSize = parseInt(this.value);
+            usersPage = 1;
+            loadUsers();
+        });
+        const prevB = document.getElementById('usersPrev');
+        if (prevB) prevB.addEventListener('click', function() { if (usersPage > 1) { usersPage--; loadUsers(); } });
+        const nextB = document.getElementById('usersNext');
+        if (nextB) nextB.addEventListener('click', function() { if (usersPage < totalPages) { usersPage++; loadUsers(); } });
+        const pageInp = document.getElementById('usersPageInput');
+        if (pageInp) {
+            const apply = () => {
+                let p = parseInt(pageInp.value) || 1;
+                if (p < 1) p = 1;
+                if (p > totalPages) p = totalPages;
+                usersPage = p;
+                loadUsers();
+            };
+            pageInp.addEventListener('change', apply);
+            pageInp.addEventListener('keydown', e => { if (e.key === 'Enter') apply(); });
+        }
     }
 
     window.openUserEditModal = function(userId) {
@@ -821,18 +1092,28 @@
     // ===== Посетители =====
     async function loadVisitors() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-user-check"></i> Посетители сайта`;
-        document.getElementById('tableWrapper').innerHTML = `<table class="content-table"><thead><tr>
-            <th>Тип</th><th>Ник / ID</th><th>Email</th><th>Последний визит</th><th>Посещений</th>
-        </tr></thead><tbody id="tableBody"><tr><td colspan="5" class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</td></tr></tbody></table>`;
         document.getElementById('toolbar').style.display = 'none';
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
+        const pag = document.getElementById('contentPagination');
+        if (pag) pag.innerHTML = '';
 
         const { data, error } = await supabaseClient.rpc('get_unique_visitors');
-        const tbody = document.getElementById('tableBody');
-        if (error) { tbody.innerHTML = `<tr><td colspan="5" class="empty-block">Ошибка: ${error.message}</td></tr>`; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="empty-block">Пока нет данных о посетителях</td></tr>`; return; }
+        if (error) { wrapper.innerHTML = `<p class="empty-block">Ошибка: ${error.message}</p>`; return; }
+        visitorsData = data || [];
+        if (visitorsData.length === 0) { wrapper.innerHTML = `<p class="empty-block">Пока нет данных о посетителях</p>`; return; }
 
-        let html = '';
-        data.forEach(v => {
+        const totalItems = visitorsData.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / visitorsPageSize));
+        if (visitorsPage > totalPages) visitorsPage = totalPages;
+        if (visitorsPage < 1) visitorsPage = 1;
+        const startIdx = (visitorsPage - 1) * visitorsPageSize;
+        const pageItems = visitorsData.slice(startIdx, startIdx + visitorsPageSize);
+
+        let html = `<table class="content-table"><thead><tr>
+            <th>Тип</th><th>Ник / ID</th><th>Email</th><th>Последний визит</th><th>Посещений</th>
+        </tr></thead><tbody>`;
+        pageItems.forEach(v => {
             const last = new Date(v.last_visit);
             const dateStr = last.toLocaleDateString('ru-RU') + ' ' + last.toLocaleTimeString('ru-RU');
             const isReg = v.is_registered;
@@ -849,13 +1130,56 @@
                 <td><strong>${v.visit_count}</strong></td>
             </tr>`;
         });
-        tbody.innerHTML = html;
+        html += '</tbody></table>';
+
+        const options = PAGE_SIZES.map(sz =>
+            `<option value="${sz}"${visitorsPageSize === sz ? ' selected' : ''}>${sz}</option>`
+        ).join('');
+        html += `
+            <div class="pagination-bar">
+                <div class="pagination-total">Всего посетителей: <strong>${totalItems}</strong></div>
+                <div class="pagination-controls">
+                    <label>Показывать по:
+                        <select class="page-size-select" id="visitorsPageSize">${options}</select>
+                    </label>
+                    <button class="page-btn" id="visitorsPrev" ${visitorsPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <span class="page-info">Страница <input type="number" class="page-input" id="visitorsPageInput" value="${visitorsPage}" min="1" max="${totalPages}"> из <strong>${totalPages}</strong></span>
+                    <button class="page-btn" id="visitorsNext" ${visitorsPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        `;
+        wrapper.innerHTML = html;
+
+        const sizeSel = document.getElementById('visitorsPageSize');
+        if (sizeSel) sizeSel.addEventListener('change', function() {
+            visitorsPageSize = parseInt(this.value);
+            visitorsPage = 1;
+            loadVisitors();
+        });
+        const prevB = document.getElementById('visitorsPrev');
+        if (prevB) prevB.addEventListener('click', function() { if (visitorsPage > 1) { visitorsPage--; loadVisitors(); } });
+        const nextB = document.getElementById('visitorsNext');
+        if (nextB) nextB.addEventListener('click', function() { if (visitorsPage < totalPages) { visitorsPage++; loadVisitors(); } });
+        const pageInp = document.getElementById('visitorsPageInput');
+        if (pageInp) {
+            const apply = () => {
+                let p = parseInt(pageInp.value) || 1;
+                if (p < 1) p = 1;
+                if (p > totalPages) p = totalPages;
+                visitorsPage = p;
+                loadVisitors();
+            };
+            pageInp.addEventListener('change', apply);
+            pageInp.addEventListener('keydown', e => { if (e.key === 'Enter') apply(); });
+        }
     }
 
     // ===== Редактор контента (CMS) =====
     function showCMS() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-edit"></i> Редактор контента (Decap CMS)`;
         document.getElementById('toolbar').style.display = 'none';
+        const pag = document.getElementById('contentPagination');
+        if (pag) pag.innerHTML = '';
         document.getElementById('tableWrapper').innerHTML = `<iframe id="cmsFrame" src="admin/index.html" allow="clipboard-write"></iframe>`;
     }
 
@@ -863,6 +1187,8 @@
     async function loadStats() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика`;
         document.getElementById('toolbar').style.display = 'none';
+        const pag = document.getElementById('contentPagination');
+        if (pag) pag.innerHTML = '';
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML = '<div class="stats-grid" id="statsGrid"><div class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div></div>';
 
@@ -887,6 +1213,7 @@
         }
     }
 
+    // ===== Токен и удаление контента =====
     function getToken() { return localStorage.getItem('github_token') || ''; }
     function askToken() {
         const t = prompt('Вставьте GitHub Personal Access Token (права repo и workflow):');
@@ -936,6 +1263,8 @@
             currentTab = this.dataset.tab;
             const wrapper = document.getElementById('tableWrapper');
             wrapper.style.display = 'block';
+            const pag = document.getElementById('contentPagination');
+            if (pag) pag.innerHTML = '';
             if (currentTab === 'downloads') loadDownloads();
             else if (currentTab === 'stats') loadStats();
             else if (currentTab === 'users') loadUsers();
