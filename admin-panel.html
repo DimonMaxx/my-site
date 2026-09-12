@@ -1159,4 +1159,226 @@
             });
             const data = await resp.json();
             if (resp.ok && data.success) { alert('Пользователь удалён.'); await loadUsers(); }
-            else alert('
+            else alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        } catch (e) { alert('Ошибка: ' + e.message); }
+    };
+
+    // ===== Посетители =====
+    async function loadVisitors() {
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-user-check"></i> Посетители сайта`;
+        document.getElementById('toolbar').style.display = 'none';
+        document.getElementById('contentPagination').innerHTML = '';
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
+        const { data, error } = await supabaseClient.rpc('get_unique_visitors');
+        if (error) { wrapper.innerHTML = `<p class="empty-block">Ошибка: ${error.message}</p>`; return; }
+        visitorsData = data || [];
+        if (visitorsData.length === 0) { wrapper.innerHTML = `<p class="empty-block">Пока нет данных о посетителях</p>`; return; }
+
+        const totalItems = visitorsData.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / visitorsPageSize));
+        if (visitorsPage > totalPages) visitorsPage = totalPages;
+        if (visitorsPage < 1) visitorsPage = 1;
+        const startIdx = (visitorsPage - 1) * visitorsPageSize;
+        const pageItems = visitorsData.slice(startIdx, startIdx + visitorsPageSize);
+
+        let html = `<table class="content-table"><thead><tr>
+            <th>Тип</th><th>Ник / ID</th><th>Email</th><th>Последний визит</th><th>Посещений</th>
+        </tr></thead><tbody>`;
+        pageItems.forEach(v => {
+            const last = new Date(v.last_visit);
+            const dateStr = last.toLocaleDateString('ru-RU') + ' ' + last.toLocaleTimeString('ru-RU');
+            const isReg = v.is_registered;
+            const typeBadge = isReg
+                ? '<span class="role-badge role-user">Польз.</span>'
+                : '<span class="role-badge role-anon">Аноним</span>';
+            const idDisplay = isReg ? (v.username || '—') : ('ID: ' + (v.visitor_key || '').replace('anon_', '').slice(0, 10) + '...');
+            const emailDisplay = isReg ? (v.email || '—') : '—';
+            html += `<tr>
+                <td>${typeBadge}</td>
+                <td><strong>${escapeHtml(idDisplay)}</strong></td>
+                <td>${escapeHtml(emailDisplay)}</td>
+                <td>${dateStr}</td>
+                <td><strong>${v.visit_count}</strong></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+
+        const visible = getVisiblePages(visitorsPage, totalPages);
+        const pageNums = visible.map(p =>
+            `<button class="page-num${p === visitorsPage ? ' active' : ''}" data-visitors-page="${p}">${p}</button>`
+        ).join('');
+        const sizes = PAGE_SIZES.map(sz =>
+            `<option value="${sz}"${visitorsPageSize === sz ? ' selected' : ''}>${sz}</option>`
+        ).join('');
+        html += `
+            <div class="pagination-bar">
+                <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${visitorsPage}</strong> из <strong>${totalPages}</strong></div>
+                <div class="pagination-controls">
+                    <label>Показывать по:
+                        <select class="page-size-select" id="visitorsPageSize">${sizes}</select>
+                    </label>
+                    <button class="page-btn" id="visitorsPrev" ${visitorsPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <div class="page-numbers">${pageNums}</div>
+                    <button class="page-btn" id="visitorsNext" ${visitorsPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+                    <div class="page-jump">
+                        <label>Стр.:</label>
+                        <input type="number" class="page-jump-input" id="visitorsJumpInput" min="1" max="${totalPages}" placeholder="#">
+                        <button class="page-jump-btn" id="visitorsJumpBtn">Перейти</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        wrapper.innerHTML = html;
+
+        document.querySelectorAll('.page-num[data-visitors-page]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                visitorsPage = parseInt(this.dataset.visitorsPage, 10);
+                loadVisitors();
+            });
+        });
+        const sizeSel = document.getElementById('visitorsPageSize');
+        if (sizeSel) sizeSel.addEventListener('change', function() {
+            visitorsPageSize = parseInt(this.value);
+            visitorsPage = 1;
+            loadVisitors();
+        });
+        const prevB = document.getElementById('visitorsPrev');
+        if (prevB) prevB.addEventListener('click', function() { if (visitorsPage > 1) { visitorsPage--; loadVisitors(); } });
+        const nextB = document.getElementById('visitorsNext');
+        if (nextB) nextB.addEventListener('click', function() { if (visitorsPage < totalPages) { visitorsPage++; loadVisitors(); } });
+        const jumpBtn = document.getElementById('visitorsJumpBtn');
+        const jumpInput = document.getElementById('visitorsJumpInput');
+        if (jumpBtn && jumpInput) {
+            const doJump = () => {
+                let p = parseInt(jumpInput.value, 10);
+                if (isNaN(p)) p = 1;
+                if (p < 1) p = 1;
+                if (p > totalPages) p = totalPages;
+                visitorsPage = p;
+                loadVisitors();
+            };
+            jumpBtn.addEventListener('click', doJump);
+            jumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doJump(); } });
+        }
+    }
+
+    // ===== Редактор контента (CMS) =====
+    function showCMS() {
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-edit"></i> Редактор контента (Decap CMS)`;
+        document.getElementById('toolbar').style.display = 'none';
+        document.getElementById('contentPagination').innerHTML = '';
+        document.getElementById('tableWrapper').innerHTML = `<iframe id="cmsFrame" src="admin/index.html" allow="clipboard-write"></iframe>`;
+    }
+
+    // ===== Статистика =====
+    async function loadStats() {
+        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика`;
+        document.getElementById('toolbar').style.display = 'none';
+        document.getElementById('contentPagination').innerHTML = '';
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = '<div class="stats-grid" id="statsGrid"><div class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div></div>';
+        try {
+            const { data: total } = await supabaseClient.rpc('get_total_visitors');
+            const { data: year } = await supabaseClient.rpc('get_visitors_last_year');
+            const { data: month } = await supabaseClient.rpc('get_visitors_last_month');
+            const { data: week } = await supabaseClient.rpc('get_visitors_last_week');
+            const { data: today } = await supabaseClient.rpc('get_visitors_today');
+            const { data: counter } = await supabaseClient.rpc('get_total_visit_count');
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${counter || 0}</div><div class="stat-label">Счётчик (всего)</div></div>
+                <div class="stat-card"><div class="stat-value">${total || 0}</div><div class="stat-label">Уникальных</div></div>
+                <div class="stat-card"><div class="stat-value">${year || 0}</div><div class="stat-label">За год</div></div>
+                <div class="stat-card"><div class="stat-value">${month || 0}</div><div class="stat-label">За месяц</div></div>
+                <div class="stat-card"><div class="stat-value">${week || 0}</div><div class="stat-label">За неделю</div></div>
+                <div class="stat-card"><div class="stat-value">${today || 0}</div><div class="stat-label">За сегодня</div></div>
+            `;
+        } catch (e) {
+            wrapper.innerHTML = `<div class="empty-block">Ошибка загрузки статистики</div>`;
+        }
+    }
+
+    // ===== Токен и удаление контента =====
+    function getToken() { return localStorage.getItem('github_token') || ''; }
+    function askToken() {
+        const t = prompt('Вставьте GitHub Personal Access Token (права repo и workflow):');
+        if (t && t.trim()) localStorage.setItem('github_token', t.trim());
+    }
+
+    async function deleteSelected() {
+        const token = getToken();
+        if (!token) { askToken(); return; }
+        const rows = getSelectedRows();
+        if (rows.length === 0) return;
+        const section = currentTab;
+        const data = sectionData[section] || [];
+        const items = rows.map(idx => ({ section: section, title: data[idx]?.title || '' }));
+        if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты.`)) return;
+        const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${DELETE_WORKFLOW}/dispatches`;
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ref: 'main', inputs: { delete_list: JSON.stringify(items) } })
+            });
+            if (resp.status === 204) alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
+            else alert('Ошибка GitHub API: ' + resp.status + '\n' + await resp.text());
+        } catch (e) { alert('Ошибка: ' + e.message); }
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function escapeAttr(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    document.querySelectorAll('.sidebar .nav-link').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTab = this.dataset.tab;
+            document.getElementById('tableWrapper').style.display = 'block';
+            document.getElementById('contentPagination').innerHTML = '';
+            if (currentTab === 'downloads') loadDownloads();
+            else if (currentTab === 'stats') loadStats();
+            else if (currentTab === 'users') loadUsers();
+            else if (currentTab === 'visitors') loadVisitors();
+            else if (currentTab === 'cms') showCMS();
+            else loadSection(currentTab);
+        });
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+        if (currentTab === 'downloads') loadDownloads();
+        else if (currentTab === 'users') loadUsers();
+        else if (currentTab === 'visitors') loadVisitors();
+        else if (currentTab === 'stats') loadStats();
+        else if (currentTab === 'cms') showCMS();
+        else loadSection(currentTab);
+    });
+    document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+
+    // Перерисовка при смене размера экрана
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (SECTIONS[currentTab] && sectionData[currentTab]) {
+                renderContentTable(currentTab);
+            } else if (currentTab === 'users') loadUsers();
+            else if (currentTab === 'visitors') loadVisitors();
+        }, 300);
+    });
+
+    checkAuth();
+</script>
+</body>
+</html>
