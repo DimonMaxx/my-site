@@ -133,7 +133,7 @@
         }
         .section-title i { color: #2563eb; }
 
-        .content-table-wrapper { overflow-x: auto; }
+        .content-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .content-table {
             width: 100%; border-collapse: collapse; background: white;
             border-radius: 12px; overflow: hidden;
@@ -289,33 +289,208 @@
         }
         .page-jump-btn:hover { background: #1d4ed8; }
 
-        @media (max-width: 1024px) {
-            .content-area { flex-direction: column; }
-            .stats-panel { width: 100%; align-self: stretch; }
-        }
-        @media (max-width: 768px) {
-            .container { border-radius: 24px; }
-            header { flex-direction: column; align-items: stretch; gap: 12px; }
-            .logo { justify-content: center; }
-            .header-actions { justify-content: center; flex-wrap: wrap; }
+        /* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ ==================== */
+        @media (max-width: 900px) {
+            body { padding: 8px; }
+            .container { border-radius: 20px; }
+
+            header {
+                padding: 12px 16px;
+                gap: 10px;
+            }
+            .logo { font-size: 20px; }
+            .logo i { font-size: 24px; }
+            .header-actions { width: 100%; justify-content: center; gap: 5px; }
+            .header-actions a, .header-actions button {
+                padding: 7px 12px;
+                font-size: 12px;
+                border-radius: 30px;
+            }
+            .user-info { flex-wrap: wrap; justify-content: center; gap: 6px; }
+            .username {
+                font-size: 12px;
+                max-width: 110px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
             .main-layout { flex-direction: column; }
             .sidebar {
-                width: 100%; border-right: none; border-bottom: 2px solid #eef2ff;
-                padding: 10px; display: flex; flex-wrap: wrap; gap: 4px;
-                justify-content: center;
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid #eef2ff;
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                gap: 6px;
+                padding: 10px 12px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
             }
-            .sidebar .nav-link { padding: 8px 14px; font-size: 14px; gap: 8px; }
-            .content-area { padding: 16px; }
-            .stats-panel { width: 100%; }
-            .pagination-bar { flex-direction: column; align-items: stretch; }
-            .pagination-controls { justify-content: center; }
+            .sidebar::-webkit-scrollbar { display: none; }
+            .sidebar .nav-link {
+                flex-shrink: 0;
+                width: auto;
+                padding: 8px 14px;
+                font-size: 13px;
+                gap: 6px;
+                margin-bottom: 0;
+                white-space: nowrap;
+                border-radius: 30px;
+            }
+            .sidebar .nav-link i { font-size: 14px; width: auto; }
+
+            .content-area {
+                padding: 14px 12px;
+                gap: 16px;
+                flex-direction: column;
+            }
+
+            .stats-panel {
+                width: 100%;
+                align-self: stretch;
+                padding: 14px;
+            }
+            .stats-panel h4 { font-size: 15px; margin-bottom: 10px; }
+            .stats-panel table { font-size: 13px; }
+            .stats-panel .value { font-size: 15px; }
+
+            .section-title {
+                font-size: 20px;
+                margin-bottom: 15px;
+                padding-bottom: 8px;
+            }
+            .section-title i { font-size: 18px; }
+
+            /* Таблицы */
+            .content-table-wrapper {
+                margin: 0 -12px;
+                padding: 0 12px;
+                border-radius: 0;
+            }
+            .content-table {
+                min-width: 620px;
+                font-size: 12px;
+            }
+            .content-table thead th {
+                padding: 8px 6px;
+                font-size: 11px;
+            }
+            .content-table tbody td {
+                padding: 8px 6px;
+                font-size: 12px;
+                max-width: 180px;
+            }
+            .content-table .col-cover { width: 50px; padding: 4px; }
+            .content-table .col-cover img,
+            .content-table .no-cover {
+                width: 40px;
+                height: 56px;
+            }
+            .content-table .col-cover img:hover { transform: none; }
+            .content-table .col-title { max-width: 140px; }
+            .content-table .col-desc { max-width: 220px; }
+
+            /* Пагинация */
+            .pagination-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .pagination-total {
+                font-size: 12px;
+                text-align: center;
+            }
+            .pagination-total strong { font-size: 13px; }
+            .pagination-controls {
+                justify-content: center;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .pagination-controls label { font-size: 12px; gap: 4px; }
+            .page-size-select { padding: 5px 8px; font-size: 12px; }
+            .page-btn { width: 32px; height: 32px; font-size: 12px; }
+            .page-num {
+                min-width: 32px;
+                height: 32px;
+                font-size: 12px;
+                padding: 0 6px;
+                border-radius: 6px;
+            }
+            .page-numbers { gap: 3px; }
+            .page-jump {
+                width: 100%;
+                justify-content: center;
+                font-size: 12px;
+                margin-top: 4px;
+            }
+            .page-jump label { font-size: 12px; }
+            .page-jump-input { width: 50px; padding: 5px 6px; font-size: 12px; }
+            .page-jump-btn { padding: 5px 10px; font-size: 12px; }
+
+            .btn-download-sm { padding: 5px 10px; font-size: 11px; gap: 4px; }
+            .desc-short { -webkit-line-clamp: 3; }
+            .desc-toggle { font-size: 11px; }
         }
-        @media (max-width: 480px) {
-            .header-actions a, .header-actions button { font-size: 12px; padding: 6px 12px; }
-            .sidebar .nav-link { font-size: 13px; padding: 6px 10px; }
-            .pagination-controls { font-size: 12px; }
-            .page-btn { width: 32px; height: 32px; }
-            .page-num { min-width: 32px; height: 32px; font-size: 13px; padding: 0 6px; }
+
+        @media (max-width: 500px) {
+            body { padding: 5px; }
+            .container { border-radius: 16px; }
+            header { padding: 10px 12px; gap: 8px; }
+            .logo { font-size: 17px; }
+            .logo i { font-size: 20px; }
+            .header-actions a, .header-actions button {
+                padding: 6px 10px;
+                font-size: 11px;
+                gap: 4px;
+            }
+            .header-actions a i, .header-actions button i { font-size: 11px; }
+
+            .sidebar { padding: 8px 10px; gap: 5px; }
+            .sidebar .nav-link {
+                padding: 6px 10px;
+                font-size: 11px;
+                gap: 4px;
+            }
+            .sidebar .nav-link i { font-size: 12px; }
+
+            .content-area { padding: 10px 8px; gap: 12px; }
+
+            .section-title { font-size: 16px; gap: 8px; }
+            .section-title i { font-size: 15px; }
+
+            .content-table-wrapper {
+                margin: 0 -8px;
+                padding: 0 8px;
+            }
+            .content-table { min-width: 560px; font-size: 11px; }
+            .content-table thead th { padding: 6px 5px; font-size: 10px; }
+            .content-table tbody td { padding: 6px 5px; font-size: 11px; }
+            .content-table .col-cover { width: 42px; padding: 3px; }
+            .content-table .col-cover img,
+            .content-table .no-cover {
+                width: 34px;
+                height: 48px;
+                font-size: 18px;
+            }
+
+            .stats-panel { padding: 10px; }
+            .stats-panel h4 { font-size: 13px; }
+            .stats-panel table { font-size: 12px; }
+            .stats-panel .value { font-size: 13px; }
+
+            .pagination-bar { padding: 8px 10px; gap: 8px; }
+            .pagination-controls { gap: 4px; }
+            .page-btn { width: 28px; height: 28px; font-size: 11px; }
+            .page-num { min-width: 28px; height: 28px; font-size: 11px; padding: 0 5px; }
+            .page-jump-input { width: 42px; font-size: 11px; padding: 4px 5px; }
+            .page-jump-btn { padding: 4px 8px; font-size: 11px; }
+            .btn-download-sm { padding: 4px 8px; font-size: 10px; }
         }
     </style>
 </head>
@@ -361,7 +536,7 @@
                         Бесплатные программы, книги, фильмы, музыка, игры и многое другое. Чтобы скачивать, <strong>зарегистрируйтесь</strong>.
                     </p>
                     <p style="font-size:15px; color:#64748b;">
-                        <i class="fas fa-info-circle"></i> Выберите раздел в меню слева.
+                        <i class="fas fa-info-circle"></i> Выберите раздел в меню сверху.
                     </p>
                 </div>
                 <div id="news" class="tab-content"><h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2><div id="news-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div></div>
@@ -397,9 +572,16 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const YANDEX_FOLDER_URL = 'https://disk.yandex.ru/d/zMxF4nXHPkIVCQ';
     const PAGE_SIZES = [5, 10, 15, 25, 50, 100];
-    const MAX_PAGE_BUTTONS = 11;
     let currentUser = null;
     let currentProfile = null;
+
+    // Количество кнопок пагинации в зависимости от ширины экрана
+    function getMaxPageButtons() {
+        const w = window.innerWidth;
+        if (w < 480) return 5;
+        if (w < 768) return 7;
+        return 11;
+    }
 
     function slugify(text) {
         if (!text) return '';
@@ -620,24 +802,18 @@
         return result;
     }
 
-    // Возвращает массив видимых номеров страниц (не более MAX_PAGE_BUTTONS)
     function getVisiblePages(currentPage, totalPages) {
+        const MAX = getMaxPageButtons();
         const pages = [];
-        if (totalPages <= MAX_PAGE_BUTTONS) {
+        if (totalPages <= MAX) {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
             return pages;
         }
-        const half = Math.floor(MAX_PAGE_BUTTONS / 2); // 5
+        const half = Math.floor(MAX / 2);
         let start = currentPage - half;
-        let end = start + MAX_PAGE_BUTTONS - 1;
-        if (start < 1) {
-            start = 1;
-            end = MAX_PAGE_BUTTONS;
-        }
-        if (end > totalPages) {
-            end = totalPages;
-            start = end - MAX_PAGE_BUTTONS + 1;
-        }
+        let end = start + MAX - 1;
+        if (start < 1) { start = 1; end = MAX; }
+        if (end > totalPages) { end = totalPages; start = end - MAX + 1; }
         for (let i = start; i <= end; i++) pages.push(i);
         return pages;
     }
@@ -659,13 +835,13 @@
                             ${sizes}
                         </select>
                     </label>
-                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Предыдущая страница">
+                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Назад">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <div class="page-numbers" data-container="${escapeAttr(containerId)}">
                         ${pageNums}
                     </div>
-                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Следующая страница">
+                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Вперёд">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                     <div class="page-jump">
@@ -681,40 +857,28 @@
     function attachPaginationHandlers(container, containerId, renderFn) {
         const state = tableStates[containerId];
         if (!state) return;
-
         const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
-        if (sizeSelect) {
-            sizeSelect.addEventListener('change', function() {
-                state.pageSize = parseInt(this.value);
-                state.currentPage = 1;
-                renderFn(containerId);
-            });
-        }
+        if (sizeSelect) sizeSelect.addEventListener('change', function() {
+            state.pageSize = parseInt(this.value);
+            state.currentPage = 1;
+            renderFn(containerId);
+        });
         const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
-        if (prevBtn) {
-            prevBtn.addEventListener('click', function() {
-                if (state.currentPage > 1) { state.currentPage--; renderFn(containerId); }
-            });
-        }
+        if (prevBtn) prevBtn.addEventListener('click', function() {
+            if (state.currentPage > 1) { state.currentPage--; renderFn(containerId); }
+        });
         const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
-        if (nextBtn) {
-            nextBtn.addEventListener('click', function() {
-                const filtered = getFilteredSorted(state);
-                const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-                if (state.currentPage < totalPages) { state.currentPage++; renderFn(containerId); }
-            });
-        }
-        // Клик по номеру страницы
+        if (nextBtn) nextBtn.addEventListener('click', function() {
+            const filtered = getFilteredSorted(state);
+            const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+            if (state.currentPage < totalPages) { state.currentPage++; renderFn(containerId); }
+        });
         container.querySelectorAll(`.page-num[data-page]`).forEach(btn => {
             btn.addEventListener('click', function() {
                 const p = parseInt(this.dataset.page, 10);
-                if (!isNaN(p) && p !== state.currentPage) {
-                    state.currentPage = p;
-                    renderFn(containerId);
-                }
+                if (!isNaN(p) && p !== state.currentPage) { state.currentPage = p; renderFn(containerId); }
             });
         });
-        // Кнопка "Перейти"
         const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
         const jumpInput = container.querySelector(`.page-jump-input[data-container="${containerId}"]`);
         if (jumpBtn && jumpInput) {
@@ -864,9 +1028,9 @@
     function getSearchPlaceholder(col) {
         if (col.type === 'download') return 'Есть/нет';
         if (col.type === 'count') return 'Число';
-        if (col.type === 'description') return 'Поиск в описании...';
-        if (col.key === 'title') return 'Поиск по названию...';
-        if (col.key === 'author') return 'Поиск по автору...';
+        if (col.type === 'description') return 'Поиск...';
+        if (col.key === 'title') return 'Название...';
+        if (col.key === 'author') return 'Автор...';
         if (col.key === 'year') return 'Год...';
         if (col.key === 'date') return 'Дата...';
         return 'Поиск...';
@@ -956,6 +1120,22 @@
         const { error } = await supabaseClient.from('visits').insert([{ visitor_id: vid, user_id: uid, page: window.location.pathname }]);
         if (error) console.error(error);
     }
+
+    // Перерисовка таблиц при смене ориентации/размера экрана
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            Object.keys(tableStates).forEach(containerId => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                const renderFn = RENDERERS[containerId];
+                if (renderFn && tableStates[containerId].data.length > 0) {
+                    renderTableWithState(containerId, container, renderFn);
+                }
+            });
+        }, 300);
+    });
 
     (async function init() {
         await checkAuth();
