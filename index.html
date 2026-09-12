@@ -140,6 +140,10 @@
             min-width: 0;
         }
 
+        /* Показываем только активный раздел */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .section-title {
             font-size: 26px; font-weight: 700;
             margin: 0 0 20px 0; padding-bottom: 10px;
@@ -525,6 +529,21 @@
     let currentUser = null;
     let currentProfile = null;
 
+    // Набор загруженных разделов (чтобы не загружать повторно)
+    const loadedSections = new Set();
+
+    // Соответствие tab-id → { containerId, jsonPath }
+    const SECTION_FILES = {
+        news:     { container: 'news-container',     json: '_content/news.json' },
+        programs: { container: 'programs-container', json: '_content/programs.json' },
+        books:    { container: 'books-container',    json: '_content/books.json' },
+        articles: { container: 'articles-container', json: '_content/articles.json' },
+        movies:   { container: 'movies-container',   json: '_content/movies.json' },
+        music:    { container: 'music-container',    json: '_content/music.json' },
+        games:    { container: 'games-container',    json: '_content/games.json' },
+        misc:     { container: 'misc-container',     json: '_content/misc.json' }
+    };
+
     function getMaxPageButtons() {
         const w = window.innerWidth;
         if (w < 480) return 5;
@@ -727,6 +746,17 @@
             console.error(e);
             container.innerHTML = `<p class="empty-block" style="color:#ef4444;">Не удалось загрузить раздел.</p>`;
         }
+    }
+
+    // Загружаем раздел только один раз — при первом открытии
+    async function loadSectionIfNeeded(tabId) {
+        if (loadedSections.has(tabId)) return;
+        const info = SECTION_FILES[tabId];
+        if (!info) return; // например, "home"
+        loadedSections.add(tabId);
+        const renderFn = RENDERERS[info.container];
+        if (!renderFn) return;
+        await loadCollection(info.container, info.json, renderFn);
     }
 
     function getFilteredSorted(state) {
@@ -1049,6 +1079,7 @@
 
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
     const tabContents = document.querySelectorAll('.tab-content');
+
     function switchTab(tabId) {
         tabContents.forEach(el => el.classList.remove('active'));
         const target = document.getElementById(tabId);
@@ -1058,12 +1089,13 @@
             if (link.dataset.tab === tabId) link.classList.add('active');
         });
         localStorage.setItem('activeTab', tabId);
+        // Ленивая загрузка содержимого раздела (только один раз)
+        loadSectionIfNeeded(tabId);
     }
+
     navLinks.forEach(link => {
         link.addEventListener('click', function() { switchTab(this.dataset.tab); });
     });
-    const savedTab = localStorage.getItem('activeTab');
-    if (savedTab && document.getElementById(savedTab)) switchTab(savedTab);
 
     async function trackVisit() {
         let vid = localStorage.getItem('visitor_id');
@@ -1093,15 +1125,15 @@
         await checkAuth();
         await trackVisit();
         await loadDownloadCounts();
-        loadCollection('news-container', '_content/news.json', RENDERERS['news-container']);
-        loadCollection('programs-container', '_content/programs.json', RENDERERS['programs-container']);
-        loadCollection('books-container', '_content/books.json', RENDERERS['books-container']);
-        loadCollection('articles-container', '_content/articles.json', RENDERERS['articles-container']);
-        loadCollection('movies-container', '_content/movies.json', RENDERERS['movies-container']);
-        loadCollection('music-container', '_content/music.json', RENDERERS['music-container']);
-        loadCollection('games-container', '_content/games.json', RENDERERS['games-container']);
-        loadCollection('misc-container', '_content/misc.json', RENDERERS['misc-container']);
         loadStats();
+
+        // Восстанавливаем последний открытый раздел и грузим только его
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab && document.getElementById(savedTab)) {
+            switchTab(savedTab);
+        } else {
+            switchTab('home');
+        }
     })();
 </script>
 </body>
