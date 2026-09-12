@@ -18,7 +18,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
             background: white;
             border-radius: 32px;
@@ -87,12 +87,21 @@
         .username { font-weight: 600; font-size: 14px; color: #0f172a; }
 
         .main-layout { display: flex; flex: 1; }
+
+        /* ===== ЛЕВАЯ КОЛОНКА: меню + статистика ===== */
         .sidebar {
-            width: 220px; background: #f8fafc;
-            padding: 20px 10px;
+            width: 260px;
+            background: #f8fafc;
+            padding: 20px 12px;
             border-right: 2px solid #eef2ff;
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
+        .sidebar-nav { display: flex; flex-direction: column; }
+
         .sidebar .nav-link {
             display: flex; align-items: center; gap: 14px;
             padding: 12px 16px; border-radius: 12px;
@@ -103,27 +112,33 @@
         .sidebar .nav-link i { width: 24px; font-size: 18px; text-align: center; }
         .sidebar .nav-link:hover { background: #eef2ff; color: #1e293b; }
         .sidebar .nav-link.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
-        .content-area { flex: 1; padding: 25px 30px; display: flex; gap: 30px; }
-        .tab-content-wrapper { flex: 1; min-width: 0; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Статистика (перенесена в левую колонку) */
         .stats-panel {
-            width: 220px; flex-shrink: 0;
-            background: #f8fafc; border-radius: 16px;
-            padding: 18px 16px; align-self: flex-start;
+            background: white;
+            border-radius: 16px;
+            padding: 16px 14px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
         .stats-panel h4 {
-            font-size: 16px; font-weight: 700; color: #0f172a;
-            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+            font-size: 15px; font-weight: 700; color: #0f172a;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
             border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;
         }
         .stats-panel table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .stats-panel td { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+        .stats-panel td { padding: 7px 0; border-bottom: 1px solid #e5e7eb; }
         .stats-panel td:last-child { text-align: right; font-weight: 700; color: #0f172a; }
         .stats-panel tr:last-child td { border-bottom: none; }
         .stats-panel .label { color: #64748b; }
-        .stats-panel .value { font-size: 16px; }
+        .stats-panel .value { font-size: 15px; }
+
+        /* ===== ПРАВАЯ ОБЛАСТЬ: только контент ===== */
+        .content-area {
+            flex: 1;
+            padding: 25px 30px;
+            min-width: 0;
+        }
 
         .section-title {
             font-size: 26px; font-weight: 700;
@@ -138,7 +153,6 @@
             width: 100%; border-collapse: collapse; background: white;
             border-radius: 12px; overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            min-width: 700px;
         }
         .content-table thead th {
             background: #f1f5f9; color: #1e293b;
@@ -170,29 +184,32 @@
         }
         .content-table tbody tr:hover { background: #f8fafc; }
         .content-table tbody tr:last-child td { border-bottom: none; }
-        .content-table .col-title { font-weight: 600; color: #0f172a; max-width: 200px; }
-        .content-table .col-desc { max-width: 400px; }
+        .content-table .col-title { font-weight: 600; color: #0f172a; max-width: 250px; }
+
+        /* Описание теперь шире — занимает много места */
+        .content-table .col-desc { min-width: 400px; max-width: 700px; }
+
         .content-table .col-center { text-align: center; white-space: nowrap; }
         .content-table .col-num { text-align: right; font-weight: 600; }
-        .content-table .col-cover { width: 70px; padding: 6px; text-align: center; vertical-align: middle; }
+        .content-table .col-cover { width: 90px; padding: 8px; text-align: center; vertical-align: middle; }
         .content-table .col-cover img {
-            width: 55px; height: 78px; object-fit: cover;
-            border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            width: 70px; height: 100px; object-fit: cover;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
             display: block; margin: 0 auto; transition: transform 0.2s;
         }
         .content-table .col-cover img:hover {
-            transform: scale(1.6);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transform: scale(1.7);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
             z-index: 10; position: relative;
         }
         .content-table .no-cover {
-            width: 55px; height: 78px; background: #f1f5f9;
-            border-radius: 6px; display: flex; align-items: center;
+            width: 70px; height: 100px; background: #f1f5f9;
+            border-radius: 8px; display: flex; align-items: center;
             justify-content: center; color: #cbd5e1;
-            font-size: 24px; margin: 0 auto;
+            font-size: 28px; margin: 0 auto;
         }
         .desc-short {
-            display: -webkit-box; -webkit-line-clamp: 2;
+            display: -webkit-box; -webkit-line-clamp: 3;
             -webkit-box-orient: vertical; overflow: hidden;
             text-overflow: ellipsis; word-break: break-word;
         }
@@ -200,7 +217,7 @@
         .desc-toggle {
             background: none; border: none; color: #2563eb;
             font-weight: 600; cursor: pointer; font-size: 13px;
-            margin-top: 4px; padding: 0; font-family: 'Inter', sans-serif;
+            margin-top: 6px; padding: 0; font-family: 'Inter', sans-serif;
         }
         .desc-toggle:hover { text-decoration: underline; }
         .btn-download-sm {
@@ -310,22 +327,28 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
+
             .main-layout { flex-direction: column; }
+
             .sidebar {
                 width: 100%;
                 border-right: none;
                 border-bottom: 2px solid #eef2ff;
-                display: flex;
+                padding: 12px;
+                gap: 14px;
+            }
+            .sidebar-nav {
+                flex-direction: row;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 overflow-y: hidden;
                 gap: 6px;
-                padding: 10px 12px;
+                padding-bottom: 4px;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
             }
-            .sidebar::-webkit-scrollbar { display: none; }
+            .sidebar-nav::-webkit-scrollbar { display: none; }
             .sidebar .nav-link {
                 flex-shrink: 0;
                 width: auto;
@@ -337,23 +360,29 @@
                 border-radius: 30px;
             }
             .sidebar .nav-link i { font-size: 14px; width: auto; }
-            .content-area { padding: 14px 12px; gap: 16px; flex-direction: column; }
-            .stats-panel { width: 100%; align-self: stretch; padding: 14px; }
-            .stats-panel h4 { font-size: 15px; margin-bottom: 10px; }
+
+            .stats-panel { padding: 12px; }
+            .stats-panel h4 { font-size: 14px; margin-bottom: 8px; padding-bottom: 8px; }
             .stats-panel table { font-size: 13px; }
-            .stats-panel .value { font-size: 15px; }
+            .stats-panel td { padding: 6px 0; }
+            .stats-panel .value { font-size: 14px; }
+
+            .content-area { padding: 14px 12px; }
+
             .section-title { font-size: 20px; margin-bottom: 15px; padding-bottom: 8px; }
             .section-title i { font-size: 18px; }
+
             .content-table-wrapper { margin: 0 -12px; padding: 0 12px; border-radius: 0; }
-            .content-table { min-width: 620px; font-size: 12px; }
+            .content-table { font-size: 12px; }
             .content-table thead th { padding: 8px 6px; font-size: 11px; }
-            .content-table tbody td { padding: 8px 6px; font-size: 12px; max-width: 180px; }
-            .content-table .col-cover { width: 50px; padding: 4px; }
-            .content-table .col-cover img,
-            .content-table .no-cover { width: 40px; height: 56px; }
-            .content-table .col-cover img:hover { transform: none; }
+            .content-table tbody td { padding: 8px 6px; font-size: 12px; }
+            .content-table .col-desc { min-width: 250px; max-width: 400px; }
             .content-table .col-title { max-width: 140px; }
-            .content-table .col-desc { max-width: 220px; }
+            .content-table .col-cover { width: 55px; padding: 4px; }
+            .content-table .col-cover img,
+            .content-table .no-cover { width: 42px; height: 60px; }
+            .content-table .col-cover img:hover { transform: none; }
+
             .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; font-size: 12px; }
             .pagination-total { font-size: 12px; text-align: center; }
             .pagination-total strong { font-size: 13px; }
@@ -368,7 +397,6 @@
             .page-jump-input { width: 50px; padding: 5px 6px; font-size: 12px; }
             .page-jump-btn { padding: 5px 10px; font-size: 12px; }
             .btn-download-sm { padding: 5px 10px; font-size: 11px; gap: 4px; }
-            .desc-short { -webkit-line-clamp: 3; }
             .desc-toggle { font-size: 11px; }
         }
         @media (max-width: 500px) {
@@ -379,23 +407,27 @@
             .logo i { font-size: 20px; }
             .header-actions a, .header-actions button { padding: 6px 10px; font-size: 11px; gap: 4px; }
             .header-actions a i, .header-actions button i { font-size: 11px; }
-            .sidebar { padding: 8px 10px; gap: 5px; }
+
+            .sidebar { padding: 10px; gap: 10px; }
             .sidebar .nav-link { padding: 6px 10px; font-size: 11px; gap: 4px; }
             .sidebar .nav-link i { font-size: 12px; }
-            .content-area { padding: 10px 8px; gap: 12px; }
-            .section-title { font-size: 16px; gap: 8px; }
-            .section-title i { font-size: 15px; }
-            .content-table-wrapper { margin: 0 -8px; padding: 0 8px; }
-            .content-table { min-width: 560px; font-size: 11px; }
-            .content-table thead th { padding: 6px 5px; font-size: 10px; }
-            .content-table tbody td { padding: 6px 5px; font-size: 11px; }
-            .content-table .col-cover { width: 42px; padding: 3px; }
-            .content-table .col-cover img,
-            .content-table .no-cover { width: 34px; height: 48px; font-size: 18px; }
             .stats-panel { padding: 10px; }
             .stats-panel h4 { font-size: 13px; }
             .stats-panel table { font-size: 12px; }
             .stats-panel .value { font-size: 13px; }
+
+            .content-area { padding: 10px 8px; }
+            .section-title { font-size: 16px; gap: 8px; }
+            .section-title i { font-size: 15px; }
+            .content-table-wrapper { margin: 0 -8px; padding: 0 8px; }
+            .content-table { font-size: 11px; }
+            .content-table thead th { padding: 6px 5px; font-size: 10px; }
+            .content-table tbody td { padding: 6px 5px; font-size: 11px; }
+            .content-table .col-desc { min-width: 200px; max-width: 300px; }
+            .content-table .col-cover { width: 46px; padding: 3px; }
+            .content-table .col-cover img,
+            .content-table .no-cover { width: 36px; height: 52px; font-size: 18px; }
+
             .pagination-bar { padding: 8px 10px; gap: 8px; }
             .pagination-controls { gap: 4px; }
             .page-btn { width: 28px; height: 28px; font-size: 11px; }
@@ -428,18 +460,34 @@
     </header>
 
     <div class="main-layout">
+
+        <!-- ЛЕВАЯ КОЛОНКА: навигация + статистика -->
         <aside class="sidebar" id="sidebarNav">
-            <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
-            <div class="nav-link" data-tab="news"><i class="fas fa-newspaper"></i> Новости</div>
-            <div class="nav-link" data-tab="programs"><i class="fas fa-code"></i> Программы</div>
-            <div class="nav-link" data-tab="books"><i class="fas fa-book"></i> Книги</div>
-            <div class="nav-link" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</div>
-            <div class="nav-link" data-tab="movies"><i class="fas fa-film"></i> Фильмы</div>
-            <div class="nav-link" data-tab="music"><i class="fas fa-music"></i> Музыка</div>
-            <div class="nav-link" data-tab="games"><i class="fas fa-gamepad"></i> Игры</div>
-            <div class="nav-link" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</div>
+            <nav class="sidebar-nav">
+                <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
+                <div class="nav-link" data-tab="news"><i class="fas fa-newspaper"></i> Новости</div>
+                <div class="nav-link" data-tab="programs"><i class="fas fa-code"></i> Программы</div>
+                <div class="nav-link" data-tab="books"><i class="fas fa-book"></i> Книги</div>
+                <div class="nav-link" data-tab="articles"><i class="fas fa-pen-fancy"></i> Статьи</div>
+                <div class="nav-link" data-tab="movies"><i class="fas fa-film"></i> Фильмы</div>
+                <div class="nav-link" data-tab="music"><i class="fas fa-music"></i> Музыка</div>
+                <div class="nav-link" data-tab="games"><i class="fas fa-gamepad"></i> Игры</div>
+                <div class="nav-link" data-tab="misc"><i class="fas fa-ellipsis-h"></i> Разное</div>
+            </nav>
+
+            <div class="stats-panel" id="statsPanel">
+                <h4><i class="fas fa-chart-simple"></i> Статистика</h4>
+                <table>
+                    <tr><td class="label">Всего</td><td class="value" id="stat-total">0</td></tr>
+                    <tr><td class="label">За год</td><td class="value" id="stat-year">0</td></tr>
+                    <tr><td class="label">За месяц</td><td class="value" id="stat-month">0</td></tr>
+                    <tr><td class="label">За неделю</td><td class="value" id="stat-week">0</td></tr>
+                    <tr><td class="label">За сегодня</td><td class="value" id="stat-today">0</td></tr>
+                </table>
+            </div>
         </aside>
 
+        <!-- ПРАВАЯ ОБЛАСТЬ: только контент -->
         <div class="content-area">
             <div class="tab-content-wrapper">
                 <div id="home" class="tab-content active">
@@ -448,7 +496,7 @@
                         Бесплатные программы, книги, фильмы, музыка, игры и многое другое. Чтобы скачивать, <strong>зарегистрируйтесь</strong>.
                     </p>
                     <p style="font-size:15px; color:#64748b;">
-                        <i class="fas fa-info-circle"></i> Выберите раздел в меню сверху.
+                        <i class="fas fa-info-circle"></i> Выберите раздел в меню слева.
                     </p>
                 </div>
                 <div id="news" class="tab-content"><h2 class="section-title"><i class="fas fa-newspaper"></i> Новости</h2><div id="news-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div></div>
@@ -459,16 +507,6 @@
                 <div id="music" class="tab-content"><h2 class="section-title"><i class="fas fa-music"></i> Музыка</h2><div id="music-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div></div>
                 <div id="games" class="tab-content"><h2 class="section-title"><i class="fas fa-gamepad"></i> Игры</h2><div id="games-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div></div>
                 <div id="misc" class="tab-content"><h2 class="section-title"><i class="fas fa-ellipsis-h"></i> Разное</h2><div id="misc-container"><p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p></div></div>
-            </div>
-            <div class="stats-panel" id="statsPanel">
-                <h4><i class="fas fa-chart-simple"></i> Статистика</h4>
-                <table>
-                    <tr><td class="label">Всего</td><td class="value" id="stat-total">0</td></tr>
-                    <tr><td class="label">За год</td><td class="value" id="stat-year">0</td></tr>
-                    <tr><td class="label">За месяц</td><td class="value" id="stat-month">0</td></tr>
-                    <tr><td class="label">За неделю</td><td class="value" id="stat-week">0</td></tr>
-                    <tr><td class="label">За сегодня</td><td class="value" id="stat-today">0</td></tr>
-                </table>
             </div>
         </div>
     </div>
@@ -487,7 +525,6 @@
     let currentUser = null;
     let currentProfile = null;
 
-    // Количество кнопок пагинации в зависимости от ширины экрана
     function getMaxPageButtons() {
         const w = window.innerWidth;
         if (w < 480) return 5;
