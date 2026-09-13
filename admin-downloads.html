@@ -163,7 +163,7 @@
 <body>
 <div class="container">
     <div class="nav-links">
-        <a href="admin/"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
+        <a href="admin-panel.html"><i class="fas fa-arrow-left"></i> Вернуться в админку</a>
         <a href="index.html"><i class="fas fa-home"></i> На главную</a>
     </div>
 
@@ -202,10 +202,11 @@
     </div>
 </div>
 
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
 
     let allLogs = [];
     let filteredLogs = [];
@@ -241,13 +242,13 @@
                 .order('downloaded_at', { ascending: false });
             if (error) throw error;
             allLogs = data || [];
-            // Сброс выделений при загрузке
             const selectAll = document.getElementById('selectAllCheckbox');
             if (selectAll) selectAll.checked = false;
             applyFilters();
         } catch (error) {
             console.error('Ошибка загрузки логов:', error);
-            document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="4" class="empty">Ошибка загрузки. Попробуйте позже.</td></tr>';
+            document.getElementById('logsTableBody').innerHTML =
+                '<tr><td colspan="4" class="empty">Ошибка загрузки. Попробуйте позже.</td></tr>';
         }
     }
 
@@ -292,14 +293,13 @@
             const displayName = log.file_name || log.file_id || 'Без названия';
             html += `<tr>
                 <td class="center"><input type="checkbox" class="log-checkbox" data-id="${log.id}"></td>
-                <td><strong>${escapeHtml(displayName)}</strong></td>
-                <td>${escapeHtml(log.username || 'Неизвестный')}</td>
+                <td><strong>${MF.escapeHtml(displayName)}</strong></td>
+                <td>${MF.escapeHtml(log.username || 'Неизвестный')}</td>
                 <td>${dateStr}</td>
             </tr>`;
         });
         tbody.innerHTML = html;
 
-        // Обработчики чекбоксов
         document.querySelectorAll('.log-checkbox').forEach(cb => {
             cb.addEventListener('change', updateDeleteButton);
         });
@@ -307,20 +307,10 @@
         updateDeleteButton();
     }
 
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
     function getSelectedIds() {
         const ids = [];
         document.querySelectorAll('.log-checkbox:checked').forEach(cb => {
-            ids.push(parseInt(cb.dataset.id));
+            ids.push(parseInt(cb.dataset.id, 10));
         });
         return ids;
     }
@@ -338,7 +328,6 @@
             info.style.display = 'none';
         }
 
-        // Обновляем состояние "выбрать все"
         const allCheckboxes = document.querySelectorAll('.log-checkbox');
         const selectAll = document.getElementById('selectAllCheckbox');
         if (allCheckboxes.length > 0 && selectAll) {
@@ -369,7 +358,7 @@
             const { error } = await supabaseClient
                 .from('download_logs')
                 .delete()
-                .neq('id', 0); // удаляем всё, кроме несуществующего id=0
+                .neq('id', 0);
             if (error) throw error;
             await loadLogs();
         } catch (error) {
@@ -384,7 +373,7 @@
     document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
     document.getElementById('deleteAllBtn').addEventListener('click', deleteAll);
 
-    document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+    document.getElementById('selectAllCheckbox').addEventListener('change', function () {
         const checked = this.checked;
         document.querySelectorAll('.log-checkbox').forEach(cb => {
             cb.checked = checked;
