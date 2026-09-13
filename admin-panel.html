@@ -835,7 +835,7 @@
 
     function getSelectedRows() {
         const rows = [];
-        document.querySelectorAll('.row-checkbox:checked').forEach(cb => rows.push(parseInt(cb.dataset.rowIndex)));
+        document.querySelectorAll('.row-checkbox:checked').forEach(cb => rows.push(parseInt(cb.dataset.rowIndex, 10)));
         return rows;
     }
 
@@ -872,6 +872,90 @@
         });
         html += '</tbody></table>';
         wrapper.innerHTML = html;
+    }
+
+    /**
+     * Универсальный рендер пагинации для Users / Visitors.
+     * Использует общий MF.renderPagination + MF.attachPaginationHandlers.
+     *
+     * @param {string} prefix       - 'users' или 'visitors'
+     * @param {number} totalItems   - всего записей
+     * @param {number} currentPage  - текущая страница
+     * @param {number} pageSize     - размер страницы
+     * @param {object} callbacks    - { onPageChange, onSizeChange }
+     * @returns {string}            - HTML-разметка pagination-bar
+     */
+    function renderSimplePagination(prefix, totalItems, currentPage, pageSize, callbacks) {
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+        const sizes = PAGE_SIZES.map(sz =>
+            `<option value="${sz}"${pageSize === sz ? ' selected' : ''}>${sz}</option>`
+        ).join('');
+        const visible = MF.getVisiblePages(currentPage, totalPages);
+        const pageNums = visible.map(p =>
+            `<button class="page-num${p === currentPage ? ' active' : ''}" data-${prefix}-page="${p}">${p}</button>`
+        ).join('');
+
+        const html = `
+            <div class="pagination-bar">
+                <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${currentPage}</strong> из <strong>${totalPages}</strong></div>
+                <div class="pagination-controls">
+                    <label>Показывать по:
+                        <select class="page-size-select" id="${prefix}PageSize">${sizes}</select>
+                    </label>
+                    <button class="page-btn" id="${prefix}Prev" ${currentPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <div class="page-numbers">${pageNums}</div>
+                    <button class="page-btn" id="${prefix}Next" ${currentPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+                    <div class="page-jump">
+                        <label>Стр.:</label>
+                        <input type="number" class="page-jump-input" id="${prefix}JumpInput" min="1" max="${totalPages}" placeholder="#">
+                        <button class="page-jump-btn" id="${prefix}JumpBtn">Перейти</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            const sizeSel = document.getElementById(`${prefix}PageSize`);
+            if (sizeSel) sizeSel.addEventListener('change', function () {
+                callbacks.onSizeChange(parseInt(this.value, 10));
+            });
+
+            const prevB = document.getElementById(`${prefix}Prev`);
+            if (prevB) prevB.addEventListener('click', function () {
+                if (currentPage > 1) callbacks.onPageChange(currentPage - 1);
+            });
+
+            const nextB = document.getElementById(`${prefix}Next`);
+            if (nextB) nextB.addEventListener('click', function () {
+                if (currentPage < totalPages) callbacks.onPageChange(currentPage + 1);
+            });
+
+            document.querySelectorAll(`.page-num[data-${prefix}-page]`).forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const p = parseInt(this.dataset[`${prefix}Page`], 10);
+                    callbacks.onPageChange(p);
+                });
+            });
+
+            const jumpBtn = document.getElementById(`${prefix}JumpBtn`);
+            const jumpInput = document.getElementById(`${prefix}JumpInput`);
+            if (jumpBtn && jumpInput) {
+                const doJump = () => {
+                    let p = parseInt(jumpInput.value, 10);
+                    if (isNaN(p)) p = 1;
+                    if (p < 1) p = 1;
+                    if (p > totalPages) p = totalPages;
+                    callbacks.onPageChange(p);
+                };
+                jumpBtn.addEventListener('click', doJump);
+                jumpInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); doJump(); }
+                });
+            }
+        }, 0);
+
+        return html;
     }
 
     async function loadUsers() {
@@ -926,31 +1010,10 @@
         });
         html += '</tbody></table>';
 
-        const visible = MF.getVisiblePages(usersPage, totalPages);
-        const pageNums = visible.map(p =>
-            `<button class="page-num${p === usersPage ? ' active' : ''}" data-users-page="${p}">${p}</button>`
-        ).join('');
-        const sizes = PAGE_SIZES.map(sz =>
-            `<option value="${sz}"${usersPageSize === sz ? ' selected' : ''}>${sz}</option>`
-        ).join('');
-        html += `
-            <div class="pagination-bar">
-                <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${usersPage}</strong> из <strong>${totalPages}</strong></div>
-                <div class="pagination-controls">
-                    <label>Показывать по:
-                        <select class="page-size-select" id="usersPageSize">${sizes}</select>
-                    </label>
-                    <button class="page-btn" id="usersPrev" ${usersPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
-                    <div class="page-numbers">${pageNums}</div>
-                    <button class="page-btn" id="usersNext" ${usersPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
-                    <div class="page-jump">
-                        <label>Стр.:</label>
-                        <input type="number" class="page-jump-input" id="usersJumpInput" min="1" max="${totalPages}" placeholder="#">
-                        <button class="page-jump-btn" id="usersJumpBtn">Перейти</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        html += renderSimplePagination('users', totalItems, usersPage, usersPageSize, {
+            onPageChange: (p) => { usersPage = p; loadUsers(); },
+            onSizeChange: (sz) => { usersPageSize = sz; usersPage = 1; loadUsers(); }
+        });
         wrapper.innerHTML = html;
 
         document.querySelectorAll('.user-role-select').forEach(sel => {
@@ -962,36 +1025,6 @@
                 else alert('Роль обновлена!');
             });
         });
-        document.querySelectorAll('.page-num[data-users-page]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                usersPage = parseInt(this.dataset.usersPage, 10);
-                loadUsers();
-            });
-        });
-        const sizeSel = document.getElementById('usersPageSize');
-        if (sizeSel) sizeSel.addEventListener('change', function () {
-            usersPageSize = parseInt(this.value, 10);
-            usersPage = 1;
-            loadUsers();
-        });
-        const prevB = document.getElementById('usersPrev');
-        if (prevB) prevB.addEventListener('click', function () { if (usersPage > 1) { usersPage--; loadUsers(); } });
-        const nextB = document.getElementById('usersNext');
-        if (nextB) nextB.addEventListener('click', function () { if (usersPage < totalPages) { usersPage++; loadUsers(); } });
-        const jumpBtn = document.getElementById('usersJumpBtn');
-        const jumpInput = document.getElementById('usersJumpInput');
-        if (jumpBtn && jumpInput) {
-            const doJump = () => {
-                let p = parseInt(jumpInput.value, 10);
-                if (isNaN(p)) p = 1;
-                if (p < 1) p = 1;
-                if (p > totalPages) p = totalPages;
-                usersPage = p;
-                loadUsers();
-            };
-            jumpBtn.addEventListener('click', doJump);
-            jumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doJump(); } });
-        }
     }
 
     window.openUserEditModal = function (userId) {
@@ -1082,63 +1115,11 @@
         });
         html += '</tbody></table>';
 
-        const visible = MF.getVisiblePages(visitorsPage, totalPages);
-        const pageNums = visible.map(p =>
-            `<button class="page-num${p === visitorsPage ? ' active' : ''}" data-visitors-page="${p}">${p}</button>`
-        ).join('');
-        const sizes = PAGE_SIZES.map(sz =>
-            `<option value="${sz}"${visitorsPageSize === sz ? ' selected' : ''}>${sz}</option>`
-        ).join('');
-        html += `
-            <div class="pagination-bar">
-                <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${visitorsPage}</strong> из <strong>${totalPages}</strong></div>
-                <div class="pagination-controls">
-                    <label>Показывать по:
-                        <select class="page-size-select" id="visitorsPageSize">${sizes}</select>
-                    </label>
-                    <button class="page-btn" id="visitorsPrev" ${visitorsPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
-                    <div class="page-numbers">${pageNums}</div>
-                    <button class="page-btn" id="visitorsNext" ${visitorsPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
-                    <div class="page-jump">
-                        <label>Стр.:</label>
-                        <input type="number" class="page-jump-input" id="visitorsJumpInput" min="1" max="${totalPages}" placeholder="#">
-                        <button class="page-jump-btn" id="visitorsJumpBtn">Перейти</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        html += renderSimplePagination('visitors', totalItems, visitorsPage, visitorsPageSize, {
+            onPageChange: (p) => { visitorsPage = p; loadVisitors(); },
+            onSizeChange: (sz) => { visitorsPageSize = sz; visitorsPage = 1; loadVisitors(); }
+        });
         wrapper.innerHTML = html;
-
-        document.querySelectorAll('.page-num[data-visitors-page]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                visitorsPage = parseInt(this.dataset.visitorsPage, 10);
-                loadVisitors();
-            });
-        });
-        const sizeSel = document.getElementById('visitorsPageSize');
-        if (sizeSel) sizeSel.addEventListener('change', function () {
-            visitorsPageSize = parseInt(this.value, 10);
-            visitorsPage = 1;
-            loadVisitors();
-        });
-        const prevB = document.getElementById('visitorsPrev');
-        if (prevB) prevB.addEventListener('click', function () { if (visitorsPage > 1) { visitorsPage--; loadVisitors(); } });
-        const nextB = document.getElementById('visitorsNext');
-        if (nextB) nextB.addEventListener('click', function () { if (visitorsPage < totalPages) { visitorsPage++; loadVisitors(); } });
-        const jumpBtn = document.getElementById('visitorsJumpBtn');
-        const jumpInput = document.getElementById('visitorsJumpInput');
-        if (jumpBtn && jumpInput) {
-            const doJump = () => {
-                let p = parseInt(jumpInput.value, 10);
-                if (isNaN(p)) p = 1;
-                if (p < 1) p = 1;
-                if (p > totalPages) p = totalPages;
-                visitorsPage = p;
-                loadVisitors();
-            };
-            jumpBtn.addEventListener('click', doJump);
-            jumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doJump(); } });
-        }
     }
 
     function showCMS() {
