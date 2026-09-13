@@ -227,7 +227,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         }
 
-        /* ===== ПАГИНАЦИЯ ===== */
         .pagination-bar {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 12px; margin-top: 15px;
@@ -336,7 +335,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ ==================== */
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
@@ -409,7 +407,6 @@
             .toolbar button { padding: 6px 12px; font-size: 12px; }
             .selected-info { font-size: 12px; }
 
-            /* Таблицы */
             .content-table-wrapper {
                 margin: 0 -12px;
                 padding: 0 12px;
@@ -440,11 +437,9 @@
                 margin-left: 2px;
             }
 
-            /* Модальное окно */
             .modal-box { padding: 20px; }
             .modal-box h3 { font-size: 17px; }
 
-            /* Пагинация */
             .pagination-bar {
                 flex-direction: column;
                 align-items: stretch;
@@ -465,13 +460,11 @@
             .page-jump-input { width: 50px; padding: 5px 6px; font-size: 12px; }
             .page-jump-btn { padding: 5px 10px; font-size: 12px; }
 
-            /* Статистика */
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .stat-card { padding: 14px; }
             .stat-card .stat-value { font-size: 24px; }
             .stat-card .stat-label { font-size: 11px; }
 
-            /* CMS iframe */
             #cmsFrame { height: calc(100vh - 280px); }
         }
 
@@ -629,40 +622,26 @@
     </div>
 </div>
 
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const CFG = window.APP_CONFIG;
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
 
-    const GITHUB_OWNER = 'DimonMaxx';
-    const GITHUB_REPO = 'my-site';
-    const DELETE_WORKFLOW = 'delete-content.yml';
-    const PAGE_SIZES = [5, 10, 15, 25, 50, 100];
+    const SUPABASE_URL = CFG.SUPABASE_URL;
+    const PAGE_SIZES = CFG.PAGE_SIZES;
+    const DELETE_WORKFLOW = CFG.WORKFLOW_DELETE;
 
-    function getMaxPageButtons() {
-        const w = window.innerWidth;
-        if (w < 480) return 5;
-        if (w < 768) return 7;
-        return 11;
-    }
+    // Одноразовая очистка устаревшего токена GitHub
+    try { localStorage.removeItem('github_token'); } catch (e) {}
 
-    const SECTIONS = {
-        programs: { file: '_content/programs.json', label: 'Программы', icon: 'fa-code', columns: ['title', 'description', 'version', 'size', 'download_link'] },
-        books:    { file: '_content/books.json',    label: 'Книги',     icon: 'fa-book', columns: ['title', 'author', 'description', 'format', 'download_link'] },
-        news:     { file: '_content/news.json',     label: 'Новости',   icon: 'fa-newspaper', columns: ['title', 'date', 'body'] },
-        articles: { file: '_content/articles.json', label: 'Статьи',    icon: 'fa-pen-fancy', columns: ['title', 'date', 'body'] },
-        movies:   { file: '_content/movies.json',   label: 'Фильмы',    icon: 'fa-film', columns: ['title', 'year', 'description', 'download_link'] },
-        music:    { file: '_content/music.json',    label: 'Музыка',    icon: 'fa-music', columns: ['title', 'artist', 'year', 'description', 'download_link'] },
-        games:    { file: '_content/games.json',    label: 'Игры',      icon: 'fa-gamepad', columns: ['title', 'platform', 'year', 'description', 'download_link'] },
-        misc:     { file: '_content/misc.json',     label: 'Разное',    icon: 'fa-ellipsis-h', columns: ['title', 'description', 'download_link'] },
-    };
-
-    const COLUMN_LABELS = {
-        title: 'Название', description: 'Описание', version: 'Версия', size: 'Размер',
-        download_link: 'Ссылка', author: 'Автор', format: 'Формат', date: 'Дата',
-        body: 'Текст', year: 'Год', artist: 'Исполнитель', platform: 'Платформа',
-        file_name: 'Файл', username: 'Пользователь', downloaded_at: 'Дата и время'
-    };
+    const SECTIONS = Object.fromEntries(
+        Object.entries(CFG.SECTIONS).map(([key, meta]) => [
+            key, { file: meta.json, label: meta.label, icon: meta.icon, columns: meta.columns }
+        ])
+    );
+    const COLUMN_LABELS = CFG.COLUMN_LABELS;
 
     let currentTab = 'programs';
     let currentUser = null;
@@ -672,10 +651,10 @@
     let usersData = [];
     let usersDataMap = {};
     let usersPage = 1;
-    let usersPageSize = 10;
+    let usersPageSize = CFG.DEFAULT_PAGE_SIZE;
     let visitorsData = [];
     let visitorsPage = 1;
-    let visitorsPageSize = 10;
+    let visitorsPageSize = CFG.DEFAULT_PAGE_SIZE;
     let downloadCounts = {};
 
     async function checkAuth() {
@@ -707,13 +686,6 @@
         } catch (e) { console.error(e); }
     }
 
-    function slugify(text) {
-        if (!text) return '';
-        let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
-        return slug.replace(/[\s\-]+/g, '-');
-    }
-
-    // ===== Контент =====
     async function loadSection(section) {
         if (section === 'downloads') { await loadDownloads(); return; }
         if (section === 'stats') { await loadStats(); return; }
@@ -738,7 +710,11 @@
         }
 
         if (!tableStates[section]) {
-            tableStates[section] = { sortKey: null, sortDir: 'asc', searches: {}, pageSize: 10, currentPage: 1 };
+            tableStates[section] = {
+                sortKey: null, sortDir: 'asc', searches: {},
+                pageSize: CFG.DEFAULT_PAGE_SIZE, currentPage: 1,
+                totalItems: 0
+            };
         }
         renderContentTable(section);
     }
@@ -767,103 +743,6 @@
         return filtered;
     }
 
-    function getVisiblePages(currentPage, totalPages) {
-        const MAX = getMaxPageButtons();
-        const pages = [];
-        if (totalPages <= MAX) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-            return pages;
-        }
-        const half = Math.floor(MAX / 2);
-        let start = currentPage - half;
-        let end = start + MAX - 1;
-        if (start < 1) { start = 1; end = MAX; }
-        if (end > totalPages) { end = totalPages; start = end - MAX + 1; }
-        for (let i = start; i <= end; i++) pages.push(i);
-        return pages;
-    }
-
-    function renderPagination(containerId, totalItems, totalPages, state) {
-        const sizes = PAGE_SIZES.map(sz =>
-            `<option value="${sz}"${state.pageSize === sz ? ' selected' : ''}>${sz}</option>`
-        ).join('');
-        const visible = getVisiblePages(state.currentPage, totalPages);
-        const pageNums = visible.map(p =>
-            `<button class="page-num${p === state.currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`
-        ).join('');
-        return `
-            <div class="pagination-bar" data-pagination-for="${escapeAttr(containerId)}">
-                <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${state.currentPage}</strong> из <strong>${totalPages}</strong></div>
-                <div class="pagination-controls">
-                    <label>Показывать по:
-                        <select class="page-size-select" data-container="${escapeAttr(containerId)}">
-                            ${sizes}
-                        </select>
-                    </label>
-                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Назад">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="page-numbers" data-container="${escapeAttr(containerId)}">
-                        ${pageNums}
-                    </div>
-                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Вперёд">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <div class="page-jump">
-                        <label>Стр.:</label>
-                        <input type="number" class="page-jump-input" data-container="${escapeAttr(containerId)}" min="1" max="${totalPages}" placeholder="#">
-                        <button class="page-jump-btn" data-container="${escapeAttr(containerId)}">Перейти</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function attachPaginationHandlers(container, containerId, renderFn) {
-        const state = tableStates[containerId];
-        if (!state) return;
-        const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
-        if (sizeSelect) sizeSelect.addEventListener('change', function() {
-            state.pageSize = parseInt(this.value);
-            state.currentPage = 1;
-            renderFn(containerId);
-        });
-        const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
-        if (prevBtn) prevBtn.addEventListener('click', function() {
-            if (state.currentPage > 1) { state.currentPage--; renderFn(containerId); }
-        });
-        const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
-        if (nextBtn) nextBtn.addEventListener('click', function() {
-            const filtered = getFilteredSorted(state);
-            const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-            if (state.currentPage < totalPages) { state.currentPage++; renderFn(containerId); }
-        });
-        container.querySelectorAll('.page-num[data-page]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const p = parseInt(this.dataset.page, 10);
-                if (!isNaN(p) && p !== state.currentPage) { state.currentPage = p; renderFn(containerId); }
-            });
-        });
-        const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
-        const jumpInput = container.querySelector(`.page-jump-input[data-container="${containerId}"]`);
-        if (jumpBtn && jumpInput) {
-            const doJump = () => {
-                const filtered = getFilteredSorted(state);
-                const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-                let p = parseInt(jumpInput.value, 10);
-                if (isNaN(p)) p = 1;
-                if (p < 1) p = 1;
-                if (p > totalPages) p = totalPages;
-                state.currentPage = p;
-                renderFn(containerId);
-            };
-            jumpBtn.addEventListener('click', doJump);
-            jumpInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); doJump(); }
-            });
-        }
-    }
-
     function renderContentTable(section) {
         const info = SECTIONS[section];
         const state = tableStates[section];
@@ -871,6 +750,7 @@
 
         const filtered = getFilteredSorted(state);
         const totalItems = filtered.length;
+        state.totalItems = totalItems;
         const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
         if (state.currentPage > totalPages) state.currentPage = totalPages;
         if (state.currentPage < 1) state.currentPage = 1;
@@ -886,7 +766,7 @@
             if (isSorted) icon = state.sortDir === 'asc' ? '<i class="fas fa-sort-up sort-icon active"></i>' : '<i class="fas fa-sort-down sort-icon active"></i>';
             headHtml += `<th>
                 <div class="th-label" data-sort-key="${col}">${COLUMN_LABELS[col] || col} ${icon}</div>
-                <input type="text" class="col-search" data-search-key="${col}" placeholder="Поиск..." value="${escapeAttr(state.searches[col] || '')}">
+                <input type="text" class="col-search" data-search-key="${col}" placeholder="Поиск..." value="${MF.escapeAttr(state.searches[col] || '')}">
             </th>`;
         });
         headHtml += '</tr>';
@@ -903,12 +783,13 @@
                 columns.forEach(col => {
                     const val = item[col];
                     if (col === 'download_link' && val) {
-                        tbodyHtml += `<td><a href="${escapeAttr(val)}" target="_blank" style="color:#2563eb;">Скачать</a></td>`;
+                        tbodyHtml += `<td><a href="${MF.escapeAttr(val)}" target="_blank" style="color:#2563eb;">Скачать</a></td>`;
                     } else if (col === 'title') {
-                        tbodyHtml += `<td class="title-cell">${escapeHtml(val || '')}</td>`;
+                        tbodyHtml += `<td class="title-cell">${MF.escapeHtml(val || '')}</td>`;
                     } else {
-                        const shortVal = val ? String(val).slice(0, 120) + (String(val).length > 120 ? '...' : '') : '';
-                        tbodyHtml += `<td title="${escapeAttr(val || '')}">${escapeHtml(shortVal)}</td>`;
+                        const s = val ? String(val) : '';
+                        const shortVal = s.length > 120 ? s.slice(0, 120) + '...' : s;
+                        tbodyHtml += `<td title="${MF.escapeAttr(val || '')}">${MF.escapeHtml(shortVal)}</td>`;
                     }
                 });
                 tbodyHtml += '</tr>';
@@ -918,11 +799,11 @@
         wrapper.innerHTML = `<table class="content-table"><thead>${headHtml}</thead><tbody>${tbodyHtml}</tbody></table>`;
 
         const paginationEl = document.getElementById('contentPagination');
-        paginationEl.innerHTML = renderPagination(section, totalItems, totalPages, state);
-        attachPaginationHandlers(paginationEl, section, () => renderContentTable(section));
+        paginationEl.innerHTML = MF.renderPagination(section, totalItems, totalPages, state);
+        MF.attachPaginationHandlers(paginationEl, section, state, () => renderContentTable(section));
 
         wrapper.querySelectorAll('.th-label').forEach(el => {
-            el.addEventListener('click', function() {
+            el.addEventListener('click', function () {
                 const key = this.dataset.sortKey;
                 if (state.sortKey === key) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
                 else { state.sortKey = key; state.sortDir = 'asc'; }
@@ -931,7 +812,7 @@
             });
         });
         wrapper.querySelectorAll('.col-search').forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 const key = this.dataset.searchKey;
                 state.searches[key] = this.value;
                 state.currentPage = 1;
@@ -944,7 +825,7 @@
             });
         });
         const selectAll = document.getElementById('selectAllCheckbox');
-        if (selectAll) selectAll.addEventListener('change', function() {
+        if (selectAll) selectAll.addEventListener('change', function () {
             wrapper.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
             updateDeleteButton();
         });
@@ -973,7 +854,6 @@
         }
     }
 
-    // ===== История скачиваний =====
     async function loadDownloads() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-download"></i> История скачиваний`;
         document.getElementById('toolbar').style.display = 'none';
@@ -988,13 +868,12 @@
         data.forEach(log => {
             const d = new Date(log.downloaded_at);
             const dateStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU');
-            html += `<tr><td>${escapeHtml(log.file_name || log.file_id || '')}</td><td>${escapeHtml(log.username || '')}</td><td>${dateStr}</td></tr>`;
+            html += `<tr><td>${MF.escapeHtml(log.file_name || log.file_id || '')}</td><td>${MF.escapeHtml(log.username || '')}</td><td>${dateStr}</td></tr>`;
         });
         html += '</tbody></table>';
         wrapper.innerHTML = html;
     }
 
-    // ===== Пользователи =====
     async function loadUsers() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-users"></i> Пользователи`;
         document.getElementById('toolbar').style.display = 'none';
@@ -1028,8 +907,8 @@
             const note = user.admin_note || '';
             html += `<tr>
                 <td>${idx}</td>
-                <td><span class="role-badge ${roleClass}">${roleLabel}</span> <strong>${escapeHtml(user.username || '—')}</strong></td>
-                <td>${escapeHtml(user.full_name || '—')}</td>
+                <td><span class="role-badge ${roleClass}">${roleLabel}</span> <strong>${MF.escapeHtml(user.username || '—')}</strong></td>
+                <td>${MF.escapeHtml(user.full_name || '—')}</td>
                 <td>
                     <select class="user-role-select" data-id="${user.id}" ${isMe ? 'disabled' : ''}>
                         <option value="user" ${role === 'user' ? 'selected' : ''}>Пользователь</option>
@@ -1037,17 +916,17 @@
                         <option value="admin" ${role === 'admin' ? 'selected' : ''}>Администратор</option>
                     </select>
                 </td>
-                <td class="admin-note-cell" title="${escapeAttr(note)}">${escapeHtml(note.slice(0, 40))}${note.length > 40 ? '...' : ''}</td>
+                <td class="admin-note-cell" title="${MF.escapeAttr(note)}">${MF.escapeHtml(note.slice(0, 40))}${note.length > 40 ? '...' : ''}</td>
                 <td>${created}</td>
                 <td class="actions-cell">
                     <button class="btn-edit" onclick="openUserEditModal('${user.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-del-user" onclick="deleteUser('${user.id}', '${escapeAttr(user.username || '')}')" ${isMe ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
+                    <button class="btn-del-user" onclick="deleteUser('${user.id}', '${MF.escapeAttr(user.username || '')}')" ${isMe ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`;
         });
         html += '</tbody></table>';
 
-        const visible = getVisiblePages(usersPage, totalPages);
+        const visible = MF.getVisiblePages(usersPage, totalPages);
         const pageNums = visible.map(p =>
             `<button class="page-num${p === usersPage ? ' active' : ''}" data-users-page="${p}">${p}</button>`
         ).join('');
@@ -1075,7 +954,7 @@
         wrapper.innerHTML = html;
 
         document.querySelectorAll('.user-role-select').forEach(sel => {
-            sel.addEventListener('change', async function() {
+            sel.addEventListener('change', async function () {
                 const userId = this.dataset.id;
                 const newRole = this.value;
                 const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
@@ -1084,21 +963,21 @@
             });
         });
         document.querySelectorAll('.page-num[data-users-page]').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 usersPage = parseInt(this.dataset.usersPage, 10);
                 loadUsers();
             });
         });
         const sizeSel = document.getElementById('usersPageSize');
-        if (sizeSel) sizeSel.addEventListener('change', function() {
-            usersPageSize = parseInt(this.value);
+        if (sizeSel) sizeSel.addEventListener('change', function () {
+            usersPageSize = parseInt(this.value, 10);
             usersPage = 1;
             loadUsers();
         });
         const prevB = document.getElementById('usersPrev');
-        if (prevB) prevB.addEventListener('click', function() { if (usersPage > 1) { usersPage--; loadUsers(); } });
+        if (prevB) prevB.addEventListener('click', function () { if (usersPage > 1) { usersPage--; loadUsers(); } });
         const nextB = document.getElementById('usersNext');
-        if (nextB) nextB.addEventListener('click', function() { if (usersPage < totalPages) { usersPage++; loadUsers(); } });
+        if (nextB) nextB.addEventListener('click', function () { if (usersPage < totalPages) { usersPage++; loadUsers(); } });
         const jumpBtn = document.getElementById('usersJumpBtn');
         const jumpInput = document.getElementById('usersJumpInput');
         if (jumpBtn && jumpInput) {
@@ -1115,7 +994,7 @@
         }
     }
 
-    window.openUserEditModal = function(userId) {
+    window.openUserEditModal = function (userId) {
         const user = usersDataMap[userId];
         if (!user) return;
         document.getElementById('editUserId').value = userId;
@@ -1126,9 +1005,9 @@
         document.getElementById('editAdminNote').value = user.admin_note || '';
         document.getElementById('userEditModal').classList.add('active');
     };
-    window.closeUserEditModal = function() { document.getElementById('userEditModal').classList.remove('active'); };
+    window.closeUserEditModal = function () { document.getElementById('userEditModal').classList.remove('active'); };
 
-    document.getElementById('saveUserBtn').addEventListener('click', async function() {
+    document.getElementById('saveUserBtn').addEventListener('click', async function () {
         const userId = document.getElementById('editUserId').value;
         const username = document.getElementById('editUsername').value.trim();
         const fullName = document.getElementById('editFullName').value.trim();
@@ -1143,7 +1022,7 @@
         else { alert('Данные обновлены!'); closeUserEditModal(); await loadUsers(); }
     });
 
-    window.deleteUser = async function(userId, username) {
+    window.deleteUser = async function (userId, username) {
         if (userId === currentUser?.id) { alert('Нельзя удалить себя.'); return; }
         if (!confirm(`Удалить пользователя "${username}"?\n\nЭто действие необратимо.`)) return;
         try {
@@ -1163,7 +1042,6 @@
         } catch (e) { alert('Ошибка: ' + e.message); }
     };
 
-    // ===== Посетители =====
     async function loadVisitors() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-user-check"></i> Посетители сайта`;
         document.getElementById('toolbar').style.display = 'none';
@@ -1196,15 +1074,15 @@
             const emailDisplay = isReg ? (v.email || '—') : '—';
             html += `<tr>
                 <td>${typeBadge}</td>
-                <td><strong>${escapeHtml(idDisplay)}</strong></td>
-                <td>${escapeHtml(emailDisplay)}</td>
+                <td><strong>${MF.escapeHtml(idDisplay)}</strong></td>
+                <td>${MF.escapeHtml(emailDisplay)}</td>
                 <td>${dateStr}</td>
                 <td><strong>${v.visit_count}</strong></td>
             </tr>`;
         });
         html += '</tbody></table>';
 
-        const visible = getVisiblePages(visitorsPage, totalPages);
+        const visible = MF.getVisiblePages(visitorsPage, totalPages);
         const pageNums = visible.map(p =>
             `<button class="page-num${p === visitorsPage ? ' active' : ''}" data-visitors-page="${p}">${p}</button>`
         ).join('');
@@ -1232,21 +1110,21 @@
         wrapper.innerHTML = html;
 
         document.querySelectorAll('.page-num[data-visitors-page]').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 visitorsPage = parseInt(this.dataset.visitorsPage, 10);
                 loadVisitors();
             });
         });
         const sizeSel = document.getElementById('visitorsPageSize');
-        if (sizeSel) sizeSel.addEventListener('change', function() {
-            visitorsPageSize = parseInt(this.value);
+        if (sizeSel) sizeSel.addEventListener('change', function () {
+            visitorsPageSize = parseInt(this.value, 10);
             visitorsPage = 1;
             loadVisitors();
         });
         const prevB = document.getElementById('visitorsPrev');
-        if (prevB) prevB.addEventListener('click', function() { if (visitorsPage > 1) { visitorsPage--; loadVisitors(); } });
+        if (prevB) prevB.addEventListener('click', function () { if (visitorsPage > 1) { visitorsPage--; loadVisitors(); } });
         const nextB = document.getElementById('visitorsNext');
-        if (nextB) nextB.addEventListener('click', function() { if (visitorsPage < totalPages) { visitorsPage++; loadVisitors(); } });
+        if (nextB) nextB.addEventListener('click', function () { if (visitorsPage < totalPages) { visitorsPage++; loadVisitors(); } });
         const jumpBtn = document.getElementById('visitorsJumpBtn');
         const jumpInput = document.getElementById('visitorsJumpInput');
         if (jumpBtn && jumpInput) {
@@ -1263,7 +1141,6 @@
         }
     }
 
-    // ===== Редактор контента (CMS) =====
     function showCMS() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-edit"></i> Редактор контента (Decap CMS)`;
         document.getElementById('toolbar').style.display = 'none';
@@ -1271,7 +1148,6 @@
         document.getElementById('tableWrapper').innerHTML = `<iframe id="cmsFrame" src="admin/index.html" allow="clipboard-write"></iframe>`;
     }
 
-    // ===== Статистика =====
     async function loadStats() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика`;
         document.getElementById('toolbar').style.display = 'none';
@@ -1298,50 +1174,42 @@
         }
     }
 
-    // ===== Токен и удаление контента =====
-    function getToken() { return localStorage.getItem('github_token') || ''; }
-    function askToken() {
-        const t = prompt('Вставьте GitHub Personal Access Token (права repo и workflow):');
-        if (t && t.trim()) localStorage.setItem('github_token', t.trim());
-    }
-
     async function deleteSelected() {
-        const token = getToken();
-        if (!token) { askToken(); return; }
         const rows = getSelectedRows();
         if (rows.length === 0) return;
         const section = currentTab;
         const data = sectionData[section] || [];
-        const items = rows.map(idx => ({ section: section, title: data[idx]?.title || '' }));
+        const items = rows.map(idx => ({ section, title: data[idx]?.title || '' }));
         if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты.`)) return;
-        const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${DELETE_WORKFLOW}/dispatches`;
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { alert('Сессия истекла. Войдите заново.'); return; }
+
         try {
-            const resp = await fetch(url, {
+            const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({ ref: 'main', inputs: { delete_list: JSON.stringify(items) } })
+                body: JSON.stringify({
+                    workflow: DELETE_WORKFLOW,
+                    inputs: { delete_list: JSON.stringify(items) }
+                })
             });
-            if (resp.status === 204) alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
-            else alert('Ошибка GitHub API: ' + resp.status + '\n' + await resp.text());
-        } catch (e) { alert('Ошибка: ' + e.message); }
-    }
-
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    function escapeAttr(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const result = await resp.json();
+            if (resp.ok && result.ok) {
+                alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
+            } else {
+                alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
+            }
+        } catch (e) {
+            alert('Ошибка сети: ' + e.message);
+        }
     }
 
     document.querySelectorAll('.sidebar .nav-link').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentTab = this.dataset.tab;
@@ -1366,7 +1234,6 @@
     });
     document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
 
-    // Перерисовка при смене размера экрана
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
