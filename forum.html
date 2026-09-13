@@ -161,7 +161,6 @@
     <div class="forum-header">
         <div class="forum-header-left">
             <a href="index.html" class="back-link">← На главную</a>
-            <!-- Ссылка на админ-панель (видна только админам) -->
             <a href="admin-panel.html" class="admin-panel-link" id="forumAdminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
@@ -231,10 +230,12 @@
     </div>
 </div>
 
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const CFG = window.APP_CONFIG;
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
 
     let currentUser = null;
     let currentUserProfile = null;
@@ -269,12 +270,18 @@
     const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
 
     function showAuthForms() { authForms.style.display = 'flex'; userInfo.style.display = 'none'; }
-    function showUserInfo(user) { authForms.style.display = 'none'; userInfo.style.display = 'flex'; userName.textContent = user.email || user.username; }
+    function showUserInfo(user) {
+        authForms.style.display = 'none';
+        userInfo.style.display = 'flex';
+        userName.textContent = user.email || user.username;
+    }
+
     async function getCurrentUser() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) return null;
         return data.user;
     }
+
     async function loadUserProfile(userId) {
         const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
         if (error) { console.error(error); return null; }
@@ -291,11 +298,13 @@
         updateVisitCounter();
         renderAuthWidget();
     }
+
     async function register(email, password) {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) { alert('Ошибка регистрации: ' + error.message); return; }
         alert('Регистрация успешна! Теперь войдите.');
     }
+
     async function logout() {
         await supabaseClient.auth.signOut();
         currentUser = null; currentUserProfile = null;
@@ -306,18 +315,28 @@
 
     async function loadTopics() {
         topicsList.innerHTML = '<p style="color:#6b7280;">Загрузка тем...</p>';
-        const { data, error } = await supabaseClient.from('topics').select('*, profiles(username)').order('created_at', { ascending: false });
+        const { data, error } = await supabaseClient
+            .from('topics')
+            .select('*, profiles(username)')
+            .order('created_at', { ascending: false });
         if (error) { topicsList.innerHTML = '<p style="color:red;">Ошибка загрузки тем</p>'; console.error(error); return; }
-        if (data.length === 0) { topicsList.innerHTML = '<p style="color:#6b7280;">Пока нет тем. Будьте первым!</p>'; return; }
+        if (!data || data.length === 0) { topicsList.innerHTML = '<p style="color:#6b7280;">Пока нет тем. Будьте первым!</p>'; return; }
         let html = '';
         data.forEach(topic => {
             const author = topic.profiles?.username || 'Неизвестный';
             const date = new Date(topic.created_at).toLocaleDateString('ru-RU');
-            html += `<div class="topic-card" data-id="${topic.id}"><h3>${topic.title}</h3><div class="meta"><span>👤 ${author}</span><span>📅 ${date}</span><span class="badge">${topic.category || 'Общее'}</span></div></div>`;
+            html += `<div class="topic-card" data-id="${topic.id}">
+                <h3>${MF.escapeHtml(topic.title)}</h3>
+                <div class="meta">
+                    <span>👤 ${MF.escapeHtml(author)}</span>
+                    <span>📅 ${MF.escapeHtml(date)}</span>
+                    <span class="badge">${MF.escapeHtml(topic.category || 'Общее')}</span>
+                </div>
+            </div>`;
         });
         topicsList.innerHTML = html;
         document.querySelectorAll('.topic-card').forEach(el => {
-            el.addEventListener('click', () => openTopicView(parseInt(el.dataset.id)));
+            el.addEventListener('click', () => openTopicView(parseInt(el.dataset.id, 10)));
         });
     }
 
@@ -325,9 +344,12 @@
         if (!currentUser) { alert('Войдите, чтобы создать тему.'); return; }
         editingTopicId = null;
         modalTitle.textContent = 'Создать новую тему';
-        topicTitle.value = ''; topicCategory.value = 'Общее'; topicContent.value = '';
+        topicTitle.value = '';
+        topicCategory.value = 'Общее';
+        topicContent.value = '';
         topicModal.style.display = 'flex';
     }
+
     async function saveTopic() {
         const title = topicTitle.value.trim();
         const category = topicCategory.value;
@@ -338,54 +360,108 @@
             const { error } = await supabaseClient.from('topics').update({ title, category, content }).eq('id', editingTopicId);
             if (error) { alert('Ошибка обновления: ' + error.message); return; }
         } else {
-            const { error } = await supabaseClient.from('topics').insert([{ title, category, content, author_id: currentUser.id }]);
+            const { error } = await supabaseClient.from('topics').insert([{
+                title, category, content, author_id: currentUser.id
+            }]);
             if (error) { alert('Ошибка создания: ' + error.message); return; }
         }
         topicModal.style.display = 'none';
         await loadTopics();
     }
+
     async function openTopicView(topicId) {
         currentTopicId = topicId;
-        const { data: topic, error } = await supabaseClient.from('topics').select('*, profiles(username)').eq('id', topicId).single();
+        const { data: topic, error } = await supabaseClient
+            .from('topics')
+            .select('*, profiles(username)')
+            .eq('id', topicId)
+            .single();
         if (error || !topic) { alert('Тема не найдена.'); return; }
         viewTopicTitle.textContent = topic.title;
         viewTopicContent.textContent = topic.content;
-        const { data: comments } = await supabaseClient.from('comments').select('*, profiles(username), attachments(*)').eq('topic_id', topicId).order('created_at', { ascending: true });
+
+        const { data: comments } = await supabaseClient
+            .from('comments')
+            .select('*, profiles(username), attachments(*)')
+            .eq('topic_id', topicId)
+            .order('created_at', { ascending: true });
+
         let html = '';
         if (comments && comments.length > 0) {
             comments.forEach(c => {
                 const author = c.profiles?.username || 'Неизвестный';
-                const date = new Date(c.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(c.created_at).toLocaleTimeString('ru-RU');
+                const d = new Date(c.created_at);
+                const date = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU');
                 let att = '';
-                if (c.attachments) c.attachments.forEach(a => { att += `<span class="attachment">📎 <a href="${a.file_url}" target="_blank">${a.file_name}</a></span> `; });
-                html += `<div class="comment"><div><strong>${author}</strong> <span class="meta">${date}</span></div><p>${c.content}</p>${att}</div>`;
+                if (c.attachments) {
+                    c.attachments.forEach(a => {
+                        att += `<span class="attachment">📎 <a href="${MF.escapeAttr(a.file_url)}" target="_blank" rel="noopener">${MF.escapeHtml(a.file_name)}</a></span> `;
+                    });
+                }
+                html += `<div class="comment">
+                    <div><strong>${MF.escapeHtml(author)}</strong> <span class="meta">${MF.escapeHtml(date)}</span></div>
+                    <p>${MF.escapeHtml(c.content)}</p>
+                    ${att}
+                </div>`;
             });
-        } else html = '<p style="color:#6b7280;">Нет комментариев. Будьте первым!</p>';
+        } else {
+            html = '<p style="color:#6b7280;">Нет комментариев. Будьте первым!</p>';
+        }
         viewComments.innerHTML = html;
         viewModal.style.display = 'flex';
-        commentInput.value = ''; fileInput.value = '';
+        commentInput.value = '';
+        fileInput.value = '';
     }
+
     async function addComment() {
         const content = commentInput.value.trim();
         if (!content) { alert('Введите текст комментария.'); return; }
         if (!currentUser) { alert('Войдите, чтобы комментировать.'); return; }
-        const { data: comment, error } = await supabaseClient.from('comments').insert([{ content, author_id: currentUser.id, topic_id: currentTopicId }]).select().single();
+
+        const { data: comment, error } = await supabaseClient
+            .from('comments')
+            .insert([{ content, author_id: currentUser.id, topic_id: currentTopicId }])
+            .select()
+            .single();
         if (error) { alert('Ошибка: ' + error.message); return; }
+
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
-            const ext = file.name.split('.').pop();
-            const path = `comments/${currentTopicId}/${Date.now()}.${ext}`;
-            const { error: upErr } = await supabaseClient.storage.from('attachments').upload(path, file);
+
+            if (!CFG.ALLOWED_ATTACH_TYPES.includes(file.type)) {
+                alert('Недопустимый тип файла. Разрешены: изображения, PDF, ZIP.');
+                await openTopicView(currentTopicId);
+                return;
+            }
+            if (file.size > CFG.MAX_ATTACH_SIZE) {
+                alert('Файл больше ' + Math.round(CFG.MAX_ATTACH_SIZE / 1024 / 1024) + ' МБ.');
+                await openTopicView(currentTopicId);
+                return;
+            }
+
+            const ext = file.name.split('.').pop().toLowerCase();
+            const path = `${currentUser.id}/${currentTopicId}/${Date.now()}.${ext}`;
+            const { error: upErr } = await supabaseClient.storage
+                .from('attachments')
+                .upload(path, file, { contentType: file.type });
             if (!upErr) {
                 const { data: urlData } = supabaseClient.storage.from('attachments').getPublicUrl(path);
-                await supabaseClient.from('attachments').insert([{ file_url: urlData.publicUrl, file_name: file.name, file_size: file.size, comment_id: comment.id, uploaded_by: currentUser.id }]);
+                await supabaseClient.from('attachments').insert([{
+                    file_url: urlData.publicUrl,
+                    file_name: file.name,
+                    file_size: file.size,
+                    comment_id: comment.id,
+                    uploaded_by: currentUser.id
+                }]);
+            } else {
+                console.error('Ошибка загрузки файла:', upErr);
             }
         }
         await openTopicView(currentTopicId);
     }
 
     async function updateVisitCounter() {
-        if (currentUserProfile?.role === 'admin') return; // админ не увеличивает счётчик
+        if (currentUserProfile?.role === 'admin') return;
         const { error } = await supabaseClient.rpc('increment_visit_counter');
         if (error) console.error(error);
     }
@@ -394,7 +470,11 @@
         let vid = localStorage.getItem('visitor_id');
         if (!vid) { vid = crypto.randomUUID(); localStorage.setItem('visitor_id', vid); }
         const user = await getCurrentUser();
-        const { error } = await supabaseClient.from('visits').insert([{ visitor_id: vid, user_id: user?.id || null, page: window.location.pathname }]);
+        const { error } = await supabaseClient.from('visits').insert([{
+            visitor_id: vid,
+            user_id: user?.id || null,
+            page: window.location.pathname
+        }]);
         if (error) console.error(error);
     }
 
@@ -406,7 +486,12 @@
         if (newUsername && newUsername !== profile.username) {
             const { error } = await supabaseClient.from('profiles').update({ username: newUsername }).eq('id', currentUser.id);
             if (error) alert('Ошибка: ' + error.message);
-            else { currentUserProfile = await loadUserProfile(currentUser.id); showUserInfo(currentUser); alert('Имя обновлено!'); renderAuthWidget(); }
+            else {
+                currentUserProfile = await loadUserProfile(currentUser.id);
+                showUserInfo(currentUser);
+                alert('Имя обновлено!');
+                renderAuthWidget();
+            }
         }
     }
 
@@ -423,8 +508,8 @@
             const avatarUrl = currentUserProfile?.avatar_url || '';
             const username = currentUserProfile?.username || currentUser.email;
             widget.innerHTML = `
-                <span class="username">${username}</span>
-                <div class="user-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
+                <span class="username">${MF.escapeHtml(username)}</span>
+                <div class="user-avatar">${avatarUrl ? `<img src="${MF.escapeAttr(avatarUrl)}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
                 <a href="profile.html" class="auth-btn" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
                 <button id="logoutBtnWidget" class="auth-btn auth-btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
@@ -460,7 +545,9 @@
             currentUser = user;
             currentUserProfile = await loadUserProfile(user.id);
             showUserInfo(user);
-        } else showAuthForms();
+        } else {
+            showAuthForms();
+        }
         await trackVisit();
         await loadTopics();
         await updateVisitCounter();
