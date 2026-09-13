@@ -1,57 +1,21 @@
-import gspread
-import pandas as pd
+# generate_from_sheets.py
+# Google Sheets → JSON + MD
+# Общие константы и функции — в common.py
+
 import os
 import json
-import sys
-import re
 
-SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
+import pandas as pd
+import gspread
 
-SHEET_CONFIG = {
-    "Новости": {"json": "_content/news.json", "folder": "_content/news"},
-    "Программы": {"json": "_content/programs.json", "folder": "_content/programs"},
-    "Книги": {"json": "_content/books.json", "folder": "_content/books"},
-    "Музыка": {"json": "_content/music.json", "folder": "_content/music"},
-    "Игры": {"json": "_content/games.json", "folder": "_content/games"},
-    "Статьи": {"json": "_content/articles.json", "folder": "_content/articles"},
-    "Фильмы": {"json": "_content/movies.json", "folder": "_content/movies"},
-    "Разное": {"json": "_content/misc.json", "folder": "_content/misc"},
-}
+from common import (
+    SPREADSHEET_ID,
+    SHEET_CONFIG,
+    COLUMN_MAPPING,
+    get_gspread_client,
+    slugify,
+)
 
-COLUMN_MAPPING = {
-    "Название": "title",
-    "Описание": "description",
-    "Версия": "version",
-    "Размер (МБ)": "size",
-    "Ссылка для скачивания": "download_link",
-    "Автор": "author",
-    "Формат": "format",
-    "Год": "year",
-    "Платформа": "platform",
-    "Текст": "body",
-    "Обложка": "cover",   # ← добавьте эту строку
-}
-
-def get_gspread_client():
-    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
-    if creds_json:
-        try:
-            creds_dict = json.loads(creds_json)
-            return gspread.service_account_from_dict(creds_dict)
-        except Exception as e:
-            print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
-            sys.exit(1)
-    else:
-        try:
-            return gspread.service_account(filename="credentials.json")
-        except FileNotFoundError:
-            print("Файл credentials.json не найден. Убедитесь, что он есть при локальном запуске.")
-            sys.exit(1)
-
-def slugify(title):
-    slug = re.sub(r'[^\w\s-]', '', title).strip().lower()
-    slug = re.sub(r'[-\s]+', '-', slug)
-    return slug
 
 def generate_json_and_md(worksheet, json_path, folder_path):
     print(f"Обработка листа: {worksheet.title}")
@@ -79,7 +43,6 @@ def generate_json_and_md(worksheet, json_path, folder_path):
                 item[en_key] = str(value).strip()
         if 'title' in item and item['title']:
             json_data.append(item)
-            # Создаём Markdown
             title = item['title']
             slug = slugify(title)
             md_filename = f"{slug}.md"
@@ -97,16 +60,15 @@ def generate_json_and_md(worksheet, json_path, folder_path):
         else:
             print(f"  Пропущена строка без названия: {row}")
 
-    # Записываем JSON
     try:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
         print(f"  Создан JSON: {json_path} ({len(json_data)} записей)")
-        # Дополнительный вывод содержимого для отладки
         if json_data:
             print(f"  Пример данных: {json_data[0]}")
     except Exception as e:
         print(f"  ОШИБКА записи JSON: {e}")
+
 
 def main():
     print("Подключение к Google Sheets...")
@@ -127,6 +89,7 @@ def main():
             print(f"ПРЕДУПРЕЖДЕНИЕ: Лист '{sheet_title}' не найден. Пропускаем.")
 
     print("Готово! JSON и Markdown файлы созданы.")
+
 
 if __name__ == "__main__":
     main()
