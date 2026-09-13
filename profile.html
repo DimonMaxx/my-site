@@ -78,13 +78,9 @@
             margin-top: 10px;
         }
         .btn-primary:hover { background: #1d4ed8; }
-        .btn-danger {
-            background: #dc2626;
-        }
+        .btn-danger { background: #dc2626; }
         .btn-danger:hover { background: #b91c1c; }
-        .btn-secondary {
-            background: #64748b;
-        }
+        .btn-secondary { background: #64748b; }
         .btn-secondary:hover { background: #475569; }
         .buttons-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
         .buttons-row button { flex: 1; min-width: 120px; }
@@ -108,7 +104,7 @@
             <div class="avatar-upload" onclick="document.getElementById('avatarInput').click()">
                 <i class="fas fa-camera"></i> Загрузить аватар
             </div>
-            <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
         </div>
     </div>
 
@@ -138,15 +134,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const CFG = window.APP_CONFIG;
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
 
     let currentUser = null;
     let currentProfile = null;
 
-    // Проверка авторизации
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) {
@@ -154,7 +151,6 @@
             return;
         }
         currentUser = data.user;
-        // Загружаем профиль
         const { data: profile, error: profError } = await supabaseClient
             .from('profiles')
             .select('*')
@@ -178,14 +174,13 @@
     function updateAvatar(url) {
         const display = document.getElementById('avatarDisplay');
         if (url) {
-            display.innerHTML = `<img src="${url}" alt="avatar">`;
+            display.innerHTML = `<img src="${MF.escapeAttr(url)}" alt="avatar">`;
         } else {
             display.innerHTML = '<i class="fas fa-user"></i>';
         }
     }
 
-    // Сохранение профиля
-    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    document.getElementById('profileForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const username = document.getElementById('profileUsername').value.trim();
         const fullName = document.getElementById('profileFullName').value.trim();
@@ -217,8 +212,7 @@
         }
     });
 
-    // Смена пароля (простой диалог)
-    document.getElementById('changePasswordBtn').addEventListener('click', async function() {
+    document.getElementById('changePasswordBtn').addEventListener('click', async function () {
         const newPassword = prompt('Введите новый пароль (мин. 6 символов):');
         if (!newPassword) return;
         if (newPassword.length < 6) {
@@ -233,22 +227,34 @@
         }
     });
 
-    // Выход
-    document.getElementById('logoutBtn').addEventListener('click', async function() {
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
         await supabaseClient.auth.signOut();
         window.location.href = 'index.html';
     });
 
-    // Загрузка аватара (простой вариант)
-    document.getElementById('avatarInput').addEventListener('change', async function(e) {
+    document.getElementById('avatarInput').addEventListener('change', async function (e) {
         const file = e.target.files[0];
         if (!file) return;
-        // Загружаем в Supabase Storage
-        const fileExt = file.name.split('.').pop();
+
+        // Проверка типа
+        if (!CFG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            alert('Допустимы только изображения JPEG/PNG/WebP/GIF');
+            e.target.value = '';
+            return;
+        }
+        // Проверка размера
+        if (file.size > CFG.MAX_AVATAR_SIZE) {
+            alert('Файл больше ' + Math.round(CFG.MAX_AVATAR_SIZE / 1024 / 1024) + ' МБ');
+            e.target.value = '';
+            return;
+        }
+
+        const fileExt = file.name.split('.').pop().toLowerCase();
         const fileName = `${currentUser.id}/avatar.${fileExt}`;
+
         const { error: uploadError } = await supabaseClient.storage
             .from('attachments')
-            .upload(fileName, file, { upsert: true });
+            .upload(fileName, file, { upsert: true, contentType: file.type });
         if (uploadError) {
             alert('Ошибка загрузки аватара: ' + uploadError.message);
             return;
@@ -256,8 +262,8 @@
         const { data: urlData } = supabaseClient.storage
             .from('attachments')
             .getPublicUrl(fileName);
-        const avatarUrl = urlData.publicUrl;
-        // Обновляем профиль
+        const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
+
         const { error: updateError } = await supabaseClient
             .from('profiles')
             .update({ avatar_url: avatarUrl })
@@ -270,7 +276,6 @@
         }
     });
 
-    // Запуск
     checkAuth();
 </script>
 </body>
