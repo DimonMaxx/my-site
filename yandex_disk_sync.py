@@ -1,4 +1,6 @@
-import gspread
+# yandex_disk_sync.py
+# Синхронизация обложек книг с Яндекс.Диска в Supabase Storage
+
 import os
 import json
 import sys
@@ -10,8 +12,13 @@ import requests
 import xml.etree.ElementTree as ET
 from urllib.parse import quote
 
+from common import (
+    SPREADSHEET_ID,
+    get_gspread_client,
+    normalize,
+)
+
 # ========== НАСТРОЙКИ ==========
-SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
 YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
 SHEET_TITLE = "Книги"
 
