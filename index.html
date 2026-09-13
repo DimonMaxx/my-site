@@ -88,7 +88,6 @@
 
         .main-layout { display: flex; flex: 1; }
 
-        /* ===== ЛЕВАЯ КОЛОНКА: меню + статистика ===== */
         .sidebar {
             width: 260px;
             background: #f8fafc;
@@ -113,7 +112,6 @@
         .sidebar .nav-link:hover { background: #eef2ff; color: #1e293b; }
         .sidebar .nav-link.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
 
-        /* Статистика (перенесена в левую колонку) */
         .stats-panel {
             background: white;
             border-radius: 16px;
@@ -133,14 +131,12 @@
         .stats-panel .label { color: #64748b; }
         .stats-panel .value { font-size: 15px; }
 
-        /* ===== ПРАВАЯ ОБЛАСТЬ: только контент ===== */
         .content-area {
             flex: 1;
             padding: 25px 30px;
             min-width: 0;
         }
 
-        /* Показываем только активный раздел */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -190,7 +186,6 @@
         .content-table tbody tr:last-child td { border-bottom: none; }
         .content-table .col-title { font-weight: 600; color: #0f172a; max-width: 250px; }
 
-        /* Описание теперь шире — занимает много места */
         .content-table .col-desc { min-width: 400px; max-width: 700px; }
 
         .content-table .col-center { text-align: center; white-space: nowrap; }
@@ -243,7 +238,6 @@
             background: #f8fafc; border-radius: 12px;
         }
 
-        /* ===== ПАГИНАЦИЯ ===== */
         .pagination-bar {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 12px; margin-top: 15px;
@@ -310,7 +304,6 @@
         }
         .page-jump-btn:hover { background: #1d4ed8; }
 
-        /* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ ==================== */
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
@@ -455,8 +448,7 @@
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
-            <a href="https://github.com/DimonMaxx/my-site/actions/workflows/update-content.yml" 
-               target="_blank" class="btn-update" id="adminUpdateBtn" style="display:none;">
+            <a href="#" target="_blank" class="btn-update" id="adminUpdateBtn" style="display:none;">
                <i class="fas fa-sync-alt"></i> Обновить
             </a>
             <div id="authWidget" style="display:flex; align-items:center; gap:6px;"></div>
@@ -465,7 +457,6 @@
 
     <div class="main-layout">
 
-        <!-- ЛЕВАЯ КОЛОНКА: навигация + статистика -->
         <aside class="sidebar" id="sidebarNav">
             <nav class="sidebar-nav">
                 <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
@@ -491,7 +482,6 @@
             </div>
         </aside>
 
-        <!-- ПРАВАЯ ОБЛАСТЬ: только контент -->
         <div class="content-area">
             <div class="tab-content-wrapper">
                 <div id="home" class="tab-content active">
@@ -520,66 +510,34 @@
     </footer>
 </div>
 
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const YANDEX_FOLDER_URL = 'https://disk.yandex.ru/d/zMxF4nXHPkIVCQ';
-    const PAGE_SIZES = [5, 10, 15, 25, 50, 100];
+    const CFG = window.APP_CONFIG;
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
+
+    const SUPABASE_URL = CFG.SUPABASE_URL;
+    const YANDEX_FOLDER_URL = CFG.YANDEX_FOLDER_URL;
+
     let currentUser = null;
     let currentProfile = null;
 
-    // Набор загруженных разделов (чтобы не загружать повторно)
+    // Одноразовая очистка устаревшего токена GitHub
+    try { localStorage.removeItem('github_token'); } catch (e) {}
+
     const loadedSections = new Set();
 
-    // Соответствие tab-id → { containerId, jsonPath }
-    const SECTION_FILES = {
-        news:     { container: 'news-container',     json: '_content/news.json' },
-        programs: { container: 'programs-container', json: '_content/programs.json' },
-        books:    { container: 'books-container',    json: '_content/books.json' },
-        articles: { container: 'articles-container', json: '_content/articles.json' },
-        movies:   { container: 'movies-container',   json: '_content/movies.json' },
-        music:    { container: 'music-container',    json: '_content/music.json' },
-        games:    { container: 'games-container',    json: '_content/games.json' },
-        misc:     { container: 'misc-container',     json: '_content/misc.json' }
-    };
+    const SECTION_FILES = Object.fromEntries(
+        Object.entries(CFG.SECTIONS).map(([key, meta]) => [
+            key, { container: meta.container, json: meta.json }
+        ])
+    );
 
-    function getMaxPageButtons() {
-        const w = window.innerWidth;
-        if (w < 480) return 5;
-        if (w < 768) return 7;
-        return 11;
-    }
-
-    function slugify(text) {
-        if (!text) return '';
-        let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
-        return slug.replace(/[\s\-]+/g, '-');
-    }
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    function escapeAttr(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    window.toggleDesc = function(btn) {
-        const cell = btn.closest('td');
-        const shortEl = cell.querySelector('.desc-short');
-        const fullEl = cell.querySelector('.desc-full');
-        if (!shortEl || !fullEl) return;
-        if (fullEl.style.display === 'block') {
-            fullEl.style.display = 'none';
-            shortEl.style.display = '-webkit-box';
-            btn.textContent = 'Развернуть';
-        } else {
-            fullEl.style.display = 'block';
-            shortEl.style.display = 'none';
-            btn.textContent = 'Свернуть';
-        }
-    };
+    // Динамическая ссылка на GitHub workflow в шапке
+    document.getElementById('adminUpdateBtn').href =
+        `https://github.com/${CFG.GITHUB_OWNER}/${CFG.GITHUB_REPO}` +
+        `/actions/workflows/${CFG.WORKFLOW_UPDATE}`;
 
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
@@ -588,7 +546,8 @@
             renderAuthWidget(false); return;
         }
         currentUser = data.user;
-        const { data: profile, error: pe } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+        const { data: profile, error: pe } = await supabaseClient
+            .from('profiles').select('*').eq('id', currentUser.id).single();
         if (pe) console.error('Ошибка загрузки профиля:', pe);
         currentProfile = profile || null;
         renderAuthWidget(true);
@@ -605,12 +564,12 @@
             const avatarUrl = currentProfile?.avatar_url || '';
             const username = currentProfile?.username || currentUser.email;
             widget.innerHTML = `
-                <span class="username">${escapeHtml(username)}</span>
-                <div class="user-avatar">${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
+                <span class="username">${MF.escapeHtml(username)}</span>
+                <div class="user-avatar">${avatarUrl ? `<img src="${MF.escapeAttr(avatarUrl)}" alt="avatar">` : '<i class="fas fa-user"></i>'}</div>
                 <a href="profile.html" class="btn-primary" style="background:#64748b;"><i class="fas fa-user-cog"></i> Профиль</a>
                 <button id="logoutBtnMain" class="btn-danger"><i class="fas fa-sign-out-alt"></i> Выйти</button>
             `;
-            document.getElementById('logoutBtnMain').addEventListener('click', async function() {
+            document.getElementById('logoutBtnMain').addEventListener('click', async function () {
                 await supabaseClient.auth.signOut();
                 window.location.href = 'index.html';
             });
@@ -654,16 +613,6 @@
         });
     }
 
-    function triggerDownload(url) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.rel = 'noopener';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-
     async function incrementDownload(fileId, downloadUrl, fileName) {
         if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
         try {
@@ -685,13 +634,13 @@
                     const path = parsed.searchParams.get('path');
                     if (path) {
                         const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
-                        triggerDownload(proxyUrl);
+                        MF.triggerDownload(proxyUrl);
                     } else {
-                        triggerDownload(downloadUrl);
+                        MF.triggerDownload(downloadUrl);
                     }
                 } catch (e) {
                     console.error('Ошибка парсинга URL:', e);
-                    triggerDownload(downloadUrl);
+                    MF.triggerDownload(downloadUrl);
                 }
             }
         } catch (e) {
@@ -703,28 +652,31 @@
                     const path = parsed.searchParams.get('path');
                     if (path) {
                         const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
-                        triggerDownload(proxyUrl);
+                        MF.triggerDownload(proxyUrl);
                     } else {
-                        triggerDownload(downloadUrl);
+                        MF.triggerDownload(downloadUrl);
                     }
                 } catch (err) {
-                    triggerDownload(downloadUrl);
+                    MF.triggerDownload(downloadUrl);
                 }
             }
         }
     }
 
     const tableStates = {};
+
     function initTableState(id, cols) {
         if (!tableStates[id]) {
             tableStates[id] = {
                 data: [], columns: cols,
                 sortKey: null, sortDir: 'asc', searches: {},
-                pageSize: 10, currentPage: 1
+                pageSize: CFG.DEFAULT_PAGE_SIZE, currentPage: 1,
+                totalItems: 0
             };
         }
         return tableStates[id];
     }
+
     async function loadCollection(containerId, jsonPath, renderFn) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -748,11 +700,10 @@
         }
     }
 
-    // Загружаем раздел только один раз — при первом открытии
     async function loadSectionIfNeeded(tabId) {
         if (loadedSections.has(tabId)) return;
         const info = SECTION_FILES[tabId];
-        if (!info) return; // например, "home"
+        if (!info) return;
         loadedSections.add(tabId);
         const renderFn = RENDERERS[info.container];
         if (!renderFn) return;
@@ -781,112 +732,13 @@
         return result;
     }
 
-    function getVisiblePages(currentPage, totalPages) {
-        const MAX = getMaxPageButtons();
-        const pages = [];
-        if (totalPages <= MAX) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-            return pages;
-        }
-        const half = Math.floor(MAX / 2);
-        let start = currentPage - half;
-        let end = start + MAX - 1;
-        if (start < 1) { start = 1; end = MAX; }
-        if (end > totalPages) { end = totalPages; start = end - MAX + 1; }
-        for (let i = start; i <= end; i++) pages.push(i);
-        return pages;
-    }
-
-    function renderPagination(containerId, totalItems, totalPages, state) {
-        const sizes = PAGE_SIZES.map(sz =>
-            `<option value="${sz}"${state.pageSize === sz ? ' selected' : ''}>${sz}</option>`
-        ).join('');
-        const visible = getVisiblePages(state.currentPage, totalPages);
-        const pageNums = visible.map(p =>
-            `<button class="page-num${p === state.currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`
-        ).join('');
-        return `
-            <div class="pagination-bar" data-pagination-for="${escapeAttr(containerId)}">
-                <div class="pagination-total">Всего записей: <strong>${totalItems}</strong> • Страница <strong>${state.currentPage}</strong> из <strong>${totalPages}</strong></div>
-                <div class="pagination-controls">
-                    <label>Показывать по:
-                        <select class="page-size-select" data-container="${escapeAttr(containerId)}">
-                            ${sizes}
-                        </select>
-                    </label>
-                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Назад">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="page-numbers" data-container="${escapeAttr(containerId)}">
-                        ${pageNums}
-                    </div>
-                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Вперёд">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <div class="page-jump">
-                        <label>Перейти на стр.:</label>
-                        <input type="number" class="page-jump-input" data-container="${escapeAttr(containerId)}" min="1" max="${totalPages}" placeholder="#">
-                        <button class="page-jump-btn" data-container="${escapeAttr(containerId)}">Перейти</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function attachPaginationHandlers(container, containerId, renderFn) {
-        const state = tableStates[containerId];
-        if (!state) return;
-        const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
-        if (sizeSelect) sizeSelect.addEventListener('change', function() {
-            state.pageSize = parseInt(this.value);
-            state.currentPage = 1;
-            renderTableWithState(containerId, container, renderFn);
-        });
-        const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
-        if (prevBtn) prevBtn.addEventListener('click', function() {
-            if (state.currentPage > 1) { state.currentPage--; renderTableWithState(containerId, container, renderFn); }
-        });
-        const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
-        if (nextBtn) nextBtn.addEventListener('click', function() {
-            const filtered = getFilteredSorted(state);
-            const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-            if (state.currentPage < totalPages) { state.currentPage++; renderTableWithState(containerId, container, renderFn); }
-        });
-        container.querySelectorAll(`.page-num[data-page]`).forEach(btn => {
-            btn.addEventListener('click', function() {
-                const p = parseInt(this.dataset.page, 10);
-                if (!isNaN(p) && p !== state.currentPage) {
-                    state.currentPage = p;
-                    renderTableWithState(containerId, container, renderFn);
-                }
-            });
-        });
-        const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
-        const jumpInput = container.querySelector(`.page-jump-input[data-container="${containerId}"]`);
-        if (jumpBtn && jumpInput) {
-            const doJump = () => {
-                const filtered = getFilteredSorted(state);
-                const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
-                let p = parseInt(jumpInput.value, 10);
-                if (isNaN(p)) p = 1;
-                if (p < 1) p = 1;
-                if (p > totalPages) p = totalPages;
-                state.currentPage = p;
-                renderTableWithState(containerId, container, renderFn);
-            };
-            jumpBtn.addEventListener('click', doJump);
-            jumpInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); doJump(); }
-            });
-        }
-    }
-
     function renderTableWithState(containerId, container, renderFn) {
         const state = tableStates[containerId];
         if (!state) return;
         const cols = state.columns;
         const allFiltered = getFilteredSorted(state);
         const totalItems = allFiltered.length;
+        state.totalItems = totalItems;
         const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
         if (state.currentPage > totalPages) state.currentPage = totalPages;
         if (state.currentPage < 1) state.currentPage = 1;
@@ -904,9 +756,9 @@
             let icon = (col.type === 'cover') ? '' : '<i class="fas fa-sort sort-icon"></i>';
             if (isSorted) icon = state.sortDir === 'asc' ? '<i class="fas fa-sort-up sort-icon active"></i>' : '<i class="fas fa-sort-down sort-icon active"></i>';
             const sv = state.searches[col.key] || '';
-            const searchField = (col.type === 'cover') ? '' : `<input type="text" class="col-search" data-search-key="${escapeAttr(col.key)}" placeholder="${escapeAttr(getSearchPlaceholder(col))}" value="${escapeAttr(sv)}">`;
+            const searchField = (col.type === 'cover') ? '' : `<input type="text" class="col-search" data-search-key="${MF.escapeAttr(col.key)}" placeholder="${MF.escapeAttr(getSearchPlaceholder(col))}" value="${MF.escapeAttr(sv)}">`;
             thead += `<th class="${cls}">
-                <div class="th-label" data-sort-key="${escapeAttr(col.key)}">${escapeHtml(col.label)} ${icon}</div>
+                <div class="th-label" data-sort-key="${MF.escapeAttr(col.key)}">${MF.escapeHtml(col.label)} ${icon}</div>
                 ${searchField}
             </th>`;
         });
@@ -921,13 +773,13 @@
                 cols.forEach(col => {
                     if (col.type === 'cover') {
                         const cover = item[col.key];
-                        if (cover) tbody += `<td class="col-cover"><img src="${escapeAttr(cover)}" alt="" loading="lazy"></td>`;
+                        if (cover) tbody += `<td class="col-cover"><img src="${MF.escapeAttr(cover)}" alt="" loading="lazy"></td>`;
                         else tbody += `<td class="col-cover"><div class="no-cover"><i class="fas fa-book"></i></div></td>`;
                     } else if (col.type === 'description') {
                         const text = item[col.key] || '';
                         if (!text) tbody += `<td class="col-desc">—</td>`;
                         else {
-                            const full = escapeHtml(text);
+                            const full = MF.escapeHtml(text);
                             tbody += `<td class="col-desc">
                                 <div class="desc-short">${full}</div>
                                 <div class="desc-full">${full}</div>
@@ -938,12 +790,12 @@
                         if (!item.download_link) tbody += `<td class="col-center">—</td>`;
                         else {
                             const isLogged = currentUser !== null;
-                            const fid = slugify(item.title || '');
+                            const fid = MF.slugify(item.title || '');
                             const ftitle = item.title || 'Без названия';
                             const btnClass = isLogged ? 'btn-download-sm' : 'btn-download-sm disabled';
                             const onclickAttr = isLogged ? '' : `onclick="event.preventDefault(); alert('Для скачивания необходимо зарегистрироваться.'); return false;"`;
                             tbody += `<td class="col-center">
-                                <a href="#" class="${btnClass}" data-file-id="${escapeAttr(fid)}" data-download-url="${escapeAttr(item.download_link)}" data-file-name="${escapeAttr(ftitle)}" ${onclickAttr}>
+                                <a href="#" class="${btnClass}" data-file-id="${MF.escapeAttr(fid)}" data-download-url="${MF.escapeAttr(item.download_link)}" data-file-name="${MF.escapeAttr(ftitle)}" ${onclickAttr}>
                                     <i class="fas fa-download"></i> Скачать
                                 </a>
                             </td>`;
@@ -951,21 +803,21 @@
                     } else if (col.type === 'count') {
                         if (!item.download_link) tbody += `<td class="col-num">—</td>`;
                         else {
-                            const fid = slugify(item.title || '');
+                            const fid = MF.slugify(item.title || '');
                             const c = downloadCounts[fid] || 0;
-                            tbody += `<td class="col-num" data-count-file-id="${escapeAttr(fid)}">${c}</td>`;
+                            tbody += `<td class="col-num" data-count-file-id="${MF.escapeAttr(fid)}">${c}</td>`;
                         }
                     } else {
                         const val = item[col.key];
-                        if (col.key === 'title') tbody += `<td class="col-title">${escapeHtml(val || '')}</td>`;
-                        else tbody += `<td>${escapeHtml(val || '')}</td>`;
+                        if (col.key === 'title') tbody += `<td class="col-title">${MF.escapeHtml(val || '')}</td>`;
+                        else tbody += `<td>${MF.escapeHtml(val || '')}</td>`;
                     }
                 });
                 tbody += '</tr>';
             });
         }
 
-        const paginationHtml = renderPagination(containerId, totalItems, totalPages, state);
+        const paginationHtml = MF.renderPagination(containerId, totalItems, totalPages, state);
         container.innerHTML = `
             <div class="content-table-wrapper">
                 <table class="content-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>
@@ -974,7 +826,7 @@
         `;
 
         container.querySelectorAll('.th-label').forEach(el => {
-            el.addEventListener('click', function() {
+            el.addEventListener('click', function () {
                 const key = this.dataset.sortKey;
                 const st = tableStates[containerId];
                 if (st.sortKey === key) st.sortDir = st.sortDir === 'asc' ? 'desc' : 'asc';
@@ -983,8 +835,9 @@
                 renderTableWithState(containerId, container, renderFn);
             });
         });
+
         container.querySelectorAll('.col-search').forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 const key = this.dataset.searchKey;
                 const st = tableStates[containerId];
                 st.searches[key] = this.value;
@@ -997,13 +850,18 @@
                 }, 250);
             });
         });
+
         container.querySelectorAll('.btn-download-sm[data-file-id]').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+            btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 incrementDownload(this.dataset.fileId, this.dataset.downloadUrl, this.dataset.fileName);
             });
         });
-        attachPaginationHandlers(container, containerId, renderFn);
+
+        MF.attachPaginationHandlers(container, containerId, state, () => {
+            renderTableWithState(containerId, container, renderFn);
+        });
+
         updateDownloadCountsDisplay();
     }
 
@@ -1089,23 +947,23 @@
             if (link.dataset.tab === tabId) link.classList.add('active');
         });
         localStorage.setItem('activeTab', tabId);
-        // Ленивая загрузка содержимого раздела (только один раз)
         loadSectionIfNeeded(tabId);
     }
 
     navLinks.forEach(link => {
-        link.addEventListener('click', function() { switchTab(this.dataset.tab); });
+        link.addEventListener('click', function () { switchTab(this.dataset.tab); });
     });
 
     async function trackVisit() {
         let vid = localStorage.getItem('visitor_id');
         if (!vid) { vid = crypto.randomUUID(); localStorage.setItem('visitor_id', vid); }
         const uid = currentUser?.id || null;
-        const { error } = await supabaseClient.from('visits').insert([{ visitor_id: vid, user_id: uid, page: window.location.pathname }]);
+        const { error } = await supabaseClient.from('visits').insert([{
+            visitor_id: vid, user_id: uid, page: window.location.pathname
+        }]);
         if (error) console.error(error);
     }
 
-    // Перерисовка таблиц при смене ориентации/размера экрана
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -1127,7 +985,6 @@
         await loadDownloadCounts();
         loadStats();
 
-        // Восстанавливаем последний открытый раздел и грузим только его
         const savedTab = localStorage.getItem('activeTab');
         if (savedTab && document.getElementById(savedTab)) {
             switchTab(savedTab);
