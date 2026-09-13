@@ -117,7 +117,6 @@
         <button data-tab="register">Регистрация</button>
     </div>
 
-    <!-- Вход -->
     <div id="login" class="tab-content active">
         <form id="loginForm">
             <div class="form-group">
@@ -134,7 +133,6 @@
         </form>
     </div>
 
-    <!-- Регистрация -->
     <div id="register" class="tab-content">
         <form id="registerForm">
             <div class="form-group">
@@ -163,24 +161,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="shared.js"></script>
 <script>
-    // --------------------------------------------
-    // ИНИЦИАЛИЗАЦИЯ SUPABASE
-    // --------------------------------------------
-    const SUPABASE_URL = 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const MF = window.MF;
+    const supabaseClient = MF.getSupabaseClient();
 
-    // --------------------------------------------
-    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
-    // --------------------------------------------
     const tabs = document.querySelectorAll('#authTabs button');
     const contents = {
         login: document.getElementById('login'),
         register: document.getElementById('register')
     };
     tabs.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             tabs.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tab = this.dataset.tab;
@@ -190,10 +183,7 @@
         });
     });
 
-    // --------------------------------------------
-    // ВХОД
-    // --------------------------------------------
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -209,15 +199,11 @@
         } else {
             successDiv.textContent = 'Успешный вход! Перенаправление...';
             successDiv.style.display = 'block';
-            // Перенаправляем на главную через 1.5 сек
             setTimeout(() => { window.location.href = 'index.html'; }, 1500);
         }
     });
 
-    // --------------------------------------------
-    // РЕГИСТРАЦИЯ
-    // --------------------------------------------
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const username = document.getElementById('regUsername').value.trim();
         const fullName = document.getElementById('regFullName').value.trim();
@@ -234,7 +220,6 @@
             return;
         }
 
-        // Регистрируем пользователя
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) {
             errorDiv.textContent = 'Ошибка: ' + error.message;
@@ -242,7 +227,6 @@
             return;
         }
 
-        // Создаём профиль (если не создаётся автоматически триггером)
         const { error: profileError } = await supabaseClient
             .from('profiles')
             .insert([{
@@ -253,12 +237,10 @@
             }]);
         if (profileError) {
             console.error('Ошибка создания профиля:', profileError);
-            // Но пользователь уже создан, так что можно не показывать ошибку
         }
 
         successDiv.textContent = 'Регистрация успешна! Теперь войдите.';
         successDiv.style.display = 'block';
-        // Автоматически переключаем на вкладку входа
         document.querySelector('#authTabs button[data-tab="login"]').click();
         document.getElementById('loginEmail').value = email;
         document.getElementById('loginPassword').value = '';
