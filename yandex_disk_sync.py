@@ -29,22 +29,6 @@ COVERS_BUCKET = "covers"
 MAX_DESC_LEN = 2000
 # ==============================
 
-def get_gspread_client():
-    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
-    if creds_json:
-        try:
-            creds_dict = json.loads(creds_json)
-            return gspread.service_account_from_dict(creds_dict)
-        except Exception as e:
-            print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
-            sys.exit(1)
-    else:
-        try:
-            return gspread.service_account(filename="credentials.json")
-        except FileNotFoundError:
-            print("Файл credentials.json не найден.")
-            sys.exit(1)
-
 def get_yandex_files_with_download(public_url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
@@ -191,16 +175,6 @@ def parse_fb2(content_bytes):
                     if result['cover_data']:
                         break
     return result
-
-def normalize(name):
-    if not name: return ''
-    name = os.path.splitext(name)[0]
-    name = re.sub(r'\s*\([^)]*\)\s*$', '', name)
-    name = name.strip().lower()
-    name = re.sub(r'\s+', ' ', name)
-    name = re.sub(r'[—–]', '-', name)
-    name = re.sub(r'[^\w\s\-]', ' ', name)
-    return re.sub(r'\s+', ' ', name).strip()
 
 def upload_cover_to_supabase(cover_data, ext, book_title):
     """Загружает обложку в Supabase Storage. Имя файла = MD5 от названия."""
