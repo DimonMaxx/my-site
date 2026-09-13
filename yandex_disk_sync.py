@@ -1,5 +1,6 @@
 # yandex_disk_sync.py
 # Синхронизация обложек книг с Яндекс.Диска в Supabase Storage
+# Общие константы и функции — в common.py
 
 import os
 import json
@@ -28,6 +29,7 @@ COVERS_BUCKET = "covers"
 
 MAX_DESC_LEN = 2000
 # ==============================
+
 
 def get_yandex_files_with_download(public_url):
     headers = {
@@ -62,6 +64,7 @@ def get_yandex_files_with_download(public_url):
             time.sleep(0.5)
     print(f"Получено файлов: {len(result)}")
     return result
+
 
 def parse_fb2(content_bytes):
     result = {'title': '', 'author': '', 'description': '', 'cover_data': None, 'cover_ext': ''}
@@ -133,7 +136,8 @@ def parse_fb2(content_bytes):
         parts = []
         for sub in ann.iter():
             tag = sub.tag.split('}')[-1]
-            if tag in ('subtitle', 'title', 'section', 'image'): continue
+            if tag in ('subtitle', 'title', 'section', 'image'):
+                continue
             if sub.text and sub.text.strip():
                 parts.append(sub.text.strip())
         desc = ' '.join(parts)
@@ -147,7 +151,8 @@ def parse_fb2(content_bytes):
         for ns in ns_candidates:
             prefix = f'{{{ns}}}' if ns else ''
             img_el = cover.find(f'.//{prefix}image')
-            if img_el is not None: break
+            if img_el is not None:
+                break
         if img_el is not None:
             href = None
             for attr in img_el.attrib:
@@ -162,9 +167,12 @@ def parse_fb2(content_bytes):
                         if b_el.attrib.get('id') == binary_id:
                             content_type = b_el.attrib.get('content-type', 'image/jpeg')
                             ext = 'jpg'
-                            if 'png' in content_type: ext = 'png'
-                            elif 'gif' in content_type: ext = 'gif'
-                            elif 'webp' in content_type: ext = 'webp'
+                            if 'png' in content_type:
+                                ext = 'png'
+                            elif 'gif' in content_type:
+                                ext = 'gif'
+                            elif 'webp' in content_type:
+                                ext = 'webp'
                             try:
                                 data = base64.b64decode(b_el.text.strip())
                                 result['cover_data'] = data
@@ -175,6 +183,7 @@ def parse_fb2(content_bytes):
                     if result['cover_data']:
                         break
     return result
+
 
 def upload_cover_to_supabase(cover_data, ext, book_title):
     """Загружает обложку в Supabase Storage. Имя файла = MD5 от названия."""
@@ -199,6 +208,7 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
     except Exception as e:
         print(f"  Ошибка загрузки обложки: {e}")
     return None
+
 
 def main():
     print("Подключение к Google Sheets...")
@@ -230,7 +240,8 @@ def main():
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
             n = normalize(row[col_title])
-            if n: name_to_row[n] = i
+            if n:
+                name_to_row[n] = i
 
     files = get_yandex_files_with_download(YANDEX_PUBLIC_FOLDER_URL)
     if not files:
@@ -243,6 +254,7 @@ def main():
     for f in files:
         norm = normalize(f['name'])
         fb2_title = ''
+        parsed = {}
         try:
             resp = requests.get(f['download_url'], timeout=60)
             if resp.status_code != 200:
@@ -255,8 +267,9 @@ def main():
 
         row_num = None
         for db_title, rnum in name_to_row.items():
-            if db_title == norm: 
-                row_num = rnum; break
+            if db_title == norm:
+                row_num = rnum
+                break
         if row_num is None and fb2_title:
             norm2 = normalize(fb2_title)
             if norm2 in name_to_row:
@@ -284,6 +297,7 @@ def main():
             skipped += 1
 
     print(f"\nИтого: обновлено обложек: {updated}, пропущено: {skipped}")
+
 
 if __name__ == "__main__":
     main()
