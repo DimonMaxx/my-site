@@ -221,12 +221,6 @@
         .role-anon { background: #e5e7eb; color: #374151; }
         .admin-note-cell { font-size: 12px; color: #7c3aed; font-style: italic; max-width: 200px; }
 
-        #cmsFrame {
-            width: 100%; height: calc(100vh - 220px);
-            border: none; border-radius: 12px; background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-        }
-
         .pagination-bar {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 12px; margin-top: 15px;
@@ -464,8 +458,6 @@
             .stat-card { padding: 14px; }
             .stat-card .stat-value { font-size: 24px; }
             .stat-card .stat-label { font-size: 11px; }
-
-            #cmsFrame { height: calc(100vh - 280px); }
         }
 
         @media (max-width: 500px) {
@@ -530,8 +522,6 @@
                 padding: 8px 10px; font-size: 13px;
             }
             .modal-actions button { padding: 8px 16px; font-size: 13px; }
-
-            #cmsFrame { height: calc(100vh - 320px); }
         }
     </style>
 </head>
@@ -564,7 +554,6 @@
             <div class="nav-divider">Управление</div>
             <button class="nav-link" data-tab="users"><i class="fas fa-users"></i> Пользователи</button>
             <button class="nav-link" data-tab="visitors"><i class="fas fa-user-check"></i> Посетители</button>
-            <button class="nav-link" data-tab="cms"><i class="fas fa-edit"></i> Редактор</button>
             <button class="nav-link" data-tab="downloads"><i class="fas fa-download"></i> Скачивания</button>
             <button class="nav-link" data-tab="stats"><i class="fas fa-chart-simple"></i> Статистика</button>
         </aside>
@@ -691,7 +680,6 @@
         if (section === 'stats') { await loadStats(); return; }
         if (section === 'users') { await loadUsers(); return; }
         if (section === 'visitors') { await loadVisitors(); return; }
-        if (section === 'cms') { showCMS(); return; }
 
         const info = SECTIONS[section];
         if (!info) return;
@@ -874,17 +862,6 @@
         wrapper.innerHTML = html;
     }
 
-    /**
-     * Универсальный рендер пагинации для Users / Visitors.
-     * Использует общий MF.renderPagination + MF.attachPaginationHandlers.
-     *
-     * @param {string} prefix       - 'users' или 'visitors'
-     * @param {number} totalItems   - всего записей
-     * @param {number} currentPage  - текущая страница
-     * @param {number} pageSize     - размер страницы
-     * @param {object} callbacks    - { onPageChange, onSizeChange }
-     * @returns {string}            - HTML-разметка pagination-bar
-     */
     function renderSimplePagination(prefix, totalItems, currentPage, pageSize, callbacks) {
         const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
@@ -1122,13 +1099,6 @@
         wrapper.innerHTML = html;
     }
 
-    function showCMS() {
-        document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-edit"></i> Редактор контента (Decap CMS)`;
-        document.getElementById('toolbar').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
-        document.getElementById('tableWrapper').innerHTML = `<iframe id="cmsFrame" src="admin/index.html" allow="clipboard-write"></iframe>`;
-    }
-
     async function loadStats() {
         document.getElementById('sectionTitle').innerHTML = `<i class="fas fa-chart-simple"></i> Статистика`;
         document.getElementById('toolbar').style.display = 'none';
@@ -1200,7 +1170,6 @@
             else if (currentTab === 'stats') loadStats();
             else if (currentTab === 'users') loadUsers();
             else if (currentTab === 'visitors') loadVisitors();
-            else if (currentTab === 'cms') showCMS();
             else loadSection(currentTab);
         });
     });
@@ -1210,7 +1179,6 @@
         else if (currentTab === 'users') loadUsers();
         else if (currentTab === 'visitors') loadVisitors();
         else if (currentTab === 'stats') loadStats();
-        else if (currentTab === 'cms') showCMS();
         else loadSection(currentTab);
     });
     document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
