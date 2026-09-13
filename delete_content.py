@@ -1,50 +1,19 @@
-import gspread
+# delete_content.py
+# Удаление строк из Google Sheets по названию
+# Общие константы и функции — в common.py
+
 import os
 import json
-import sys
-import re
 
-SPREADSHEET_ID = "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw"
+import gspread
 
-SECTION_TO_SHEET = {
-    "programs": "Программы",
-    "books": "Книги",
-    "news": "Новости",
-    "articles": "Статьи",
-    "movies": "Фильмы",
-    "music": "Музыка",
-    "games": "Игры",
-    "misc": "Разное",
-}
+from common import (
+    SPREADSHEET_ID,
+    SECTION_TO_SHEET,
+    get_gspread_client,
+    normalize,
+)
 
-def get_gspread_client():
-    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
-    if creds_json:
-        try:
-            creds_dict = json.loads(creds_json)
-            return gspread.service_account_from_dict(creds_dict)
-        except Exception as e:
-            print(f"Ошибка парсинга GOOGLE_CREDENTIALS_JSON: {e}")
-            sys.exit(1)
-    else:
-        try:
-            return gspread.service_account(filename="credentials.json")
-        except FileNotFoundError:
-            print("Файл credentials.json не найден.")
-            sys.exit(1)
-
-def normalize(name):
-    if not name:
-        return ''
-    name = os.path.splitext(name)[0]
-    name = re.sub(r'\s*\([^)]*\)\s*$', '', name)
-    name = name.strip().lower()
-    name = re.sub(r'\s+', ' ', name)
-    name = re.sub(r'[—–]', '-', name)
-    name = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', name)
-    name = re.sub(r'[^\w\s\-]', ' ', name)
-    name = re.sub(r'\s+', ' ', name).strip()
-    return name
 
 def main():
     delete_list_json = os.environ.get('DELETE_LIST', '[]')
@@ -96,7 +65,6 @@ def main():
             print(f"  На листе '{sheet_name}' нет колонки 'Название'")
             continue
 
-        # Собираем номера строк для удаления (1-based)
         rows_to_delete = []
         titles_norm = [normalize(t) for t in titles]
         for i, row in enumerate(all_values[1:], start=2):
@@ -104,13 +72,12 @@ def main():
                 row_title_norm = normalize(row[col_title])
                 if row_title_norm in titles_norm:
                     rows_to_delete.append(i)
-                    titles_norm.remove(row_title_norm)  # чтобы не удалить повторно
+                    titles_norm.remove(row_title_norm)
 
         if not rows_to_delete:
             print(f"  Ничего не найдено для удаления.")
             continue
 
-        # Удаляем строки в обратном порядке (снизу вверх), чтобы не сбить индексы
         print(f"  Удаляем {len(rows_to_delete)} строк: {sorted(rows_to_delete, reverse=True)[:5]}...")
         for row_num in sorted(rows_to_delete, reverse=True):
             worksheet.delete_rows(row_num)
@@ -118,6 +85,7 @@ def main():
         print(f"  ✓ Удалено {len(rows_to_delete)} строк.")
 
     print("\nГотово!")
+
 
 if __name__ == "__main__":
     main()
