@@ -622,7 +622,6 @@
     const PAGE_SIZES = CFG.PAGE_SIZES;
     const DELETE_WORKFLOW = CFG.WORKFLOW_DELETE;
 
-    // Одноразовая очистка устаревшего токена GitHub
     try { localStorage.removeItem('github_token'); } catch (e) {}
 
     const SECTIONS = Object.fromEntries(
