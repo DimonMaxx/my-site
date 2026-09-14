@@ -34,17 +34,18 @@ COLUMN_MAPPING = {
     "Платформа": "platform",
     "Текст": "body",
     "Обложка": "cover",
+    "Папка": "folder",
 }
 
 SHEET_CONFIG = {
-    "Новости":  {"json": "_content/news.json",     "folder": "_content/news"},
+    "Новости":   {"json": "_content/news.json",     "folder": "_content/news"},
     "Программы": {"json": "_content/programs.json", "folder": "_content/programs"},
-    "Книги":    {"json": "_content/books.json",    "folder": "_content/books"},
-    "Музыка":   {"json": "_content/music.json",    "folder": "_content/music"},
-    "Игры":     {"json": "_content/games.json",    "folder": "_content/games"},
-    "Статьи":   {"json": "_content/articles.json", "folder": "_content/articles"},
-    "Фильмы":   {"json": "_content/movies.json",   "folder": "_content/movies"},
-    "Разное":   {"json": "_content/misc.json",     "folder": "_content/misc"},
+    "Книги":     {"json": "_content/books.json",    "folder": "_content/books"},
+    "Музыка":    {"json": "_content/music.json",    "folder": "_content/music"},
+    "Игры":      {"json": "_content/games.json",    "folder": "_content/games"},
+    "Статьи":    {"json": "_content/articles.json", "folder": "_content/articles"},
+    "Фильмы":    {"json": "_content/movies.json",   "folder": "_content/movies"},
+    "Разное":    {"json": "_content/misc.json",     "folder": "_content/misc"},
 }
 
 
