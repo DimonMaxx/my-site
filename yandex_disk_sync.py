@@ -1,6 +1,7 @@
 # yandex_disk_sync.py
 # Синхронизация обложек книг с Яндекс.Диска в Supabase Storage
 # Общие константы и функции — в common.py
+# Обходит рекурсивно все подпапки публичной папки.
 
 import os
 import json
@@ -30,40 +31,77 @@ COVERS_BUCKET = "covers"
 MAX_DESC_LEN = 2000
 # ==============================
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+}
 
-def get_yandex_files_with_download(public_url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-    }
+
+def list_yandex_files_recursive(public_url, sub_path=None):
+    """
+    Рекурсивно обходит публичную папку Яндекс.Диска.
+    Возвращает список словарей:
+      { name, path, folder, download_url }
+    где:
+      name         — имя файла (с расширением)
+      path         — полный путь внутри публичного ресурса
+      folder       — имя родительской папки (или '' для корня)
+      download_url — временная ссылка на скачивание
+    """
     api_url = "https://cloud-api.yandex.net/v1/disk/public/resources"
     params = {"public_key": public_url, "limit": 1000, "sort": "name"}
-    resp = requests.get(api_url, params=params, headers=headers, timeout=30)
-    if resp.status_code != 200:
-        print(f"Ошибка списка файлов: {resp.status_code}")
+    if sub_path:
+        params["path"] = sub_path
+
+    try:
+        resp = requests.get(api_url, params=params, headers=HEADERS, timeout=30)
+    except Exception as e:
+        print(f"  Ошибка запроса списка {sub_path or '/'}: {e}")
         return []
+
+    if resp.status_code != 200:
+        print(f"  Ошибка списка файлов {sub_path or '/'}: {resp.status_code}")
+        return []
+
     items = resp.json().get('_embedded', {}).get('items', [])
     result = []
-    for idx, item in enumerate(items, start=1):
-        if item.get('type') != 'file':
-            continue
-        fname = item.get('name', '')
-        if not fname.lower().endswith('.fb2'):
-            continue
-        dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
-        dl_params = {"public_key": public_url, "path": item['path']}
-        try:
-            dl_resp = requests.get(dl_api, params=dl_params, headers=headers, timeout=30)
-            if dl_resp.status_code == 200:
-                result.append({
-                    'name': fname,
-                    'download_url': dl_resp.json().get('href')
-                })
-        except Exception as e:
-            print(f"  Ошибка {fname}: {e}")
-        if idx % 20 == 0:
-            time.sleep(0.5)
-    print(f"Получено файлов: {len(result)}")
+
+    for item in items:
+        item_type = item.get('type')
+        item_path = item.get('path', '')
+        item_name = item.get('name', '')
+
+        if item_type == 'dir':
+            # Рекурсивный обход вложенной папки
+            result.extend(list_yandex_files_recursive(public_url, item_path))
+        elif item_type == 'file':
+            # Определяем имя родительской папки из пути
+            # Пример пути: "/Книги/Фантастика/Книга.fb2" → folder = "Фантастика"
+            folder = ''
+            parts = [p for p in item_path.split('/') if p]
+            if len(parts) >= 2:
+                folder = parts[-2]
+
+            result.append({
+                'name': item_name,
+                'path': item_path,
+                'folder': folder,
+                'download_url': None  # запросим лениво, когда файл реально понадобится
+            })
+
     return result
+
+
+def get_download_url(public_url, path):
+    """Возвращает временную ссылку на скачивание файла по его пути."""
+    dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
+    params = {"public_key": public_url, "path": path}
+    try:
+        resp = requests.get(dl_api, params=params, headers=HEADERS, timeout=30)
+        if resp.status_code == 200:
+            return resp.json().get('href')
+    except Exception as e:
+        print(f"  Ошибка получения download URL для {path}: {e}")
+    return None
 
 
 def parse_fb2(content_bytes):
@@ -236,6 +274,7 @@ def main():
         print("Колонка 'Обложка' не найдена. Добавьте её в таблицу.")
         return
 
+    # Карта: нормализованное имя → номер строки
     name_to_row = {}
     for i, row in enumerate(all_values[1:], start=2):
         if col_title < len(row):
@@ -243,7 +282,12 @@ def main():
             if n:
                 name_to_row[n] = i
 
-    files = get_yandex_files_with_download(YANDEX_PUBLIC_FOLDER_URL)
+    print("Обход Яндекс.Диска (рекурсивно)...")
+    files = list_yandex_files_recursive(YANDEX_PUBLIC_FOLDER_URL)
+    # Оставляем только .fb2
+    files = [f for f in files if f['name'].lower().endswith('.fb2')]
+    print(f"Найдено .fb2 файлов: {len(files)}")
+
     if not files:
         print("Файлы не получены.")
         return
@@ -255,46 +299,67 @@ def main():
         norm = normalize(f['name'])
         fb2_title = ''
         parsed = {}
+
+        # Определяем строку в таблице по имени или по папке+имени
+        row_num = None
+        if norm in name_to_row:
+            row_num = name_to_row[norm]
+
+        if row_num is None:
+            # Не нашли по имени — пропускаем (скачивать FB2 ради названия не будем)
+            skipped += 1
+            continue
+
+        # Проверяем, есть ли уже обложка в таблице
+        row = all_values[row_num - 1]
+        current_cover = row[col_cover] if col_cover < len(row) else ''
+        if current_cover.strip():
+            skipped += 1
+            continue
+
+        # Получаем download URL лениво
+        if not f['download_url']:
+            f['download_url'] = get_download_url(YANDEX_PUBLIC_FOLDER_URL, f['path'])
+        if not f['download_url']:
+            skipped += 1
+            continue
+
+        # Скачиваем и парсим FB2
         try:
             resp = requests.get(f['download_url'], timeout=60)
             if resp.status_code != 200:
+                skipped += 1
                 continue
             parsed = parse_fb2(resp.content)
             fb2_title = parsed.get('title', '').strip()
         except Exception as e:
             print(f"  Ошибка парсинга {f['name']}: {e}")
+            skipped += 1
             continue
 
-        row_num = None
-        for db_title, rnum in name_to_row.items():
-            if db_title == norm:
-                row_num = rnum
-                break
+        # Если название в FB2 отличается — пробуем найти по нему
         if row_num is None and fb2_title:
             norm2 = normalize(fb2_title)
             if norm2 in name_to_row:
                 row_num = name_to_row[norm2]
 
-        if row_num:
-            row = all_values[row_num - 1]
-            current_cover = row[col_cover] if col_cover < len(row) else ''
-            if current_cover.strip():
-                skipped += 1
-                continue
-            cover_data = parsed.get('cover_data')
-            cover_ext = parsed.get('cover_ext', 'jpg')
-            if not cover_data:
-                skipped += 1
-                continue
-            url = upload_cover_to_supabase(cover_data, cover_ext, fb2_title or f['name'])
-            if url:
-                col_letter = chr(65 + col_cover)
-                worksheet.update(f'{col_letter}{row_num}', [[url]], value_input_option='RAW')
-                print(f"  ✓ Обложка для: {fb2_title or f['name'][:40]}")
-                updated += 1
-                time.sleep(0.3)
-        else:
+        if row_num is None:
             skipped += 1
+            continue
+
+        cover_data = parsed.get('cover_data')
+        cover_ext = parsed.get('cover_ext', 'jpg')
+        if not cover_data:
+            skipped += 1
+            continue
+
+        url = upload_cover_to_supabase(cover_data, cover_ext, fb2_title or f['name'])
+        if url:
+            col_letter = chr(65 + col_cover)
+            worksheet.update(f'{col_letter}{row_num}', [[url]], value_input_option='RAW')
+            print(f"  ✓ Обложка для: {fb2_title or f['name'][:40]} (папка: {f['folder'] or '—'})")
+            updated += 1
+            time.sleep(0.3)
 
     print(f"\nИтого: обновлено обложек: {updated}, пропущено: {skipped}")
 
