@@ -27,14 +27,70 @@
         ],
 
         SECTIONS: {
-            news:     { label: 'Новости',    icon: 'fa-newspaper',  json: '_content/news.json',     container: 'news-container',     columns: ['title', 'date', 'body'] },
-            programs: { label: 'Программы',  icon: 'fa-code',       json: '_content/programs.json', container: 'programs-container', columns: ['title', 'description', 'version', 'size', 'download_link'] },
-            books:    { label: 'Книги',      icon: 'fa-book',       json: '_content/books.json',    container: 'books-container',    columns: ['title', 'author', 'description', 'format', 'download_link'] },
-            articles: { label: 'Статьи',     icon: 'fa-pen-fancy',  json: '_content/articles.json', container: 'articles-container', columns: ['title', 'date', 'body'] },
-            movies:   { label: 'Фильмы',     icon: 'fa-film',       json: '_content/movies.json',   container: 'movies-container',   columns: ['title', 'year', 'description', 'download_link'] },
-            music:    { label: 'Музыка',     icon: 'fa-music',      json: '_content/music.json',    container: 'music-container',    columns: ['title', 'artist', 'year', 'description', 'download_link'] },
-            games:    { label: 'Игры',       icon: 'fa-gamepad',    json: '_content/games.json',    container: 'games-container',    columns: ['title', 'platform', 'year', 'description', 'download_link'] },
-            misc:     { label: 'Разное',     icon: 'fa-ellipsis-h', json: '_content/misc.json',     container: 'misc-container',     columns: ['title', 'description', 'download_link'] }
+            news: {
+                label: 'Новости',
+                icon: 'fa-newspaper',
+                json: '_content/news.json',
+                container: 'news-container',
+                columns: ['title', 'date', 'body'],
+                folderable: false
+            },
+            programs: {
+                label: 'Программы',
+                icon: 'fa-code',
+                json: '_content/programs.json',
+                container: 'programs-container',
+                columns: ['folder', 'title', 'description', 'version', 'size', 'download_link'],
+                folderable: true
+            },
+            books: {
+                label: 'Книги',
+                icon: 'fa-book',
+                json: '_content/books.json',
+                container: 'books-container',
+                columns: ['folder', 'title', 'author', 'description', 'format', 'download_link'],
+                folderable: true
+            },
+            articles: {
+                label: 'Статьи',
+                icon: 'fa-pen-fancy',
+                json: '_content/articles.json',
+                container: 'articles-container',
+                columns: ['title', 'date', 'body'],
+                folderable: false
+            },
+            movies: {
+                label: 'Фильмы',
+                icon: 'fa-film',
+                json: '_content/movies.json',
+                container: 'movies-container',
+                columns: ['folder', 'title', 'year', 'description', 'download_link'],
+                folderable: true
+            },
+            music: {
+                label: 'Музыка',
+                icon: 'fa-music',
+                json: '_content/music.json',
+                container: 'music-container',
+                columns: ['folder', 'title', 'artist', 'year', 'description', 'download_link'],
+                folderable: true
+            },
+            games: {
+                label: 'Игры',
+                icon: 'fa-gamepad',
+                json: '_content/games.json',
+                container: 'games-container',
+                columns: ['folder', 'title', 'platform', 'year', 'description', 'download_link'],
+                folderable: true
+            },
+            misc: {
+                label: 'Разное',
+                icon: 'fa-ellipsis-h',
+                json: '_content/misc.json',
+                container: 'misc-container',
+                columns: ['title', 'description', 'download_link'],
+                folderable: false
+            }
         },
 
         COLUMN_LABELS: {
@@ -50,6 +106,7 @@
             year: 'Год',
             artist: 'Исполнитель',
             platform: 'Платформа',
+            folder: 'Папка',
             file_name: 'Файл',
             username: 'Пользователь',
             downloaded_at: 'Дата и время'
