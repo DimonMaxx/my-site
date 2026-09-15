@@ -1,8 +1,9 @@
 # yandex_disk_sync.py
-# Полная синхронизация Google Sheets с Яндекс.Диском:
-# 1. Рекурсивно обходит публичную папку.
-# 2. Для новых файлов создаёт новые строки в Google Sheets.
-# 3. Для существующих — заполняет пустые поля (папка, автор, описание, обложка, ссылка и т.д.).
+# Синхронизация Google Sheets с Яндекс.Диском.
+# - Книги: folder = имя папки автора
+# - Программы: folder = имя подпапки (Скрипты/Макросы/...)
+# - FB2: парсим автора/описание/обложку из метаданных
+# - TXT/DOC/DOCX/RTF: автора берём из имени папки, контент не парсим
 
 import os
 import sys
@@ -21,7 +22,11 @@ from common import (
 )
 
 # ========== НАСТРОЙКИ ==========
-YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ"
+# Публичные ссылки на папки Яндекс.Диска по разделам.
+YANDEX_SOURCES = {
+    'books':    'https://disk.yandex.ru/d/zMxF4nXHPkIVCQ',
+    'programs': 'https://disk.yandex.ru/d/EjUHvm6mUcgVMw',
+}
 
 SUPABASE_URL = "https://rmoonebbvpmvthvpcmpt.supabase.co"
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -29,10 +34,11 @@ COVERS_BUCKET = "covers"
 
 MAX_DESC_LEN = 2000
 
-# Какие расширения относятся к книгам (парсим FB2 для автора/описания/обложки)
-BOOK_EXTS = {'.fb2', '.epub', '.pdf', '.djvu', '.mobi', '.txt', '.doc', '.docx'}
+# Форматы книг (для заполнения колонки «Формат»)
+BOOK_EXTS = {'.fb2', '.epub', '.pdf', '.djvu', '.mobi', '.txt', '.doc', '.docx', '.rtf'}
+# Форматы, которые ПАРСИМ (только FB2 — XML)
+PARSEABLE_EXTS = {'.fb2'}
 
-# Какие поля для каждой предметной области нужно заполнять
 FIELDS_FOR_SECTION = {
     "programs": ["title", "folder", "description", "version", "size", "download_link"],
     "books":    ["title", "folder", "author", "description", "format", "download_link", "cover"],
@@ -44,7 +50,6 @@ FIELDS_FOR_SECTION = {
     "misc":     ["title", "description", "download_link"],
 }
 
-# Русские названия колонок в таблице
 RU_LABELS = {
     "title": "Название",
     "folder": "Папка",
@@ -80,17 +85,8 @@ def col_num_to_letter(n):
 
 def list_yandex_recursive(public_url, sub_path=None):
     """
-    Рекурсивно обходит публичную папку Яндекс.Диска.
-    Возвращает список словарей:
-      { name, path, section, folder, size, ext, download_url }
-    где:
-      name         — имя файла
-      path         — полный путь внутри публичного ресурса
-      section      — имя верхнеуровневой папки (первый уровень)
-      folder       — имя родительской папки (второй уровень), или ''
-      size         — размер в байтах (или 0)
-      ext          — расширение без точки (в нижнем регистре)
-      download_url — временная ссылка на скачивание (запрашивается лениво)
+    Рекурсивный обход публичной папки Яндекс.Диска.
+    Возвращает список: { name, path, parts, size, ext, download_url }
     """
     api_url = "https://cloud-api.yandex.net/v1/disk/public/resources"
     params = {"public_key": public_url, "limit": 1000, "sort": "name"}
@@ -118,26 +114,16 @@ def list_yandex_recursive(public_url, sub_path=None):
         if item_type == 'dir':
             result.extend(list_yandex_recursive(public_url, item_path))
         elif item_type == 'file':
-            # Путь имеет вид: /Папка1/Папка2/файл.ext
-            parts = [p for p in item_path.split('/') if p]
-            section = parts[0] if len(parts) >= 1 else ''
-            # folder = имя родительской папки, если файл не в корне раздела
-            if len(parts) >= 3:
-                folder = parts[-2]  # родительская папка
-            elif len(parts) == 2:
-                folder = ''  # файл прямо в разделе
-            else:
-                folder = ''  # файл в корне публичной папки
-
             ext = ''
             if '.' in item_name:
-                ext = item_name.rsplit('.', 1)[1].lower()
+                ext = '.' + item_name.rsplit('.', 1)[1].lower()
+
+            parts = [p for p in item_path.split('/') if p]
 
             result.append({
                 'name': item_name,
                 'path': item_path,
-                'section': section,
-                'folder': folder,
+                'parts': parts,
                 'size': item.get('size', 0),
                 'ext': ext,
                 'download_url': None,
@@ -146,8 +132,21 @@ def list_yandex_recursive(public_url, sub_path=None):
     return result
 
 
+def compute_folder(parts):
+    """
+    parts = части пути внутри публичной папки:
+      ['АРКАДИЙ СТРУГАЦКИЙ', 'книга.fb2']            → 'АРКАДИЙ СТРУГАЦКИЙ'
+      ['Скрипты', 'macro.exe']                       → 'Скрипты'
+      ['Скрипты', 'Подпапка', 'macro.exe']           → 'Скрипты / Подпапка'
+      ['file.fb2']                                    → ''
+    """
+    if len(parts) <= 1:
+        return ''
+    return ' / '.join(parts[:-1])
+
+
 def get_download_url(public_url, path):
-    """Возвращает временную ссылку на скачивание файла по его пути."""
+    """Временная ссылка на скачивание."""
     dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
     params = {"public_key": public_url, "path": path}
     try:
@@ -159,13 +158,13 @@ def get_download_url(public_url, path):
     return None
 
 
-def make_permanent_link(path):
-    """Постоянная ссылка для скачивания через публичную папку."""
-    return f"{YANDEX_PUBLIC_FOLDER_URL}?path={quote(path)}"
+def make_permanent_link(public_url, path):
+    """Постоянная ссылка через публичную папку."""
+    return f"{public_url}?path={quote(path)}"
 
 
 def parse_fb2(content_bytes):
-    """Парсит FB2: возвращает title, author, description, cover_data, cover_ext."""
+    """Парсит FB2. Возвращает title, author, description, cover_data, cover_ext."""
     result = {'title': '', 'author': '', 'description': '', 'cover_data': None, 'cover_ext': ''}
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
@@ -269,17 +268,17 @@ def parse_fb2(content_bytes):
                     for b_el in root.iter(f'{prefix}binary'):
                         if b_el.attrib.get('id') == binary_id:
                             content_type = b_el.attrib.get('content-type', 'image/jpeg')
-                            ext = 'jpg'
+                            ext_img = 'jpg'
                             if 'png' in content_type:
-                                ext = 'png'
+                                ext_img = 'png'
                             elif 'gif' in content_type:
-                                ext = 'gif'
+                                ext_img = 'gif'
                             elif 'webp' in content_type:
-                                ext = 'webp'
+                                ext_img = 'webp'
                             try:
                                 data = base64.b64decode(b_el.text.strip())
                                 result['cover_data'] = data
-                                result['cover_ext'] = ext
+                                result['cover_ext'] = ext_img
                             except Exception as e:
                                 print(f"  Ошибка декодирования обложки: {e}")
                             break
@@ -289,7 +288,6 @@ def parse_fb2(content_bytes):
 
 
 def upload_cover_to_supabase(cover_data, ext, book_title):
-    """Загружает обложку в Supabase Storage. Имя файла = MD5 от названия."""
     if not SUPABASE_SERVICE_KEY:
         print("  SUPABASE_SERVICE_ROLE_KEY не задан — пропускаем загрузку обложки.")
         return None
@@ -313,16 +311,11 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
 
 
 def ensure_columns(worksheet, headers, required_fields):
-    """
-    Проверяет наличие всех колонок в шапке.
-    Если какой-то нет — добавляет её справа.
-    Возвращает обновлённый список headers.
-    """
     headers = list(headers)
     for field in required_fields:
         ru = RU_LABELS.get(field)
         if ru and ru not in headers:
-            col_idx = len(headers) + 1  # 1-based
+            col_idx = len(headers) + 1
             col_letter = col_num_to_letter(col_idx)
             worksheet.update(f'{col_letter}1', [[ru]], value_input_option='RAW')
             headers.append(ru)
@@ -330,22 +323,9 @@ def ensure_columns(worksheet, headers, required_fields):
     return headers
 
 
-def find_section_key(section_ru):
-    """Обратный маппинг: 'Книги' → 'books'."""
-    for k, v in SECTION_TO_SHEET.items():
-        if v.strip().lower() == section_ru.strip().lower():
-            return k
-    return None
-
-
-def process_sheet(worksheet, section_key, all_files, gc):
-    """
-    Обрабатывает один лист:
-    - Заполняет пустые ячейки у существующих строк.
-    - Добавляет строки для новых файлов.
-    """
+def process_sheet(worksheet, section_key, files, public_url):
     sheet_name = worksheet.title
-    print(f"\n  Лист '{sheet_name}': {len(all_files)} файлов на Яндекс.Диске")
+    print(f"\n  Лист '{sheet_name}': {len(files)} файлов")
 
     all_values = worksheet.get_all_values()
     if not all_values:
@@ -356,7 +336,9 @@ def process_sheet(worksheet, section_key, all_files, gc):
     required_fields = FIELDS_FOR_SECTION.get(section_key, [])
     headers = ensure_columns(worksheet, headers, required_fields)
 
-    # Индексы колонок (0-based)
+    all_values = worksheet.get_all_values()
+    headers = list(all_values[0])
+
     col_idx = {}
     for field, ru_label in RU_LABELS.items():
         if ru_label in headers:
@@ -366,11 +348,6 @@ def process_sheet(worksheet, section_key, all_files, gc):
         print(f"    На листе нет колонки 'Название', пропускаем.")
         return
 
-    # Перечитываем данные после добавления колонок
-    all_values = worksheet.get_all_values()
-    headers = list(all_values[0])
-
-    # Индекс существующих строк: normalize(title) → row_number (2-based, 1 = заголовок)
     title_to_row = {}
     for i, row in enumerate(all_values[1:], start=2):
         if col_idx['title'] < len(row):
@@ -378,35 +355,29 @@ def process_sheet(worksheet, section_key, all_files, gc):
             if n:
                 title_to_row[n] = i
 
-    # Обновления существующих строк
     updated_cells = 0
-    for f in all_files:
-        # Определяем итоговое название
-        title_for_key = os.path.splitext(f['name'])[0]
-        # Для FB2 попробуем найти по нормализованному имени файла
+    for f in files:
         norm_name = normalize(f['name'])
-
         row_num = title_to_row.get(norm_name)
         if row_num is None:
             continue
 
         row = all_values[row_num - 1] if row_num - 1 < len(all_values) else []
 
-        # Определяем, что нужно из FB2 (только для книг)
-        need_fb2 = False
-        if section_key == "books" and f['ext'] in BOOK_EXTS:
-            # Проверяем, есть ли пустые поля, которые может дать FB2
+        # Парсим FB2 только если это .fb2 и есть пустые поля
+        need_parse = False
+        if section_key == "books" and f['ext'] in PARSEABLE_EXTS:
             for field in ['author', 'description', 'cover']:
                 if field in col_idx:
                     v = row[col_idx[field]] if col_idx[field] < len(row) else ''
                     if not v or not str(v).strip():
-                        need_fb2 = True
+                        need_parse = True
                         break
 
         fb2_data = None
-        if need_fb2:
+        if need_parse:
             if not f['download_url']:
-                f['download_url'] = get_download_url(YANDEX_PUBLIC_FOLDER_URL, f['path'])
+                f['download_url'] = get_download_url(public_url, f['path'])
             if f['download_url']:
                 try:
                     r = requests.get(f['download_url'], timeout=60)
@@ -415,7 +386,7 @@ def process_sheet(worksheet, section_key, all_files, gc):
                 except Exception as e:
                     print(f"      Ошибка парсинга {f['name']}: {e}")
 
-        updates = {}  # field → value
+        updates = {}
 
         # Папка
         if 'folder' in col_idx and f['folder']:
@@ -423,17 +394,17 @@ def process_sheet(worksheet, section_key, all_files, gc):
             if not str(v).strip():
                 updates['folder'] = f['folder']
 
-        # Ссылка для скачивания
+        # Ссылка
         if 'download_link' in col_idx:
             v = row[col_idx['download_link']] if col_idx['download_link'] < len(row) else ''
             if not str(v).strip():
-                updates['download_link'] = make_permanent_link(f['path'])
+                updates['download_link'] = make_permanent_link(public_url, f['path'])
 
         # Формат (для книг)
         if 'format' in col_idx and f['ext']:
             v = row[col_idx['format']] if col_idx['format'] < len(row) else ''
             if not str(v).strip():
-                updates['format'] = f['ext']
+                updates['format'] = f['ext'].lstrip('.')
 
         # Размер (для программ)
         if 'size' in col_idx and f['size'] > 0:
@@ -441,30 +412,35 @@ def process_sheet(worksheet, section_key, all_files, gc):
             if not str(v).strip():
                 updates['size'] = str(round(f['size'] / 1024 / 1024, 1))
 
-        # Данные из FB2
-        if fb2_data:
-            if 'author' in col_idx and fb2_data.get('author'):
-                v = row[col_idx['author']] if col_idx['author'] < len(row) else ''
-                if not str(v).strip():
+        # Автор
+        if 'author' in col_idx:
+            v = row[col_idx['author']] if col_idx['author'] < len(row) else ''
+            if not str(v).strip():
+                # 1) Из метаданных FB2
+                if fb2_data and fb2_data.get('author'):
                     updates['author'] = fb2_data['author']
+                # 2) Из имени папки (для txt/doc/docx/rtf и как fallback)
+                elif f['folder']:
+                    updates['author'] = f['folder'].split(' / ')[0]
 
-            if 'description' in col_idx and fb2_data.get('description'):
-                v = row[col_idx['description']] if col_idx['description'] < len(row) else ''
-                if not str(v).strip():
-                    updates['description'] = fb2_data['description']
+        # Описание (только FB2)
+        if fb2_data and 'description' in col_idx and fb2_data.get('description'):
+            v = row[col_idx['description']] if col_idx['description'] < len(row) else ''
+            if not str(v).strip():
+                updates['description'] = fb2_data['description']
 
-            if 'cover' in col_idx and fb2_data.get('cover_data'):
-                v = row[col_idx['cover']] if col_idx['cover'] < len(row) else ''
-                if not str(v).strip():
-                    url = upload_cover_to_supabase(
-                        fb2_data['cover_data'],
-                        fb2_data.get('cover_ext', 'jpg'),
-                        fb2_data.get('title') or f['name']
-                    )
-                    if url:
-                        updates['cover'] = url
+        # Обложка (только FB2)
+        if fb2_data and 'cover' in col_idx and fb2_data.get('cover_data'):
+            v = row[col_idx['cover']] if col_idx['cover'] < len(row) else ''
+            if not str(v).strip():
+                url = upload_cover_to_supabase(
+                    fb2_data['cover_data'],
+                    fb2_data.get('cover_ext', 'jpg'),
+                    fb2_data.get('title') or f['name']
+                )
+                if url:
+                    updates['cover'] = url
 
-        # Применяем обновления
         for field, value in updates.items():
             cell = f"{col_num_to_letter(col_idx[field] + 1)}{row_num}"
             try:
@@ -479,22 +455,21 @@ def process_sheet(worksheet, section_key, all_files, gc):
     new_rows = []
     new_titles = set()
 
-    for f in all_files:
+    for f in files:
         norm_name = normalize(f['name'])
         if norm_name in title_to_row:
-            continue  # уже есть
+            continue
         if norm_name in new_titles:
-            continue  # дубликат в этом же прогоне
+            continue
         new_titles.add(norm_name)
 
-        # Собираем данные файла
         title = os.path.splitext(f['name'])[0]
         fb2_data = {}
 
-        need_fb2 = (section_key == "books" and f['ext'] in BOOK_EXTS)
-        if need_fb2:
+        need_parse = (section_key == "books" and f['ext'] in PARSEABLE_EXTS)
+        if need_parse:
             if not f['download_url']:
-                f['download_url'] = get_download_url(YANDEX_PUBLIC_FOLDER_URL, f['path'])
+                f['download_url'] = get_download_url(public_url, f['path'])
             if f['download_url']:
                 try:
                     r = requests.get(f['download_url'], timeout=60)
@@ -505,17 +480,18 @@ def process_sheet(worksheet, section_key, all_files, gc):
                 except Exception as e:
                     print(f"      Ошибка парсинга {f['name']}: {e}")
 
-        # Формируем строку с учётом порядка колонок в sheet
-        # Создаём словарь field → value
         row_values = {
             'title': title,
             'folder': f['folder'],
-            'download_link': make_permanent_link(f['path']),
+            'download_link': make_permanent_link(public_url, f['path']),
         }
         if section_key == "books":
-            row_values['format'] = f['ext']
+            row_values['format'] = f['ext'].lstrip('.') if f['ext'] else ''
+            # Автор: из FB2, иначе из папки
             if fb2_data.get('author'):
                 row_values['author'] = fb2_data['author']
+            elif f['folder']:
+                row_values['author'] = f['folder'].split(' / ')[0]
             if fb2_data.get('description'):
                 row_values['description'] = fb2_data['description']
             if fb2_data.get('cover_data'):
@@ -531,7 +507,6 @@ def process_sheet(worksheet, section_key, all_files, gc):
                 row_values['size'] = str(round(f['size'] / 1024 / 1024, 1))
             row_values['version'] = ''
 
-        # Строим массив по позициям колонок
         max_col = max(col_idx.values()) if col_idx else 0
         row_array = [''] * (max_col + 1)
         for field, value in row_values.items():
@@ -541,7 +516,6 @@ def process_sheet(worksheet, section_key, all_files, gc):
 
     if new_rows:
         try:
-            # Проверяем, что ширина одинаковая
             max_len = max(len(r) for r in new_rows)
             for r in new_rows:
                 while len(r) < max_len:
@@ -557,41 +531,40 @@ def main():
     gc = get_gspread_client()
     sh = gc.open_by_key(SPREADSHEET_ID)
 
-    print("Обход Яндекс.Диска (рекурсивно)...")
-    all_files = list_yandex_recursive(YANDEX_PUBLIC_FOLDER_URL)
-    print(f"Всего файлов на Яндекс.Диске: {len(all_files)}")
-
-    if not all_files:
-        print("Файлы не получены.")
-        return
-
-    # Группируем по разделам (первый уровень пути)
-    by_section = {}
-    for f in all_files:
-        section = f['section']
-        if not section:
+    for section_key, public_url in YANDEX_SOURCES.items():
+        section_ru = SECTION_TO_SHEET.get(section_key)
+        if not section_ru:
+            print(f"\nРаздел '{section_key}' не найден в SECTION_TO_SHEET, пропускаем.")
             continue
-        by_section.setdefault(section, []).append(f)
 
-    print(f"Разделы: {list(by_section.keys())}")
+        print(f"\n=== Раздел: {section_ru} ({section_key}) ===")
+        print(f"Источник: {public_url}")
 
-    for section_ru, files in by_section.items():
-        section_key = find_section_key(section_ru)
-        if not section_key:
-            print(f"\n  Раздел '{section_ru}' не найден в SECTION_TO_SHEET, пропускаем.")
+        files = list_yandex_recursive(public_url)
+        print(f"Найдено файлов: {len(files)}")
+
+        if not files:
             continue
+
+        for f in files:
+            f['folder'] = compute_folder(f['parts'])
+
+        from collections import Counter
+        folders_count = Counter(f['folder'] or '(без папки)' for f in files)
+        print(f"Папок: {len(folders_count)}")
+        for folder_name, cnt in sorted(folders_count.items()):
+            print(f"  • {folder_name}: {cnt} файлов")
 
         try:
             worksheet = sh.worksheet(section_ru)
         except Exception:
-            print(f"\n  Лист '{section_ru}' не найден, пропускаем.")
+            print(f"Лист '{section_ru}' не найден, пропускаем.")
             continue
 
-        print(f"\n=== Обработка: {section_ru} ({section_key}) ===")
         try:
-            process_sheet(worksheet, section_key, files, gc)
+            process_sheet(worksheet, section_key, files, public_url)
         except Exception as e:
-            print(f"  Ошибка обработки листа '{section_ru}': {e}")
+            print(f"Ошибка обработки листа '{section_ru}': {e}")
 
     print("\nГотово!")
 
