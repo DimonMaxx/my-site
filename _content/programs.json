@@ -14,25 +14,27 @@
     "folder": "Для windows свои"
   },
   {
-    "title": "Clean_MVD",
+    "title": "Clean MVD",
+    "description": "Клеанте Давидоглу — румынский государственный деятель, военачальник, дивизионный генерал. Командующий Румынской жандармерии (1927—1928).",
     "size": "0.1",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/Clean_MVD.ods",
     "folder": "Макросы"
   },
   {
-    "title": "Clean_MVD_Klinrai",
+    "title": "Clean MVD Klinrai",
     "size": "0.1",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/Clean_MVD_Klinrai.ods",
     "folder": "Макросы"
   },
   {
-    "title": "RUIPvsPRIUR_16.03.2026 версия 5",
+    "title": "RUIPvsPRIUR 16.03.2026 версия 5",
     "size": "0.4",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/RUIPvsPRIUR_16.03.2026%20%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%205.xlsm",
     "folder": "Макросы"
   },
   {
     "title": "ЕРН Макрос",
+    "description": "Роман Дмитриевич Ермак — казахстанский хоккеист, нападающий. Выступает в составе хоккейного клуба «Снежные барсы».",
     "size": "0.1",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%95%D0%A0%D0%9D%20%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81.xlsm",
     "folder": "Макросы"
@@ -74,7 +76,7 @@
     "folder": "Макросы"
   },
   {
-    "title": "Стат52УИК_Комментарии",
+    "title": "Стат52УИК Комментарии",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%A1%D1%82%D0%B0%D1%8252%D0%A3%D0%98%D0%9A_%D0%9A%D0%BE%D0%BC%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%80%D0%B8%D0%B8.xlsm",
     "folder": "Макросы"
@@ -99,30 +101,33 @@
   },
   {
     "title": "CleanMVD",
+    "description": "Клеанте Давидоглу — румынский государственный деятель, военачальник, дивизионный генерал. Командующий Румынской жандармерии (1927—1928).",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/CleanMVD.rar",
     "folder": "Скрипты"
   },
   {
-    "title": "MVD_v2",
+    "title": "Materialy Vserossiĭskogo uchebno-metodicheskogo sbora rukovodi︠a︡shchego sostava obrazovatelʹnykh uchrezhdeniĭ sistemy dopolnitelʹnogo professionalʹnogo obrazovanii︠a︡ MVD Rossii, vedushchikh uchebnykh t︠s︡entrov MVD, GUVD, UVD subʺektov Rossiĭskoĭ Federat︠s︡ii, UVDT v ramkakh poėtapnogo perekhoda na sovremennye innovat︠s︡ionnye obrazovatelʹnye tekhnologii (1-2 noi︠a︡bri︠a︡ 2005 goda)",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/MVD_v2.rar",
     "folder": "Скрипты"
   },
   {
-    "title": "SCRIPT-ZAGS",
+    "title": "ZAGS",
+    "description": "Zanabazar's square script is a horizontal Mongolian square script, an abugida developed by the monk and scholar Zanabazar based on the Tibetan alphabet to write Mongolian. It can also be used to write Tibetan language and Sanskrit as a geometric typeface.",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/SCRIPT-ZAGS.rar",
     "folder": "Скрипты"
   },
   {
-    "title": "Script_Dyblu",
+    "title": "Script Dyblu",
+    "description": "Script Debugger is a Macintosh computer source-code editor and debugger environment for the programming languages AppleScript, and others based on Apple Inc.'s Open Scripting Architecture. It is a product of Late Night Software.",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/Script_Dyblu.rar",
     "folder": "Скрипты"
   },
   {
-    "title": "WorkDIN_22.07.2026",
+    "title": "WorkDIN 22.07.2026",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/WorkDIN_22.07.2026.rar",
     "folder": "Скрипты"
@@ -161,6 +166,18 @@
     "title": "Чужой без убытия",
     "size": "0.0",
     "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%A7%D1%83%D0%B6%D0%BE%D0%B9%20%D0%B1%D0%B5%D0%B7%20%D1%83%D0%B1%D1%8B%D1%82%D0%B8%D1%8F.rar",
+    "folder": "Скрипты"
+  },
+  {
+    "title": "MVD v2",
+    "size": "0.0",
+    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/MVD_v2.rar",
+    "folder": "Скрипты"
+  },
+  {
+    "title": "ZAGS",
+    "size": "0.0",
+    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/SCRIPT-ZAGS.rar",
     "folder": "Скрипты"
   }
 ]
