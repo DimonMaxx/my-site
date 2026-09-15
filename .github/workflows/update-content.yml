@@ -39,7 +39,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Автоматическое обновление контента из Google Sheets [skip ci]"
-          file_pattern: "_content/*.json _content/**/*.md _content/_enrichment_cache.json"
+          file_pattern: "_content/*.json _content/_enrichment_cache.json"
           commit_user_name: "GitHub Actions Bot"
           commit_user_email: "actions@github.com"
           skip_dirty_check: false
