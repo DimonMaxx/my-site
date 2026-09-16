@@ -1,45 +1,73 @@
-name: Update content from Google Sheets
+name: Sync content from Yandex.Disk
 
 on:
-  schedule:
-    - cron: '0 10 * * *'
+  # Ручной запуск из вкладки Actions
   workflow_dispatch:
 
+  # Автозапуск каждый день в 03:00 UTC (06:00 по Москве)
+  schedule:
+    - cron: '0 3 * * *'
+
+# Даём права на push, чтобы workflow мог закоммитить кэш обратно
+permissions:
+  contents: write
+
 jobs:
-  update-content:
+  sync:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
+      # 1. Забираем код репозитория
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      # 2. Ставим Python 3.10
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          cache: 'pip'
 
+      # 3. Устанавливаем зависимости из requirements.txt
       - name: Install dependencies
-        run: pip install -r requirements.txt
-          pip install gspread pandas requests python-docx
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Sync from Yandex Disk
+      # 4. Синхронизация Яндекс.Диск → Google Sheets
+      - name: Run yandex_disk_sync.py
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          YADISK_TOKEN:              ${{ secrets.YADISK_TOKEN }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_BOOKS_API_KEY:      ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          SPREADSHEET_NAME:          "Content"
+          WIKI_LANG:                 "ru"
+          ENABLE_LLM_FALLBACK:       "0"
         run: python yandex_disk_sync.py
 
-      - name: Run script
+      # 5. Google Sheets → JSON-файлы
+      - name: Run generate_from_sheets.py
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SPREADSHEET_NAME:        "Content"
         run: python generate_from_sheets.py
 
+      # 6. Коммитим изменения: JSON-файлы и кэш обогащения
       - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Автоматическое обновление контента из Google Sheets [skip ci]"
-          file_pattern: "_content/*.json _content/_enrichment_cache.json"
-          commit_user_name: "GitHub Actions Bot"
-          commit_user_email: "actions@github.com"
-          skip_dirty_check: false
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Добавляем всё, что могло измениться
+          git add _content/ || true
+          git add _cache/   || true
+
+          # Если нечего коммитить — просто выходим без ошибки
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита."
+            exit 0
+          fi
+
+          git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
