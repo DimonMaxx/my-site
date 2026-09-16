@@ -2,27 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 yandex_disk_sync.py
-Синхронизация Яндекс.Диска → Google Sheets с диагностикой пропусков
-и бесплатным обогащением описаний книг.
+Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
-Источники описаний (в порядке приоритета, все бесплатные):
+Источники описаний (в порядке приоритета):
     1. Google Books API
-    2. Wikipedia API (ru.wikipedia.org)
+    2. Wikipedia API
     3. Open Library API
-    4. LLM (YandexGPT / OpenAI) — опционально, включается через env
-
-Переменные окружения:
-    GOOGLE_CREDENTIALS_JSON   — JSON сервисного аккаунта Google (обязательно)
-    YADISK_TOKEN              — OAuth-токен Яндекс.Диска (обязательно)
-    SPREADSHEET_NAME          — имя Google-таблицы (по умолчанию "Content")
-    SUPABASE_SERVICE_ROLE_KEY — ключ Supabase для загрузки обложек (опционально)
-    GOOGLE_BOOKS_API_KEY      — ключ Google Books (опционально, повышает квоту)
-    WIKI_LANG                 — язык Wikipedia (по умолчанию "ru")
-    ENABLE_LLM_FALLBACK       — "1" чтобы включить LLM-обогащение (опционально)
-    LLM_PROVIDER              — "yandexgpt" или "openai"
-    YANDEX_GPT_API_KEY        — если включён fallback через YandexGPT
-    YANDEX_FOLDER_ID          — если включён fallback через YandexGPT
-    OPENAI_API_KEY            — если включён fallback через OpenAI
+    4. LLM (YandexGPT / OpenAI) — опционально
 """
 
 import os
@@ -59,7 +45,6 @@ except ImportError:
 
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "Content")
 
-# Разделы: имя листа → публичная ссылка Яндекс.Диска
 SECTIONS = {
     "Книги":     "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
     "Программы": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
@@ -71,41 +56,44 @@ SECTIONS = {
     "Новости":   "",
 }
 
-# Колонки для каждого листа
+# Заголовки для каждого листа. Если раздела нет — он пропускается.
 SHEET_HEADERS = {
     "Книги":     ["title", "author", "format", "size",
                   "download_link", "cover", "folder", "description"],
     "Программы": ["title", "description", "version", "size",
                   "download_link", "folder"],
+    # Остальные разделы пока не синхронизируются — добавьте при необходимости.
 }
 
-# Разрешённые расширения для книг
 ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".txt", ".djvu", ".mobi", ".azw3"}
 
-# Кэш обогащения
 CACHE_DIR  = "_cache"
 CACHE_FILE = os.path.join(CACHE_DIR, "enrichment_cache.json")
 
-# Supabase (для загрузки обложек)
 SUPABASE_URL    = "https://rmoonebbvpmvthvpcmpt.supabase.co"
 SUPABASE_BUCKET = "covers"
 
-# Внешние API
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
 OPENLIBRARY_API  = "https://openlibrary.org/search.json"
 WIKI_LANG        = os.environ.get("WIKI_LANG", "ru")
 WIKI_API         = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
 
-# LLM
 YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 
-# Таймауты и паузы
 HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
 
-# User-Agent (Wikipedia требует явный)
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/your/repo)"
+
+
+# Слова-маркеры, по которым понимаем, что статья Wikipedia — про книгу
+BOOK_MARKERS = (
+    "книга", "роман", "повесть", "рассказ", "произведение",
+    "автор", "писател", "фантаст", "литератур", "трилогия",
+    "novel", "book", "story", "written by", "author",
+    "сборник", "эпопея", "цикл",
+)
 
 
 # ============================================================
@@ -113,18 +101,18 @@ USER_AGENT = "ContentSyncBot/1.0 (https://github.com/your/repo)"
 # ============================================================
 
 class Diag:
-    """Счётчики пропусков для отчёта."""
     def __init__(self):
         self.found    = 0
         self.kept     = 0
         self.enriched = 0
-        self.sources  = {}     # сколько описаний дал каждый источник
+        self.sources  = {}
         self.skipped  = {
             "empty_title": 0,
             "empty_link":  0,
             "dup_title":   0,
             "bad_ext":     0,
             "bad_name":    0,
+            "garbage":     0,
             "other":       0,
         }
         self.skip_samples = []
@@ -136,7 +124,7 @@ class Diag:
         print(f"  Оставлено к записи:  {self.kept}")
         print(f"  Обогащено описаний:  {self.enriched}")
         if self.sources:
-            print(f"  Источники описаний:")
+            print("  Источники описаний:")
             for src, cnt in sorted(self.sources.items(), key=lambda x: -x[1]):
                 print(f"    • {src}: {cnt}")
         print(f"  Пропущено всего:     {total}")
@@ -157,7 +145,7 @@ def log_skip(diag: Diag, reason: str, name: str, extra: str = ""):
 
 
 # ============================================================
-# КЭШ ОБОГАЩЕНИЯ
+# КЭШ
 # ============================================================
 
 def load_cache() -> dict:
@@ -185,6 +173,77 @@ def cache_key(title: str, author: str) -> str:
 
 
 # ============================================================
+# ВАЛИДАЦИЯ РЕЗУЛЬТАТОВ ОБОГАЩЕНИЯ
+# ============================================================
+
+_CP866_JUNK = set("╞░─┘╦╪╟Ё┌┐└┴┬├┤│╫╬═║╔╗╚╝")
+
+
+def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
+    """Проверяет, что текст похож на описание книги/произведения."""
+    text = (desc or "").lower()
+    if not text:
+        return False
+    if any(m in text for m in BOOK_MARKERS):
+        return True
+    if author:
+        surname = author.strip().split()[-1].lower()
+        if len(surname) > 3 and surname in text:
+            return True
+    if title and title.lower() in text[:400]:
+        return True
+    return False
+
+
+def _title_words_overlap(q_title: str, found_title: str) -> bool:
+    """Совпадение значимых слов в названиях ≥ 50%."""
+    q = set(re.findall(r"\w+", (q_title or "").lower()))
+    f = set(re.findall(r"\w+", (found_title or "").lower()))
+    q = {w for w in q if len(w) > 3}
+    if not q:
+        return False
+    return len(q & f) / len(q) >= 0.5
+
+
+def _author_mentioned(author: str, text: str) -> bool:
+    if not author:
+        return False
+    surname = author.strip().split()[-1].lower()
+    return len(surname) > 3 and surname in (text or "").lower()
+
+
+def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
+    """
+    Проверяет, что результат обогащения не является мусором.
+    Пустой результат — валиден (значит, ничего не нашли).
+    """
+    if not isinstance(meta, dict):
+        return False
+    desc = (meta.get("description") or "").strip()
+    if not desc:
+        return True
+
+    src = (meta.get("source") or "none").lower()
+
+    # Надёжные источники — доверяем
+    if src in ("google_books", "openai", "yandexgpt", "none"):
+        return True
+
+    # Wikipedia — проверяем, что статья про книгу
+    if src.startswith("wikipedia"):
+        return _looks_like_book_article(desc, title, author)
+
+    # Open Library — проверяем название или автора
+    if src == "openlibrary":
+        return (
+            _title_words_overlap(title, meta.get("title", ""))
+            or _author_mentioned(author, desc)
+        )
+
+    return True
+
+
+# ============================================================
 # ЯНДЕКС.ДИСК
 # ============================================================
 
@@ -199,7 +258,6 @@ def list_public_files_recursive(client, public_key: str,
                                 path: str = "/",
                                 depth: int = 0,
                                 max_depth: int = 30) -> list:
-    """Рекурсивный обход публичной папки Яндекс.Диска."""
     result = []
     if depth > max_depth:
         print(f"    [!] Достигнута максимальная глубина {max_depth} в {path}")
@@ -243,18 +301,45 @@ def make_download_link(public_key: str, full_path: str) -> str:
 
 
 # ============================================================
-# ПАРСИНГ ИМЕНИ ФАЙЛА → МЕТАДАННЫЕ
+# ПАРСИНГ ИМЕНИ ФАЙЛА
 # ============================================================
 
 SEPARATORS = [" - ", " — ", " – ", " –– "]
+
+
+def _is_garbage_stem(stem: str) -> bool:
+    """Отсев мусорных имён файлов."""
+    if not stem:
+        return True
+    s = stem.strip()
+    # fanfic_1234567
+    if re.match(r"^fanfic_\d+$", s, re.IGNORECASE):
+        return True
+    # только звёздочки/тире/подчёркивания/точки
+    if re.match(r"^[\*\-_\.\s]+$", s):
+        return True
+    # битая CP866-кодировка
+    if any(ch in s for ch in _CP866_JUNK):
+        return True
+    # слишком короткое
+    if len(s) < 2:
+        return True
+    # название из одного символа / мусорных токенов
+    if not re.search(r"[A-Za-zА-Яа-яЁё]{2,}", s):
+        return True
+    return False
+
 
 def parse_book_name(filename: str) -> dict:
     """
     Разбирает имя файла вида:
       'АРКАДИЙ СТРУГАЦКИЙ, БОРИС СТРУГАЦКИЙ - ЗА МИЛЛИАРД ЛЕТ ДО КОНЦА СВЕТА.txt'
-    Возвращает {title, author}.
+    Возвращает {title, author} или пустой dict, если имя мусорное.
     """
     stem = os.path.splitext(filename)[0].strip()
+
+    if _is_garbage_stem(stem):
+        return {"title": "", "author": ""}
 
     # Чистим мусорные суффиксы
     stem = re.sub(r"\s*\(\d+\)\s*$", "", stem)
@@ -287,7 +372,7 @@ def parse_book_name(filename: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 1: GOOGLE BOOKS (бесплатно)
+# ИСТОЧНИК 1: GOOGLE BOOKS
 # ============================================================
 
 def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
@@ -328,6 +413,7 @@ def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
             "description": desc,
             "cover":       (info.get("imageLinks") or {}).get("thumbnail", ""),
             "source":      "google_books",
+            "title":       info.get("title", ""),
         }
     return {}
 
@@ -341,7 +427,7 @@ def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 2: WIKIPEDIA (бесплатно, без ключа)
+# ИСТОЧНИК 2: WIKIPEDIA
 # ============================================================
 
 def _wiki_request(params: dict) -> dict:
@@ -361,15 +447,12 @@ def _wiki_request(params: dict) -> dict:
 
 
 def _wiki_search_page(query: str) -> tuple:
-    """
-    Ищет страницу по запросу. Возвращает (pageid, title) или (None, None).
-    """
     data = _wiki_request({
-        "action":   "query",
-        "format":   "json",
-        "list":     "search",
-        "srsearch": query,
-        "srlimit":  1,
+        "action":      "query",
+        "format":      "json",
+        "list":        "search",
+        "srsearch":    query,
+        "srlimit":     1,
         "srnamespace": 0,
     })
     hits = (data.get("query") or {}).get("search") or []
@@ -379,7 +462,6 @@ def _wiki_search_page(query: str) -> tuple:
 
 
 def _wiki_get_extract(pageid: int) -> str:
-    """Возвращает первые абзацы страницы."""
     data = _wiki_request({
         "action":      "query",
         "format":      "json",
@@ -398,7 +480,6 @@ def _wiki_get_extract(pageid: int) -> str:
 
 
 def _wiki_first_paragraphs(text: str, max_chars: int = 800) -> str:
-    """Берёт первые 2–3 абзаца и режет по длине."""
     if not text:
         return ""
     paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
@@ -415,20 +496,25 @@ def _wiki_first_paragraphs(text: str, max_chars: int = 800) -> str:
 
 def wikipedia_lookup(title: str, author: str) -> dict:
     """
-    Ищет страницу Wikipedia по названию книги.
-    Пробует несколько вариантов запроса.
+    Ищет статью Wikipedia про книгу.
+    Строгая проверка: результат принимается, только если он похож
+    на описание книги/произведения, а не на что-то постороннее.
     """
     if not title:
         return {}
 
-    queries = [
-        f"{title} {author}".strip() if author else title,
-        f"{title} (книга)",
+    queries = []
+    if author:
+        queries.append(f"{title} {author} роман")
+    queries += [
         f"{title} (роман)",
+        f"{title} (книга)",
         f"{title} (повесть)",
         f"{title} (рассказ)",
-        title,
+        f"{title} (литературное произведение)",
     ]
+    if author:
+        queries.append(f"{title} {author}")
 
     seen_pages = set()
     for q in queries:
@@ -440,15 +526,13 @@ def wikipedia_lookup(title: str, author: str) -> dict:
             continue
         seen_pages.add(pageid)
 
-        # Проверяем, что найденная страница — про произведение,
-        # а не про что-то постороннее
         extract = _wiki_get_extract(pageid)
-        if not extract:
+        if not extract or len(extract) < 150:
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
 
-        # Отсеиваем страницы-неоднозначности и слишком короткие
-        if len(extract) < 150:
+        # Ключевая проверка: похоже ли на книгу
+        if not _looks_like_book_article(extract, title, author):
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
 
@@ -458,6 +542,7 @@ def wikipedia_lookup(title: str, author: str) -> dict:
                 "description": description,
                 "cover":       "",
                 "source":      "wikipedia",
+                "title":       page_title or "",
             }
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
@@ -465,11 +550,11 @@ def wikipedia_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 3: OPEN LIBRARY (бесплатно, без ключа)
+# ИСТОЧНИК 3: OPEN LIBRARY
 # ============================================================
 
 def openlibrary_lookup(title: str, author: str) -> dict:
-    params = {"title": title, "limit": 3}
+    params = {"title": title, "limit": 5}
     if author:
         params["author"] = author
 
@@ -486,6 +571,17 @@ def openlibrary_lookup(title: str, author: str) -> dict:
 
     docs = data.get("docs") or []
     for d in docs:
+        found_title = d.get("title", "") or ""
+        # проверяем совпадение названия, иначе пропускаем
+        if not _title_words_overlap(title, found_title):
+            # или хотя бы автор совпадает
+            authors_list = d.get("author_name") or []
+            if not any(
+                _author_mentioned(author, " ".join(authors_list))
+                for _ in [0]
+            ):
+                continue
+
         desc = ""
         fs = d.get("first_sentence")
         if isinstance(fs, list) and fs:
@@ -494,20 +590,23 @@ def openlibrary_lookup(title: str, author: str) -> dict:
             desc = fs
         if not desc and d.get("subtitle"):
             desc = d["subtitle"]
-        if desc:
-            cover_id = d.get("cover_i") or 0
-            cover = (f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
-                     if cover_id else "")
-            return {
-                "description": desc.strip(),
-                "cover":       cover,
-                "source":      "openlibrary",
-            }
+        if not desc:
+            continue
+
+        cover_id = d.get("cover_i") or 0
+        cover = (f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
+                 if cover_id else "")
+        return {
+            "description": desc.strip(),
+            "cover":       cover,
+            "source":      "openlibrary",
+            "title":       found_title,
+        }
     return {}
 
 
 # ============================================================
-# ИСТОЧНИК 4: LLM (опционально, платно)
+# ИСТОЧНИК 4: LLM
 # ============================================================
 
 def llm_lookup(title: str, author: str) -> dict:
@@ -553,7 +652,6 @@ def llm_lookup(title: str, author: str) -> dict:
             print(f"    [!] OpenAI ошибка: {e}")
             return {}
 
-    # yandexgpt по умолчанию
     api_key   = os.environ.get("YANDEX_GPT_API_KEY")
     folder_id = os.environ.get("YANDEX_FOLDER_ID")
     if not api_key or not folder_id:
@@ -586,60 +684,64 @@ def llm_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ОБОГАЩЕНИЕ: ОРКЕСТРАТОР
+# ОБОГАЩЕНИЕ
 # ============================================================
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     """
-    Порядок источников:
-      1. Google Books    (бесплатно)
-      2. Wikipedia       (бесплатно)
-      3. Open Library    (бесплатно)
-      4. LLM             (опционально)
-    Результат кэшируется.
+    Порядок: Google Books → Wikipedia → Open Library → LLM.
+    Результат валидируется и кэшируется.
     """
     ck = cache_key(title, author)
-    if ck in cache:
-        return cache[ck]
+
+    # 1. Кэш — используем только если результат валиден
+    cached = cache.get(ck)
+    if cached is not None and _result_is_acceptable(cached, title, author):
+        src = cached.get("source", "none")
+        diag.sources[src] = diag.sources.get(src, 0) + 1
+        return cached
 
     gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
     meta = {}
 
-    # 1. Google Books
+    # Google Books
     try:
         meta = google_books_lookup(title, author, gb_key)
     except Exception as e:
         print(f"    [!] Google Books fallback: {e}")
     time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 2. Wikipedia
-    if not meta.get("description"):
+    # Wikipedia
+    if not _result_is_acceptable(meta, title, author):
         try:
             meta = wikipedia_lookup(title, author)
         except Exception as e:
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 3. Open Library
-    if not meta.get("description"):
+    # Open Library
+    if not _result_is_acceptable(meta, title, author):
         try:
             meta = openlibrary_lookup(title, author)
         except Exception as e:
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 4. LLM
-    if not meta.get("description"):
+    # LLM
+    if not _result_is_acceptable(meta, title, author):
         try:
             meta = llm_lookup(title, author)
         except Exception as e:
             print(f"    [!] LLM fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # Финальная проверка
+    if meta and not _result_is_acceptable(meta, title, author):
+        meta = {}
+
     if not meta:
         meta = {"description": "", "cover": "", "source": "none"}
 
-    # Учёт источника
     src = meta.get("source", "none")
     diag.sources[src] = diag.sources.get(src, 0) + 1
 
@@ -669,7 +771,6 @@ def upload_cover_to_supabase(cover_url: str, supabase) -> str:
                 name, data, {"content-type": f"image/{ext}"}
             )
         except Exception:
-            # Возможно, уже загружено — это нормально
             pass
         public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(name)
         return public_url
@@ -752,11 +853,16 @@ def append_rows_safe(sheet, rows: list, batch_size: int = 200):
 
 
 # ============================================================
-# СБОРКА СТРОК ДЛЯ ЛИСТА
+# СБОРКА СТРОК
 # ============================================================
 
 def build_rows_for_section(section: str, files: list, public_key: str,
                            cache: dict, supabase, diag: Diag) -> list:
+    headers = SHEET_HEADERS.get(section)
+    if headers is None:
+        print(f"  [!] Нет заголовков для раздела '{section}', пропускаю.")
+        return []
+
     rows = []
     seen = set()
 
@@ -775,7 +881,7 @@ def build_rows_for_section(section: str, files: list, public_key: str,
         author = meta["author"]
 
         if not title:
-            log_skip(diag, "empty_title", name)
+            log_skip(diag, "garbage", name)
             continue
 
         # 3. Ссылка
@@ -798,7 +904,7 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             if enriched.get("description"):
                 diag.enriched += 1
 
-        # 6. Обложка через Supabase
+        # 6. Обложка
         cover = enriched.get("cover", "")
         if cover and supabase:
             cover = upload_cover_to_supabase(cover, supabase) or cover
@@ -820,14 +926,13 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             "description":   enriched.get("description", ""),
             "version":       "",
         }
-        headers = SHEET_HEADERS.get(section, SHEET_HEADERS["Книги"])
         rows.append([record.get(h, "") for h in headers])
 
     return rows
 
 
 # ============================================================
-# СИНХРОНИЗАЦИЯ ОДНОГО РАЗДЕЛА
+# СИНХРОНИЗАЦИЯ РАЗДЕЛА
 # ============================================================
 
 def sync_section(section: str, public_url: str, gs_client,
@@ -836,6 +941,10 @@ def sync_section(section: str, public_url: str, gs_client,
     if not public_url:
         print("  Пустая ссылка, пропускаю.")
         return
+    if section not in SHEET_HEADERS:
+        print(f"  Раздел '{section}' не настроен, пропускаю.")
+        return
+
     print(f"Источник: {public_url}")
 
     if yadisk is None:
@@ -877,7 +986,7 @@ def sync_section(section: str, public_url: str, gs_client,
         print(f"  [!] Не удалось открыть таблицу '{SPREADSHEET_NAME}': {e}")
         return
 
-    headers = SHEET_HEADERS.get(section, SHEET_HEADERS["Книги"])
+    headers = SHEET_HEADERS[section]
     sheet = get_or_create_sheet(sh, section, headers)
 
     existing = load_existing_keys(sheet)
