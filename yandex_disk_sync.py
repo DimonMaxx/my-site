@@ -1,11 +1,15 @@
 # yandex_disk_sync.py
-# Синхронизация Google Sheets с Яндекс.Диском + обогащение данных из интернета.
+# Синхронизация Google Sheets с Яндекс.Диском.
 #
-# Источники обогащения (по порядку):
-#   1. Google Books API — основной (название, автор, описание, обложка)
-#   2. OpenLibrary API — fallback
-#   3. Wikipedia API (ru + en) — описание и правильное написание
-#   4. DuckDuckGo Instant Answer — правильное написание названия
+# Логика:
+#   Книги:
+#     - Создаёт новые строки для новых файлов.
+#     - Обогащает из FB2/TXT/DOCX + Google Books / OpenLibrary / Wikipedia / DuckDuckGo.
+#     - Защита от дубликатов через existing_keys.
+#   Программы:
+#     - Создаёт новые строки для новых файлов (Название = имя файла).
+#     - НЕ ищет в интернете, НЕ парсит содержимое.
+#     - Заполняет только Папку, Размер, Формат, Ссылку.
 #
 # Кэш: _content/_enrichment_cache.json
 
@@ -19,7 +23,7 @@ import hashlib
 import requests
 import xml.etree.ElementTree as ET
 from io import BytesIO
-from urllib.parse import quote, urljoin
+from urllib.parse import quote
 
 from common import (
     SPREADSHEET_ID,
@@ -89,13 +93,12 @@ _ua_index = 0
 
 
 def get_headers():
-    """Возвращает заголовки со случайным User-Agent."""
     global _ua_index
     _ua_index = (_ua_index + 1) % len(USER_AGENTS)
     return {"User-Agent": USER_AGENTS[_ua_index]}
 
 
-# ========== Кэш обогащения ==========
+# ========== Кэш ==========
 CACHE_FILE = "_content/_enrichment_cache.json"
 MAX_WEB_REQUESTS = 1500
 WEB_SEARCH_DELAY = 0.25
@@ -150,19 +153,15 @@ def decode_bytes(content_bytes):
 
 
 def is_title_clean(title):
-    """Проверяет, выглядит ли название уже «красивым» (без подчёркиваний, с заглавной)."""
+    """Название «красивое» — без подчёркиваний, не имя файла, без маркеров серии."""
     if not title or len(title) < 2:
         return False
-    # Не должно быть подчёркиваний
     if '_' in title:
         return False
-    # Не должно быть точек-разделителей в начале
     if title.count('.') > 3:
         return False
-    # Не должно быть типичных маркеров серии
     if re.search(r'\b(том|книга|часть|выпуск|серия)\s*\d+', title, re.IGNORECASE):
         return False
-    # Не должно быть расширений
     if re.search(r'\.(fb2|txt|docx?|rtf|pdf|epub|djvu|mobi)$', title, re.IGNORECASE):
         return False
     return True
@@ -170,39 +169,25 @@ def is_title_clean(title):
 
 # ========== Извлечение из имени файла ==========
 def extract_from_filename(filename):
-    """
-    Извлекает автора и название из имени файла.
-    Возвращает: {'author': str, 'title': str}
-    """
     base = os.path.splitext(filename)[0].strip()
-
-    # Убираем маркеры в конце
     base = re.sub(r'\s*_OCR\s*$', '', base, flags=re.IGNORECASE)
     base = re.sub(r'\s*\(Si\)\s*$', '', base)
     base = re.sub(r'\s*\[СИ\]\s*$', '', base)
     base = re.sub(r'\s*\[СИ\]\.?\s*$', '', base)
-
-    # Заменяем подчёркивания на пробелы
     base = base.replace('_', ' ')
-
-    # Схлопываем пробелы
     base = re.sub(r'\s+', ' ', base).strip()
 
     author = ''
     title = base
 
-    # Паттерн 1: "Автор - Название" / "Автор — Название"
     m = re.match(r'^([^\-—–]{2,60})\s*[-—–]\s*(.+)$', base)
     if m:
         author = m.group(1).strip()
         title = m.group(2).strip()
-        # Убираем "Серия - " из начала названия
         title = re.sub(r'^Серия\s*[-—–]\s*', '', title).strip()
-        # Убираем "(серия N)" в конце
         title = re.sub(r'\s*\(серия\s*\d+\)\s*$', '', title, flags=re.IGNORECASE).strip()
         return {'author': author, 'title': title}
 
-    # Паттерн 2: "Название (Автор)"
     m = re.match(r'^(.+?)\s*\(([^)]+)\)\s*$', base)
     if m:
         possible_author = m.group(2).strip()
@@ -210,23 +195,19 @@ def extract_from_filename(filename):
             if not re.match(r'^(том|книга|серия|выпуск|часть|\d)', possible_author, re.IGNORECASE):
                 return {'author': possible_author, 'title': m.group(1).strip()}
 
-    # Паттерн 3: "Автор. Название"
     m = re.match(r'^([А-ЯЁA-Z][^.]{3,40})\.\s+(.+)$', base)
     if m:
         return {'author': m.group(1).strip(), 'title': m.group(2).strip()}
 
-    # Паттерн 4: "Название. Автор"
     m = re.match(r'^(.+?)\s*\.\s*([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)\s*$', base)
     if m:
         return {'author': m.group(2).strip(), 'title': m.group(1).strip()}
 
-    # Убираем номера томов в конце
     title = re.sub(r'\s+(том|книга|часть|выпуск)\s*\d+\s*$', '', title, flags=re.IGNORECASE).strip()
-
     return {'author': author, 'title': title}
 
 
-# ========== Извлечение из TXT ==========
+# ========== TXT ==========
 def extract_from_txt(content_bytes):
     result = {'author': '', 'title': '', 'description': ''}
     head = content_bytes[:8192]
@@ -259,7 +240,7 @@ def extract_from_txt(content_bytes):
     return result
 
 
-# ========== Извлечение из DOCX ==========
+# ========== DOCX ==========
 def extract_from_docx(content_bytes):
     result = {'author': '', 'title': '', 'description': ''}
     if not HAS_DOCX:
@@ -429,9 +410,8 @@ def parse_fb2(content_bytes):
     return result
 
 
-# ========== Поиск в интернете ==========
+# ========== Поиск ==========
 def _clean_search_title(title):
-    """Готовит название для поиска."""
     t = title
     t = re.sub(r'\s*\([^)]*\)\s*$', '', t)
     t = re.sub(r'\s*\[[^\]]*\]\s*$', '', t)
@@ -441,7 +421,6 @@ def _clean_search_title(title):
 
 
 def search_google_books(title, author=None):
-    """Google Books API — основной источник."""
     global _web_requests_made
     if _web_requests_made >= MAX_WEB_REQUESTS:
         return None
@@ -492,7 +471,6 @@ def search_google_books(title, author=None):
 
 
 def search_openlibrary(title, author=None):
-    """OpenLibrary API — fallback."""
     global _web_requests_made
     if _web_requests_made >= MAX_WEB_REQUESTS:
         return None
@@ -543,24 +521,18 @@ def search_openlibrary(title, author=None):
 
 
 def search_wikipedia(title, author=None):
-    """Wikipedia API (ru + en) — описания и правильное написание."""
     global _web_requests_made
     if _web_requests_made >= MAX_WEB_REQUESTS:
         return None
 
     clean_title = _clean_search_title(title)
-
-    # Сначала ищем страницу
     results = []
     for lang in ('ru', 'en'):
         if _web_requests_made >= MAX_WEB_REQUESTS:
             break
-
-        # Поиск
         search_q = clean_title
         if author:
             search_q += f' {author}'
-
         try:
             sr = requests.get(
                 f"https://{lang}.wikipedia.org/w/api.php",
@@ -576,18 +548,15 @@ def search_wikipedia(title, author=None):
             _web_requests_made += 1
             if sr.status_code == 200:
                 sr_data = sr.json()
-                # opensearch: [query, [titles], [descriptions], [urls]]
                 if len(sr_data) >= 2:
                     for page_title in sr_data[1][:2]:
                         results.append((lang, page_title))
         except Exception as e:
             print(f"      Wikipedia ({lang}) ошибка поиска: {e}")
 
-    # Для каждой найденной страницы получаем summary
     for lang, page_title in results:
         if _web_requests_made >= MAX_WEB_REQUESTS:
             break
-
         try:
             summ_url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{quote(page_title)}"
             r = requests.get(summ_url, headers=get_headers(), timeout=WEB_REQUEST_TIMEOUT)
@@ -595,24 +564,16 @@ def search_wikipedia(title, author=None):
             if r.status_code != 200:
                 continue
             d = r.json()
-
             extract = d.get('extract', '')
             if not extract or len(extract) < 50:
                 continue
-
-            # В Wikipedia заголовок страницы обычно = название книги
-            # Но часто с уточнением в скобках, обрезаем
             page_title_clean = re.sub(r'\s*\([^)]*\)\s*$', '', d.get('title', page_title))
-
-            # Автор может быть в description
-            desc = d.get('description', '')  # короткое описание
+            desc = d.get('description', '')
             author_found = ''
             if desc:
-                # "роман Ивана Иванова" → попробуем извлечь
                 m = re.search(r'(?:роман|повесть|книга|произведение)\s+([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)+)', desc)
                 if m:
                     author_found = m.group(1).strip()
-
             return {
                 'title': page_title_clean,
                 'subtitle': '',
@@ -628,7 +589,6 @@ def search_wikipedia(title, author=None):
 
 
 def search_duckduckgo(title, author=None):
-    """DuckDuckGo Instant Answer API — правильное написание."""
     global _web_requests_made
     if _web_requests_made >= MAX_WEB_REQUESTS:
         return None
@@ -660,15 +620,11 @@ def search_duckduckgo(title, author=None):
         return None
 
     d = r.json()
-
-    # AbstractText — короткое описание из Wikipedia
     abstract = d.get('AbstractText', '')
     if not abstract or len(abstract) < 50:
         return None
 
-    # Heading — обычно правильное название
     heading = d.get('Heading', '')
-
     return {
         'title': heading or clean_title,
         'subtitle': '',
@@ -680,10 +636,6 @@ def search_duckduckgo(title, author=None):
 
 
 def enrich_from_web(title, author, cache):
-    """
-    Каскадный поиск: Google Books → OpenLibrary → Wikipedia → DuckDuckGo.
-    Возвращает {'title', 'author', 'description', 'cover_url', 'source'} или {}
-    """
     key = cache_key(title, author)
     if key in cache:
         return cache[key]
@@ -694,15 +646,12 @@ def enrich_from_web(title, author, cache):
 
     result = {}
 
-    # 1. Google Books
     result = search_google_books(title, author) or {}
     if not result or not result.get('title'):
-        # 2. OpenLibrary
         r2 = search_openlibrary(title, author) or {}
         if r2.get('title'):
             result = r2
 
-    # 3. Wikipedia (дополняет, если нет описания или автора)
     need_more = (
         not result
         or not result.get('author')
@@ -715,7 +664,6 @@ def enrich_from_web(title, author, cache):
             if not result:
                 result = wiki
             else:
-                # Дополняем
                 if not result.get('author') and wiki.get('author'):
                     result['author'] = wiki['author']
                 if not result.get('description') and wiki.get('description'):
@@ -725,7 +673,6 @@ def enrich_from_web(title, author, cache):
                 if not result.get('title') and wiki.get('title'):
                     result['title'] = wiki['title']
 
-    # 4. DuckDuckGo (последний шанс)
     if not result or not result.get('description'):
         ddg = search_duckduckgo(title, author) or {}
         if ddg:
@@ -859,14 +806,33 @@ def make_permanent_link(public_url, path):
     return f"{public_url}?path={quote(path)}"
 
 
-# ========== Основная обработка ==========
-def extract_all_from_file(f, public_url, cache):
+# ========== Ключи файла ==========
+def get_all_file_keys(f):
     """
-    Извлекает максимум информации о файле:
-    1) Из имени файла
-    2) Из содержимого (.fb2/.txt/.docx)
-    3) Из интернета (Google Books / OpenLibrary / Wikipedia / DuckDuckGo)
+    Возвращает множество нормализованных ключей для файла:
+    - имя файла без расширения
+    - название, извлечённое из имени
+    - вариант с автором из имени
     """
+    keys = set()
+
+    base = os.path.splitext(f['name'])[0]
+    keys.add(normalize(base))
+
+    parsed = extract_from_filename(f['name'])
+    if parsed.get('title'):
+        keys.add(normalize(parsed['title']))
+
+    # Вариант "Автор Название" (слитно) — для случаев, когда в таблице стоит полное имя файла
+    if parsed.get('author') and parsed.get('title'):
+        keys.add(normalize(f"{parsed['author']} {parsed['title']}"))
+
+    return keys
+
+
+# ========== Обогащение книги ==========
+def enrich_book_file(f, public_url, cache):
+    """Полное обогащение для книги: имя файла + содержимое + интернет."""
     result = {
         'title': '',
         'author': '',
@@ -948,7 +914,6 @@ def extract_all_from_file(f, public_url, cache):
 
         web_data = enrich_from_web(result['title'], search_author, cache)
         if web_data:
-            # Правильное название
             web_title = web_data.get('title', '')
             if web_title:
                 if not result['title'] or not is_title_clean(result['title']):
@@ -956,33 +921,47 @@ def extract_all_from_file(f, public_url, cache):
                 elif len(web_title) > len(result['title']) and not is_title_clean(result['title']):
                     result['title'] = web_title
 
-            # Правильный автор
             web_author = web_data.get('author', '')
             if web_author and (not result['author'] or author_is_folder):
                 result['author'] = web_author
             elif web_author and not author_is_folder and len(web_author) > len(result['author']):
                 result['author'] = web_author
 
-            # Описание
             if web_data.get('description') and not result['description']:
                 result['description'] = web_data['description']
 
-            # Обложка
             if not result['cover_url'] and web_data.get('cover_url'):
                 url = download_and_upload_cover(web_data['cover_url'], result['title'])
                 if url:
                     result['cover_url'] = url
 
-    # Финальная очистка названия
+    # Финальная очистка
     if result['title']:
-        # Убираем лишние пробелы
         result['title'] = re.sub(r'\s+', ' ', result['title']).strip()
-        # Убираем точку в конце
         result['title'] = result['title'].rstrip('.')
 
     return result
 
 
+def enrich_program_file(f):
+    """
+    Для программ — только имя файла + формат + размер.
+    Никакого парсинга содержимого и поиска в интернете.
+    """
+    title = os.path.splitext(f['name'])[0]
+    title = title.replace('_', ' ').strip()
+    title = re.sub(r'\s+', ' ', title).strip()
+
+    return {
+        'title': title,
+        'author': '',
+        'description': '',
+        'cover_url': '',
+        'format': f['ext'].lstrip('.') if f['ext'] else '',
+    }
+
+
+# ========== Работа с листом ==========
 def ensure_columns(worksheet, headers, required_fields):
     headers = list(headers)
     for field in required_fields:
@@ -994,6 +973,40 @@ def ensure_columns(worksheet, headers, required_fields):
             headers.append(ru)
             print(f"    + создана колонка '{ru}' (позиция {col_letter})")
     return headers
+
+
+def build_indexes(all_values, col_idx):
+    """
+    Строит:
+    - existing_keys: множество всех нормализованных ключей (названия из таблицы)
+    - title_to_row: ключ → номер строки
+    """
+    existing_keys = set()
+    title_to_row = {}
+
+    for i, row in enumerate(all_values[1:], start=2):
+        if col_idx['title'] < len(row):
+            n = normalize(row[col_idx['title']])
+            if n:
+                existing_keys.add(n)
+                if n not in title_to_row:
+                    title_to_row[n] = i
+    return existing_keys, title_to_row
+
+
+def update_row(worksheet, row_num, col_idx, updates):
+    """Применяет обновления к строке. Возвращает число обновлённых ячеек."""
+    count = 0
+    for field, value in updates.items():
+        if field not in col_idx:
+            continue
+        cell = f"{col_num_to_letter(col_idx[field] + 1)}{row_num}"
+        try:
+            worksheet.update(values=[[value]], range_name=cell, value_input_option='RAW')
+            count += 1
+        except Exception as e:
+            print(f"      Ошибка обновления {cell}: {e}")
+    return count
 
 
 def process_sheet(worksheet, section_key, files, public_url, cache):
@@ -1021,24 +1034,23 @@ def process_sheet(worksheet, section_key, files, public_url, cache):
         print(f"    На листе нет колонки 'Название', пропускаем.")
         return
 
-    title_to_row = {}
-    for i, row in enumerate(all_values[1:], start=2):
-        if col_idx['title'] < len(row):
-            n = normalize(row[col_idx['title']])
-            if n:
-                title_to_row[n] = i
+    # Индексы
+    existing_keys, title_to_row = build_indexes(all_values, col_idx)
+
+    # Дополнительно добавляем в existing_keys все "варианты" из имён файлов,
+    # которые уже есть в таблице — по названию из строки
+    # (на случай, если название в таблице = «красивое», а имя файла — «грязное»)
 
     updated_cells = 0
 
+    # ---------- Проход 1: обновляем существующие строки ----------
     for f in files:
-        base_title = os.path.splitext(f['name'])[0]
-        norm_name = normalize(base_title)
-        row_num = title_to_row.get(norm_name)
-
-        if row_num is None:
-            from_name = extract_from_filename(f['name'])
-            if from_name.get('title'):
-                row_num = title_to_row.get(normalize(from_name['title']))
+        # Ищем строку по любому из ключей файла
+        row_num = None
+        for k in get_all_file_keys(f):
+            if k in title_to_row:
+                row_num = title_to_row[k]
+                break
 
         if row_num is None:
             continue
@@ -1056,20 +1068,34 @@ def process_sheet(worksheet, section_key, files, public_url, cache):
 
         title_is_clean = is_title_clean(current_title)
 
-        need_enrich = (
-            not str(current_author).strip()
-            or not str(current_desc).strip()
-            or not str(current_cover).strip()
-            or author_is_folder
-            or not title_is_clean
-        )
+        # Для программ — обогащаем только ссылку/папку/размер/формат
+        if section_key == 'programs':
+            data = enrich_program_file(f)
+            need_enrich = (
+                not str(row[col_idx.get('folder', 0)] if 'folder' in col_idx and col_idx['folder'] < len(row) else '').strip()
+                or not str(row[col_idx.get('size', 0)] if 'size' in col_idx and col_idx['size'] < len(row) else '').strip()
+                or not str(row[col_idx.get('download_link', 0)] if 'download_link' in col_idx and col_idx['download_link'] < len(row) else '').strip()
+            )
+        else:
+            # Книги и другие разделы
+            data = None  # посчитаем позже, если понадобится
+            need_enrich = (
+                not str(current_author).strip()
+                or not str(current_desc).strip()
+                or not str(current_cover).strip()
+                or author_is_folder
+                or not title_is_clean
+            )
 
         if not need_enrich:
             continue
 
-        data = extract_all_from_file(f, public_url, cache)
+        # Для книг — полное обогащение
+        if section_key != 'programs':
+            data = enrich_book_file(f, public_url, cache)
 
         updates = {}
+
         if 'folder' in col_idx and f['folder']:
             v = row[col_idx['folder']] if col_idx['folder'] < len(row) else ''
             if not str(v).strip():
@@ -1090,60 +1116,67 @@ def process_sheet(worksheet, section_key, files, public_url, cache):
             if not str(v).strip():
                 updates['size'] = str(round(f['size'] / 1024 / 1024, 1))
 
-        # Автор
-        if 'author' in col_idx and data['author']:
-            if not str(current_author).strip() or author_is_folder:
-                updates['author'] = data['author']
+        if section_key != 'programs':
+            # Автор
+            if 'author' in col_idx and data['author']:
+                if not str(current_author).strip() or author_is_folder:
+                    updates['author'] = data['author']
 
-        # Название (если было "грязное" или короче правильного)
-        if 'title' in col_idx and data['title']:
-            if not title_is_clean:
-                if normalize(data['title']) != normalize(current_title):
-                    updates['title'] = data['title']
-            elif len(data['title']) > len(current_title) + 5:
-                # более длинное "официальное" название
-                if normalize(data['title']) != normalize(current_title):
-                    updates['title'] = data['title']
+            # Название
+            if 'title' in col_idx and data['title']:
+                if not title_is_clean:
+                    if normalize(data['title']) != normalize(current_title):
+                        updates['title'] = data['title']
+                elif len(data['title']) > len(current_title) + 5:
+                    if normalize(data['title']) != normalize(current_title):
+                        updates['title'] = data['title']
 
-        # Описание
-        if 'description' in col_idx and data['description'] and not str(current_desc).strip():
-            updates['description'] = data['description']
+            # Описание
+            if 'description' in col_idx and data['description'] and not str(current_desc).strip():
+                updates['description'] = data['description']
 
-        # Обложка
-        if 'cover' in col_idx and data['cover_url'] and not str(current_cover).strip():
-            updates['cover'] = data['cover_url']
+            # Обложка
+            if 'cover' in col_idx and data['cover_url'] and not str(current_cover).strip():
+                updates['cover'] = data['cover_url']
 
-        for field, value in updates.items():
-            cell = f"{col_num_to_letter(col_idx[field] + 1)}{row_num}"
-            try:
-                worksheet.update(values=[[value]], range_name=cell, value_input_option='RAW')
-                updated_cells += 1
-            except Exception as e:
-                print(f"      Ошибка обновления {cell}: {e}")
+        # Применяем
+        updated_cells += update_row(worksheet, row_num, col_idx, updates)
+
+        # Если название обновилось — добавим новый ключ в existing_keys и title_to_row
+        if 'title' in updates:
+            new_norm = normalize(updates['title'])
+            existing_keys.add(new_norm)
+            if new_norm not in title_to_row:
+                title_to_row[new_norm] = row_num
+            # Также добавим все варианты старого названия
+            existing_keys.add(normalize(current_title))
 
     print(f"    Обновлено ячеек у существующих строк: {updated_cells}")
 
-    # Новые строки
+    # ---------- Проход 2: новые строки ----------
     new_rows = []
-    new_titles = set()
+    new_keys_local = set()
 
     for f in files:
-        base_title = os.path.splitext(f['name'])[0]
-        norm_name = normalize(base_title)
-        if norm_name in title_to_row:
+        file_keys = get_all_file_keys(f)
+        # Если хотя бы один ключ файла уже известен — пропускаем
+        if any(k in existing_keys for k in file_keys):
             continue
-        if norm_name in new_titles:
+        if any(k in new_keys_local for k in file_keys):
             continue
-        new_titles.add(norm_name)
+        new_keys_local.update(file_keys)
 
-        data = extract_all_from_file(f, public_url, cache)
+        if section_key == 'programs':
+            data = enrich_program_file(f)
+        else:
+            data = enrich_book_file(f, public_url, cache)
 
         row_values = {
-            'title': data['title'] or base_title,
+            'title': data['title'] or os.path.splitext(f['name'])[0],
             'folder': f['folder'],
             'download_link': make_permanent_link(public_url, f['path']),
         }
-        if section_key == "books":
+        if section_key == 'books':
             row_values['format'] = data['format']
             if data['author']:
                 row_values['author'] = data['author']
@@ -1153,10 +1186,9 @@ def process_sheet(worksheet, section_key, files, public_url, cache):
                 row_values['description'] = data['description']
             if data['cover_url']:
                 row_values['cover'] = data['cover_url']
-        elif section_key == "programs":
+        elif section_key == 'programs':
             if f['size'] > 0:
                 row_values['size'] = str(round(f['size'] / 1024 / 1024, 1))
-            row_values['version'] = ''
 
         max_col = max(col_idx.values()) if col_idx else 0
         row_array = [''] * (max_col + 1)
@@ -1177,6 +1209,7 @@ def process_sheet(worksheet, section_key, files, public_url, cache):
             print(f"    Ошибка добавления строк: {e}")
 
 
+# ========== Main ==========
 def main():
     global _web_requests_made
 
