@@ -14,7 +14,7 @@ from google.oauth2.service_account import Credentials
 # ID Google-таблицы (из URL: /spreadsheets/d/<ID>/edit)
 SPREADSHEET_ID = os.environ.get(
     "SPREADSHEET_ID",
-    "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890",   # ← замените на ваш реальный ID
+    "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← замените на ваш реальный ID
 )
 
 # Путь к JSON сервисного аккаунта (fallback, если нет env)
