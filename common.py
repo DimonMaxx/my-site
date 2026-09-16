@@ -2,6 +2,7 @@
 # Общие константы и функции для всех скриптов проекта.
 
 import os
+import re
 import json
 import gspread
 from google.oauth2.service_account import Credentials
@@ -11,16 +12,15 @@ from google.oauth2.service_account import Credentials
 # КОНСТАНТЫ
 # ============================================================
 
-# ID Google-таблицы (из URL: /spreadsheets/d/<ID>/edit)
 SPREADSHEET_ID = os.environ.get(
     "SPREADSHEET_ID",
-    "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← замените на ваш реальный ID
+    "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← при необходимости замените
 )
 
-# Путь к JSON сервисного аккаунта (fallback, если нет env)
 CREDENTIALS_FILE = os.environ.get("GOOGLE_CREDENTIALS_FILE", "credentials.json")
 
-# Конфиг листов: имя листа → путь к JSON-файлу и правило
+
+# Конфиг листов: имя листа → путь к JSON-файлу
 SHEET_CONFIG = {
     "Книги":     {"json": "_content/books.json"},
     "Программы": {"json": "_content/programs.json"},
@@ -31,6 +31,7 @@ SHEET_CONFIG = {
     "Разное":    {"json": "_content/misc.json"},
     "Новости":   {"json": "_content/news.json"},
 }
+
 
 # Соответствие русских заголовков колонок в Sheets → английским ключам в JSON
 COLUMN_MAPPING = {
@@ -50,6 +51,39 @@ COLUMN_MAPPING = {
 }
 
 
+# Соответствие ключа раздела (как в config.js) → имени листа в Google Sheets
+SECTION_TO_SHEET = {
+    "programs": "Программы",
+    "books":    "Книги",
+    "news":     "Новости",
+    "articles": "Статьи",
+    "movies":   "Фильмы",
+    "music":    "Музыка",
+    "games":    "Игры",
+    "misc":     "Разное",
+}
+
+
+# ============================================================
+# УТИЛИТЫ
+# ============================================================
+
+def normalize(s) -> str:
+    """
+    Нормализация строки для сравнения названий:
+    нижний регистр, без пробелов, дефисов, подчёркиваний, ё→е.
+    """
+    if not s:
+        return ""
+    return (
+        str(s).strip().lower()
+        .replace("ё", "е")
+        .replace(" ", "")
+        .replace("-", "")
+        .replace("_", "")
+    )
+
+
 # ============================================================
 # АВТОРИЗАЦИЯ GOOGLE
 # ============================================================
@@ -58,8 +92,8 @@ def _load_credentials_dict() -> dict:
     """
     Возвращает словарь с данными сервисного аккаунта.
     Приоритет:
-        1) env GOOGLE_CREDENTIALS_JSON  (используется в GitHub Actions)
-        2) файл credentials.json        (используется локально)
+        1) env GOOGLE_CREDENTIALS_JSON  (GitHub Actions)
+        2) файл credentials.json        (локально)
     """
     raw = os.environ.get("GOOGLE_CREDENTIALS_JSON")
     if raw:
@@ -84,8 +118,6 @@ def _load_credentials_dict() -> dict:
 def get_gspread_client():
     """
     Создаёт авторизованный клиент gspread.
-    Работает и локально (через credentials.json),
-    и в GitHub Actions (через GOOGLE_CREDENTIALS_JSON).
     """
     creds_dict = _load_credentials_dict()
     scopes = [
