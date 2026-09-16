@@ -2,184 +2,132 @@
   {
     "title": "CertificateParser",
     "description": "Распознает сертификаты для наполнения таблицы и последующей загрузки через плагин в ЦП",
-    "version": "2.0",
-    "size": "479.9",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%94%D0%BB%D1%8F%20windows%20%D1%81%D0%B2%D0%BE%D0%B8/CertificateParser.rar",
-    "folder": "Для windows свои"
+    "folder": "Для windows свои",
+    "version": "2.0"
   },
   {
     "title": "Clean MVD",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/Clean_MVD.ods",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "Clean MVD Klinrai",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/Clean_MVD_Klinrai.ods",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "RUIPvsPRIUR 16.03.2026 версия 5",
-    "version": "5",
-    "size": "0.4",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/RUIPvsPRIUR_16.03.2026%20%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%205.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "5"
   },
   {
     "title": "ЕРН Макрос",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%95%D0%A0%D0%9D%20%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "МВД Макрос",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9C%D0%92%D0%94%20%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "МВД, ЕРН, ЗАГС+ДляУверсальнойПроверки версия 2",
-    "version": "2",
-    "size": "0.2",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9C%D0%92%D0%94%2C%20%D0%95%D0%A0%D0%9D%2C%20%D0%97%D0%90%D0%93%D0%A1%2B%D0%94%D0%BB%D1%8F%D0%A3%D0%B2%D0%B5%D1%80%D1%81%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8%20%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%202.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "2"
   },
   {
     "title": "ОТБОР Текстовый Район",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9E%D0%A2%D0%91%D0%9E%D0%A0%20%D0%A2%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%A0%D0%B0%D0%B9%D0%BE%D0%BD.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "ОТБОР Текстовый",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9E%D0%A2%D0%91%D0%9E%D0%A0%20%D0%A2%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%B2%D1%8B%D0%B9.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "Просмотреть, редактировать, выгрузить версия 6",
-    "version": "6",
-    "size": "0.2",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9F%D1%80%D0%BE%D1%81%D0%BC%D0%BE%D1%82%D1%80%D0%B5%D1%82%D1%8C%2C%20%D1%80%D0%B5%D0%B4%D0%B0%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D1%82%D1%8C%2C%20%D0%B2%D1%8B%D0%B3%D1%80%D1%83%D0%B7%D0%B8%D1%82%D1%8C%20%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%206.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "6"
   },
   {
     "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
-    "version": "1.0",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%A1%D1%80%D0%B0%D0%B2%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D1%81%D1%82%D0%B0%D1%8252%D0%B8%D0%A0%D0%A3%D0%98%D0%9F167%D0%BF%D0%BE%D0%BB%D0%B5%D0%B9%20%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%20%D0%94%D0%B2%D0%BE%D0%B9%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "Стат52УИК Комментарии",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%A1%D1%82%D0%B0%D1%8252%D0%A3%D0%98%D0%9A_%D0%9A%D0%BE%D0%BC%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%80%D0%B8%D0%B8.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "1.0"
   },
   {
     "title": "отбор из других районов XLSX Версия 2 для либра офиса",
-    "version": "2",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%BE%D1%82%D0%B1%D0%BE%D1%80%20%D0%B8%D0%B7%20%D0%B4%D1%80%D1%83%D0%B3%D0%B8%D1%85%20%D1%80%D0%B0%D0%B9%D0%BE%D0%BD%D0%BE%D0%B2%20XLSX%20%D0%92%D0%B5%D1%80%D1%81%D0%B8%D1%8F%202%20%D0%B4%D0%BB%D1%8F%20%D0%BB%D0%B8%D0%B1%D1%80%D0%B0%20%D0%BE%D1%84%D0%B8%D1%81%D0%B0.ods",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "2"
   },
   {
     "title": "отбор из других районов XLSX Версия 2",
-    "version": "2",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%BE%D1%82%D0%B1%D0%BE%D1%80%20%D0%B8%D0%B7%20%D0%B4%D1%80%D1%83%D0%B3%D0%B8%D1%85%20%D1%80%D0%B0%D0%B9%D0%BE%D0%BD%D0%BE%D0%B2%20XLSX%20%D0%92%D0%B5%D1%80%D1%81%D0%B8%D1%8F%202.xlsm",
-    "folder": "Макросы"
+    "folder": "Макросы",
+    "version": "2"
   },
   {
     "title": "АвтоматПоискаПоБазеИзФайла",
-    "version": "1.0",
-    "size": "0.3",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%90%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%D0%B0%D0%9F%D0%BE%D0%91%D0%B0%D0%B7%D0%B5%D0%98%D0%B7%D0%A4%D0%B0%D0%B9%D0%BB%D0%B0.rar",
-    "folder": "Плагины"
+    "folder": "Плагины",
+    "version": "1.0"
   },
   {
     "title": "CleanMVD",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/CleanMVD.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "MVD v2",
-    "version": "2",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/MVD_v2.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "2"
   },
   {
     "title": "SCRIPT-ZAGS",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/SCRIPT-ZAGS.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "Script Dyblu",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/Script_Dyblu.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "WorkDIN 22.07.2026",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/WorkDIN_22.07.2026.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "База167поФильтрам",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%91%D0%B0%D0%B7%D0%B0167%D0%BF%D0%BE%D0%A4%D0%B8%D0%BB%D1%8C%D1%82%D1%80%D0%B0%D0%BC.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "ОтчетБД",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%9E%D1%82%D1%87%D0%B5%D1%82%D0%91%D0%94.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "ПоследнееИзДинамики",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%9F%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B5%D0%B5%D0%98%D0%B7%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D0%BA%D0%B8.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "СКРИПТ Проверка списков для Linux",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%A1%D0%9A%D0%A0%D0%98%D0%9F%D0%A2%20%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0%20%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%BE%D0%B2%20%D0%B4%D0%BB%D1%8F%20Linux.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "СнятьЗащутуСЛистаВxlsx",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%A1%D0%BD%D1%8F%D1%82%D1%8C%D0%97%D0%B0%D1%89%D1%83%D1%82%D1%83%D0%A1%D0%9B%D0%B8%D1%81%D1%82%D0%B0%D0%92xlsx.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   },
   {
     "title": "Чужой без убытия",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%A7%D1%83%D0%B6%D0%BE%D0%B9%20%D0%B1%D0%B5%D0%B7%20%D1%83%D0%B1%D1%8B%D1%82%D0%B8%D1%8F.rar",
-    "folder": "Скрипты"
+    "folder": "Скрипты",
+    "version": "1.0"
   }
 ]
