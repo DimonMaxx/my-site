@@ -28,7 +28,7 @@ jobs:
 
       - name: Delete from Google Sheets
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           DELETE_LIST: ${{ github.event.inputs.delete_list }}
         run: python delete_content.py
 
