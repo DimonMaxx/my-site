@@ -1,0 +1,4461 @@
+[
+  {
+    "title": "CertificateParser",
+    "description": "Распознает сертификаты для наполнения таблицы и последующей загрузки через плагин в ЦП",
+    "folder": "Для windows свои",
+    "version": "2.0"
+  },
+  {
+    "title": "Clean MVD",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "Clean MVD Klinrai",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "RUIPvsPRIUR 16.03.2026 версия 5",
+    "folder": "Макросы",
+    "version": "5"
+  },
+  {
+    "title": "ЕРН Макрос",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "МВД Макрос",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "МВД, ЕРН, ЗАГС+ДляУверсальнойПроверки версия 2",
+    "folder": "Макросы",
+    "version": "2"
+  },
+  {
+    "title": "ОТБОР Текстовый Район",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "ОТБОР Текстовый",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "Просмотреть, редактировать, выгрузить версия 6",
+    "folder": "Макросы",
+    "version": "6"
+  },
+  {
+    "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "Стат52УИК Комментарии",
+    "folder": "Макросы",
+    "version": "1.0"
+  },
+  {
+    "title": "отбор из других районов XLSX Версия 2 для либра офиса",
+    "folder": "Макросы",
+    "version": "2"
+  },
+  {
+    "title": "отбор из других районов XLSX Версия 2",
+    "folder": "Макросы",
+    "version": "2"
+  },
+  {
+    "title": "АвтоматПоискаПоБазеИзФайла",
+    "folder": "Плагины",
+    "version": "1.0"
+  },
+  {
+    "title": "CleanMVD",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "MVD v2",
+    "folder": "Скрипты",
+    "version": "2"
+  },
+  {
+    "title": "SCRIPT-ZAGS",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "Script Dyblu",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "WorkDIN 22.07.2026",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "База167поФильтрам",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "ОтчетБД",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "ПоследнееИзДинамики",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "СКРИПТ Проверка списков для Linux",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "СнятьЗащутуСЛистаВxlsx",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "Чужой без убытия",
+    "folder": "Скрипты",
+    "version": "1.0"
+  },
+  {
+    "title": "ЗА МИЛЛИАРД ЛЕТ ДО КО...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Обитаемый остров (Вос...",
+    "folder": "disk:"
+  },
+  {
+    "title": "СКАЗКА О ТРОЙКЕ - НИИЧАВО_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "ГРАД ОБРЕЧЕННЫЙ",
+    "folder": "disk:"
+  },
+  {
+    "title": "НИИЧАВО – 3 - НИИЧАВО_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "ПИКНИК НА ОБОЧИНЕ",
+    "folder": "disk:"
+  },
+  {
+    "title": "ПОЛДЕНЬ, XXII ВЕК",
+    "folder": "disk:"
+  },
+  {
+    "title": "ПОНЕДЕЛЬНИК НАЧИНАЕТС... - НИИЧАВО_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Галатея",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дело принципа",
+    "folder": "disk:"
+  },
+  {
+    "title": "Демон ростом два сантиметра",
+    "folder": "disk:"
+  },
+  {
+    "title": "Есть многое на небе и земле…",
+    "folder": "disk:"
+  },
+  {
+    "title": "Я – робот",
+    "folder": "disk:"
+  },
+  {
+    "title": "Daniil_Pavlovich_-_Samozvanec",
+    "folder": "disk:"
+  },
+  {
+    "title": "Арес. Черновик",
+    "folder": "disk:"
+  },
+  {
+    "title": "Победитель - Самозванец_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Реформатор - Самозванец_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Архимаг",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Битва полчищь",
+    "folder": "disk:"
+  },
+  {
+    "title": "11. Заря над бездной",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Рыцари пречистой девы",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Самое лучшее оружие",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Серая чума",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Война колдунов. Вторжение",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Война Колдунов. Штурм цитадели",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Дети Судного Часа",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Совет Двенадцати",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Шумерские ночи",
+    "folder": "disk:"
+  },
+  {
+    "title": "Демоны в Ватикане - Яцхен 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "ТРИ ГЛАЗА И ШЕСТЬ РУК - Яцхен",
+    "folder": "disk:"
+  },
+  {
+    "title": "ШЕСТИРУКИЙ РЕЗИДЕНТ - Яцхен 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Преданья стар... - Преданья стар...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сын архидемона - Яцхен 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чернокнижник",
+    "folder": "disk:"
+  },
+  {
+    "title": "4.Светские хроники года Сиреневой Лилии",
+    "folder": "disk:"
+  },
+  {
+    "title": "Полевая практика - Практикум по алхимии_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Практикум по алхимии - Практикум по алхимии_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Раз, два, три... - Практикум по ...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Светские хрон... - Практикум по ...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ученье - свет - Практикум по алхимии_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Война на личном фронте - Истории оборотня_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волчьи судьбы - Истории оборотня_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Выбор единорога - Истории оборотня_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Жестокие радости - Истории оборотня_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Месть из прошлого - Истории оборотня_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Миссия оборотня - Истории оборотня_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Неизбежный союз или Контракт ... - Истории оборотня_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Параллели семейных уз - Истории оборотня_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эльфийское Триединство - Истории оборотня_9",
+    "folder": "disk:"
+  },
+  {
+    "title": "Башня ласточки - Ведьмак_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Владычица озера - Ведьмак_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Крещение огнем - Ведьмак_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кровь эльфов - Ведьмак_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Меч предназначения - Ведьмак_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последнее желание - Ведьмак_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Час презрения - Ведьмак_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ник",
+    "folder": "disk:"
+  },
+  {
+    "title": "Юзер",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стихийник",
+    "folder": "disk:"
+  },
+  {
+    "title": "Админ",
+    "folder": "disk:"
+  },
+  {
+    "title": "Беглец",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чародей",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ник 1,2 глава",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ник 3 глава",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Земля 2115. Прибытие",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Исследователь планет",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Ник",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Программист. Снова юзер. Продвинутый юзер (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Толлеус, искусник из Кордоса",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Землянин. Том 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "11. Землянин. Том 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Раздвигая горизонты",
+    "folder": "disk:"
+  },
+  {
+    "title": "13. Преодолевая барьеры",
+    "folder": "disk:"
+  },
+  {
+    "title": "14. Лестница Миров",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Земля 2115. Астрал",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Изгой",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Исследователь планет. Том 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Ученик мага. Стихийник. Админ (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Юзер",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Стихийник",
+    "folder": "disk:"
+  },
+  {
+    "title": "ученик",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Админ",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Беглец",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Чародей. Том 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Чародей. Том 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Астральщик. Том 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Астральщик. Том 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Memories Defragmentation",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Анджей Ясинский Ник 7 Глава 9",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ник (Оригинал первых четырех книг СИ)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ник 8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новогодняя сказка-2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новогодняя сказка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Потапыч",
+    "folder": "disk:"
+  },
+  {
+    "title": "Принцессы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Старик",
+    "folder": "disk:"
+  },
+  {
+    "title": "Толлеус, искусник из Кордоса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Яблоко",
+    "folder": "disk:"
+  },
+  {
+    "title": "Земля лишних. Исход - Земля лишних_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Земля лишних. Новая жизнь - Земля лишних_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Земля лишних. Том 3 - Земля лишних_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "У Великой реки. Битва - У Великой реки_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "У Великой реки. Поход - У Великой реки_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпоха мертвых. Начало - Эпоха мертвых_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Я! Еду! Домой! - Эпоха мертвых_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Гиперборейская чума - Гиперборейская чума_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Марш экклезиастов - Гиперборейская чума_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Параграф 78",
+    "folder": "disk:"
+  },
+  {
+    "title": "Посмотри в гл... - Гиперборейска...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Зачумленный корабль - Королева Солнца_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Луна трех колец",
+    "folder": "disk:"
+  },
+  {
+    "title": "Планета колдовства - Королева Солнца_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Подчеркнуто звездами - Королева Солнца_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Покинутый корабль - Королева Солнца_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Проштемпелевано звездами - Королева Солнца_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Разум на торги - Королева Солнца_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Саргассы космоса - Королева Солнца_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Серебряная Снежинка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Герцогиня - Каждый выбирает для себя_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Долг платежом красен - Каждый выбирает для себя_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космический нянь - Каждый выбирает для себя_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Druzya_boevogo_maga.230348",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Druzya_boevogo_maga.231044",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore._Druzya_boevogo_maga.234201",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_1_Lukomore._Pervyiy_kurs.64843",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_3_Lukomore._Programma_obmena.283764",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_3_Lukomore._Programma_obmena.87277",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_4_Lukomore._Nedopisannoe_SI_.130505",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_4_Lukomore_4.126342",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Lukomore_4_Poiski_boevogo_maga_SI_.163149",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Rolevik_-_Elf.153343",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Strasti_drakoni.281162",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Svobodnyiy_polet._Snova_polet._Stremitelnyiy_polet.277606",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Svobodnyiy_polet_1_Volnyiy_polet.113637",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Svobodnyiy_polet_3_Stremitelnyiy_polet_SI_.168221",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_V_odnom_tome_114_Boevoy_mag_trilogiya_.176200",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Yumoristicheskaya_seriya_127_Lukomore._Kurs_boevogo_maga.129682",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Yumoristicheskaya_seriya_127_Plan_Aragorna_HL_.196314",
+    "folder": "disk:"
+  },
+  {
+    "title": "Badey_Yumoristicheskaya_seriya_127_Svobodnyiy_polet.146015",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье. Каникулы боевого мага - Лукоморье_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье. Курс боевого мага ... - Лукоморье_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье. Скитания боевого мага - Лукоморье_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Свободный полет (общий)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 1 курс боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 2 каникулы боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 3 Скитания боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 4 Поиски боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 5 Друзья боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лукоморье 6 выпуск боевого мага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Tars_Bastard-roda-demonov_1_Bastard-roda-demonov.538207",
+    "folder": "disk:"
+  },
+  {
+    "title": "Tars_Bastard-roda-demonov_2_Strazhi.546699",
+    "folder": "disk:"
+  },
+  {
+    "title": "Tars_Bastard-roda-demonov_3_Pretendent.561000",
+    "folder": "disk:"
+  },
+  {
+    "title": "Tars_Bastard-roda-demonov_4_Aristokrat.561266",
+    "folder": "disk:"
+  },
+  {
+    "title": "Tars_Bastard-roda-demonov_5_Glava-roda-demonov.580350",
+    "folder": "disk:"
+  },
+  {
+    "title": "01 Фурии Кальдерона",
+    "folder": "disk:"
+  },
+  {
+    "title": "02 Битва за Кальдерон",
+    "folder": "disk:"
+  },
+  {
+    "title": "03 Фурия Курсора",
+    "folder": "disk:"
+  },
+  {
+    "title": "04 Фурия Капитана",
+    "folder": "disk:"
+  },
+  {
+    "title": "05 Фурия Принцепса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Клиент Гарри",
+    "folder": "disk:"
+  },
+  {
+    "title": "Досье Дрездена 16 Мирные переговоры",
+    "folder": "disk:"
+  },
+  {
+    "title": "Досье Дрездена 17 Поле битвы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Досье дрездена 1-15",
+    "folder": "disk:"
+  },
+  {
+    "title": "Работа на стороне Досье Дрездена",
+    "folder": "disk:"
+  },
+  {
+    "title": "Халтура Досье Дрездена",
+    "folder": "disk:"
+  },
+  {
+    "title": "Атака по правилам - Тайный город_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Войны начинают неудачники - Тайный город_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Все оттенки черного - Тайный город_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "День Дракона - Тайный город_12",
+    "folder": "disk:"
+  },
+  {
+    "title": "ЗАНИМАТЕЛЬНАЯ МЕХАНИКА - La Mystique De Moscou_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Запах страха - Тайный город_13",
+    "folder": "disk:"
+  },
+  {
+    "title": "И в аду есть герои - Тайный город_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кафедра странников - Тайный город_9",
+    "folder": "disk:"
+  },
+  {
+    "title": "Командор войны - Тайный город_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Королевский крест - Тайный город_10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Королевский крест",
+    "folder": "disk:"
+  },
+  {
+    "title": "Костры на алтарях - Анклавы_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Куколка последней надежды - Тайный город_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Московский клуб - Анклавы_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Наложницы ненависти - Тайный город_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Поводыри на распутье - Анклавы_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Продавцы невозможного - Анклавы_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ребус Галла - Тайный город_14",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тень Инквизитора - Тайный город_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Царь горы - Тайный город_11",
+    "folder": "disk:"
+  },
+  {
+    "title": "Во имя порядка 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дорогой хауса 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мастер мглы 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Неофит Мглы 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Возвращение М... - Возвращение М...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дорога в маги - Путь демона_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Путь Демона II - Путь Демона_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стезя чародея - Путь демона_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тропа волшебника - Путь демона_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон и Джинн - Дракон и Джордж_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон и Джордж - Дракон и Джордж_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон и Король Подземья - Дракон и Джордж_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон на войне - Дракон и Джордж_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон на границе - Дракон и Джордж_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон, эрл и тролль - Дракон и Джордж_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Рыцарь-дракон - Дракон и Джордж_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "ГНЕВ ДРАКОНА - Диктаторы_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "ВОСХОД ЧЁРНОГО СОЛНЦА - Диктаторы_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "ЧЁРНОЕ ПЛАМЯ - Диктаторы_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Битва за будущее - Диктаторы_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "КРАСНЫЙ ДРАКОН - Диктаторы_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Основание скалы - Диктаторы_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "ЗАКОН СОХРАНЕНИЯ ЖИЗНИ - Диктаторы_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "К ВОСТОКУ ОТ ЭДЕМА - Диктаторы_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Время для драконов - Диктаторы_9",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Дочь тысячи джеддаков",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Лана из Гатола",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Гигант с Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Джон Картер и великан",
+    "folder": "disk:"
+  },
+  {
+    "title": "13. Люди-скелеты Юпитера",
+    "folder": "disk:"
+  },
+  {
+    "title": "13. Скелетоиды с Юпитера",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Боги Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Владыка Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Тувия, дева Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Марсианские шахматы",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Великий ум Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Боевой человек Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Мечи Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Искусственные люди Марса",
+    "folder": "disk:"
+  },
+  {
+    "title": "04_gildiya_zlodeev_tom_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "05 Гильдия Злодеев. Том 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "06_Gildiya-Zlodeev-Tom-6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Bes-Soznaniya_1_Idushchiy-vopreki",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Eto-my-ne-prohodili-_1_Orkanutyy",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Eto-my-ne-prohodili-_2_Elfanutyy",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Eto-my-ne-prohodili-_3_Vampanutyy",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Eto-my-ne-prohodili-_4_Imbanutyy",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_KRIT_1_Naoborot",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_KRIT_2_Naoborot-2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Konstantin-Kiba_1_Prevoshodstvo-Neodarennogo.Tom1-2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Konstantin-Kiba_4_Prevoshodstvo-Voploshchennogo-Tom-4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ra_Prevoshodstvo-Voznesyonnogo-Tom-5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Константин_Киба_Превосходство_Пробужденного",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новая жизнь",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новая жизнь. Война",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новая жизнь. Боги",
+    "folder": "disk:"
+  },
+  {
+    "title": "royallib.com",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хан Рождение легенды",
+    "folder": "disk:"
+  },
+  {
+    "title": "drugoj-mir-artefaktor",
+    "folder": "disk:"
+  },
+  {
+    "title": "drugoj-mir-popadanec",
+    "folder": "disk:"
+  },
+  {
+    "title": "drugoj-mir-preemnik-drevnikh",
+    "folder": "disk:"
+  },
+  {
+    "title": "drugoj-mir-student",
+    "folder": "disk:"
+  },
+  {
+    "title": "drugoj-mir-vidyaschij-mag",
+    "folder": "disk:"
+  },
+  {
+    "title": "Bredvik_Inoy_1_Inoy.7Sk8NA.678780",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kretov_Legenda-Kretov-_1_Legenda.x3reVw.392458",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kretov_Legenda-Kretov-_2_Inferno.586766",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kretov_Legenda-Kretov-_3_Legion.VNOdLw.587972",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kretov_Legenda-Kretov-_4_Vtorzhenie.hBmjsg.601139",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kretov_Legenda-Kretov-_5_Voyna-bogov.3wE8hw.611536",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесовик 7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Akademiya_vyisokogo_iskusstva_1.00_Adeptka.616689",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Akademiya_vyisokogo_iskusstva_2.00_Maginya.630869",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Akademiya_vyisokogo_iskusstva_3.00_Obretenie_SI.626334",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Akademiya_vyisokogo_iskusstva_4.00_Izbavlenie_SI.626335",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Akademiya_vyisokogo_iskusstva_5.00_Priznanie_SI.626331",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_1.00_Igrok_SI.353762",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_10.00_Pravo_silneyshego._Kniga_2_SI.390712",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_11.00_Tretya_sila_SI.398451",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_12.00_Posleslovie_SI.418265",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_13.00_Shestoy_Znak._Kniga_1.615351",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_14.00_Shestoy_znak._Kniga_2_SI.606166",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_2.00_Dorogi_Valliona_SI.353763",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_3.00_Proba_sil_SI.353764",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_4.00_Pervyiy_udar_SI.366519",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_5.00_Slovo_Ishtyi._Kniga_1_SI.366520",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_6.00_Slovo_Ishtyi._Kniga_2_SI.378600",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_7.00_Mertvaya_dolina._Kniga_1_SI.378602",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_8.00_Myortvaya_dolina._Kniga_2_SI.379939",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Bez_prava_na_vyibor_=_Igrok_9.00_Pravo_silneyshego._Kniga_1_SI.385987",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Grani_otrazheniy_1.00_Belyie_nochi_SI.361577",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Grani_otrazheniy_2.00_Holodnyie_dni_SI.361606",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Grani_otrazheniy_3.00_Tantsyi_vo_ldah_SI.374552",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Grani_otrazheniy_4.00_Tris_i_Shirra_dopolnitelnaya_glava__SI.391396",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Helka_i_eyo_druzya_2.00_Ne_proklinayte_muzha_Svetom.595502",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_K_chemu_snyatsya_drakonyi..._1.00_Plamya_dlya_drakona.630479",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_K_chemu_snyatsya_drakonyi..._1.00_Plamya_dlya_drakona_SI.625773",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_K_chemu_snyatsya_drakonyi..._2.00_Vsadnik_dlya_drakona.630640",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_K_chemu_snyatsya_drakonyi..._2.00_Vsadnik_dlya_drakona_SI.625774",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Ne_vyihodite_zamuzh_na_spor_1.00_Ne_vyihodite_zamuzh_na_spor_litres.582571",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Ne_vyihodite_zamuzh_na_spor_3.00_Ne_blagoslovlyayte_muzha_Tmoy.605228",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Nekromant_po_vyizovu_1.00_Nekromant_po_vyizovu_SI.439688",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Nekromant_po_vyizovu_2.00_Nekromant_na_svobode_SI.465973",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Nekromant_po_vyizovu_3.00_Nekromant_ponevole._Chast_1_SI.470523",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Nekromant_po_vyizovu_4.00_Nekromant_ponevole_2_SI.499800",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Nekromant_po_vyizovu_5.00_Nekromant_na_ohote_SI.531220",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Plamya_dlya_drakona_1.00_Plamya_dlya_drakona_SI.541200",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Professionalnyiy_nekromant_1.00_Metr_Alfa-kniga.609297",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Professionalnyiy_nekromant_2.00_Metr_na_uchebe_litres.613504",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Professionalnyiy_nekromant_3.00_Metr_na_svobode_litres.615148",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Professionalnyiy_nekromant_4.00_Metr_na_ohote_Alfa-kniga.616332",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Serdtse_Zandokara_1.00_Prednaznachenie.626396",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Serdtse_Zandokara_2.00_Voshozhdenie.626397",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Skazochnyiy_perepoloh.621215",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_nadezhdyi_1.00_Zabyityie_bogi.415702",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_nadezhdyi_2.00_Vozrozhdenie.420175",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_peremen_A._Lisina_1.00_Temnyiy_Lord_SI.353765",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_peremen_A._Lisina_2.00_Seryie_Predelyi_SI.353766",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_peremen_A._Lisina_3.00_Labirint_bezumiya_SI.361567",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_smireniya_1.00_Na_okraine_mira.403042",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_smireniya_2.00_Doroga_smertnikov.405666",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_smireniya_3.00_Vozvraschenie.409742",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_vyizova_1.00_Znamenie_smerti_SI.361682",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vremya_vyizova_2.00_Pesn_zhizni_SI.371715",
+    "folder": "disk:"
+  },
+  {
+    "title": "Lisina_Vsadnik_dlya_drakona.624273",
+    "folder": "disk:"
+  },
+  {
+    "title": "Oduvalova_Antologiya_lyubovnogo_romana_2017.00_Magiya_lyubvi._Luchshee_romanticheskoe_fentezi_2017_antologiya.620643",
+    "folder": "disk:"
+  },
+  {
+    "title": "1 Запретный плод",
+    "folder": "disk:"
+  },
+  {
+    "title": "10 Нарцисс в цепях",
+    "folder": "disk:"
+  },
+  {
+    "title": "11 Лазоревый грех",
+    "folder": "disk:"
+  },
+  {
+    "title": "2 Смеющийся труп",
+    "folder": "disk:"
+  },
+  {
+    "title": "3 Цирк проклятых",
+    "folder": "disk:"
+  },
+  {
+    "title": "4 Кафе лунатиков",
+    "folder": "disk:"
+  },
+  {
+    "title": "5 Кровавые кости",
+    "folder": "disk:"
+  },
+  {
+    "title": "6 Смертельный танец",
+    "folder": "disk:"
+  },
+  {
+    "title": "7 Жертва всесожжения",
+    "folder": "disk:"
+  },
+  {
+    "title": "8 Голубая луна",
+    "folder": "disk:"
+  },
+  {
+    "title": "9 Обсидиановая бабочка",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_10_odin-za-vseh",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_11_tajna-kota",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_12_oskolki",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_2_pervyy-pohod_tmq6hg_509159",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_3_dospehi-boga_tn_s5q_509017",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_4_nastoyashchaya-magiya_7jnbuq_520867",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_5_beskonechnaya-voyna_juvtlq_528146",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_6_serdce-mira_aajkta_534841",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_7_mir-obmana_bx7k8a_540679",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_8_bratstvo-obmana_sb_bvw_553372",
+    "folder": "disk:"
+  },
+  {
+    "title": "emelyanov_mir-karika_9_skrytaya-sila_eouxxq_558288",
+    "folder": "disk:"
+  },
+  {
+    "title": "mir-karika-pervyj-igrok",
+    "folder": "disk:"
+  },
+  {
+    "title": "1 Наследник дьявола",
+    "folder": "disk:"
+  },
+  {
+    "title": "2 Войн дьявола",
+    "folder": "disk:"
+  },
+  {
+    "title": "3 Лорд дьявола",
+    "folder": "disk:"
+  },
+  {
+    "title": "4 Клан дьявола",
+    "folder": "disk:"
+  },
+  {
+    "title": "5 Культ дьявола",
+    "folder": "disk:"
+  },
+  {
+    "title": "Прогрессор каменного века 1. Провалившийся в прошлое",
+    "folder": "disk:"
+  },
+  {
+    "title": "Прогрессор каменного века 2. Сила ведлов",
+    "folder": "disk:"
+  },
+  {
+    "title": "Прогрессор каменного века 3. Академия демиургов",
+    "folder": "disk:"
+  },
+  {
+    "title": "Прогрессор каменного века 4. Великая Звезда Мироздания",
+    "folder": "disk:"
+  },
+  {
+    "title": "Беглецы. Исход",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 1. Рождение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 2. Юность",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 3. Стая",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 4. Поля надежды",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 5. Студент",
+    "folder": "disk:"
+  },
+  {
+    "title": "Волк 6. Решение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Красно Солнышко",
+    "folder": "disk:"
+  },
+  {
+    "title": "Храм сердца 1. Сети",
+    "folder": "disk:"
+  },
+  {
+    "title": "Поле битвы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сын безумия",
+    "folder": "disk:"
+  },
+  {
+    "title": "Магия в крови",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вторая жизнь",
+    "folder": "disk:"
+  },
+  {
+    "title": "Попадать, так с музыкой 2. Порученец Жукова",
+    "folder": "disk:"
+  },
+  {
+    "title": "Попадать, так с музыкой 3. Инструктор ОМСБОН",
+    "folder": "disk:"
+  },
+  {
+    "title": "Попадать, так с музыкой!",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чароплёт",
+    "folder": "disk:"
+  },
+  {
+    "title": "выжить",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лесной фронт 2. Благими намерениями...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Майорат на двоих",
+    "folder": "disk:"
+  },
+  {
+    "title": "Унесенные магией",
+    "folder": "disk:"
+  },
+  {
+    "title": "Всего один поцелуй",
+    "folder": "disk:"
+  },
+  {
+    "title": "Игры вымершей цивилизации 1. Игрушки Анкалимы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Витязь 1. Содружество невозможных",
+    "folder": "disk:"
+  },
+  {
+    "title": "Менталист 1. В поисках истины",
+    "folder": "disk:"
+  },
+  {
+    "title": "Барон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эгнор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мантикора и Дракон. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мантикора и Дракон. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Друзей не выбирают. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Друзей не выбирают. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Магия безмолвия. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Магия безмолвия. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осколки прошлого. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осколки прошлого. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сайтаншесская роза. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сайтаншесская роза. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лэя",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пирамиды Астрала",
+    "folder": "disk:"
+  },
+  {
+    "title": "Шпионка в графском замке",
+    "folder": "disk:"
+  },
+  {
+    "title": "Игрушки для императоров 1. Лестница в небо",
+    "folder": "disk:"
+  },
+  {
+    "title": "Игрушки для императоров 2. Иллюзия выбора",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пасынок судьбы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Механический волшебник",
+    "folder": "disk:"
+  },
+  {
+    "title": "Механический дракон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эрик",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эрик 2. Железом и кровью",
+    "folder": "disk:"
+  },
+  {
+    "title": "Я, Рейван",
+    "folder": "disk:"
+  },
+  {
+    "title": "Повелители иллюзий 1. Попаданец",
+    "folder": "disk:"
+  },
+  {
+    "title": "Повелители иллюзий 2. Всевидящее око",
+    "folder": "disk:"
+  },
+  {
+    "title": "Проклятие иеремитов",
+    "folder": "disk:"
+  },
+  {
+    "title": "Игра Реальностей 1. Дрейк",
+    "folder": "disk:"
+  },
+  {
+    "title": "Герой чужой войны",
+    "folder": "disk:"
+  },
+  {
+    "title": "Выход есть всегда 1. Крепость",
+    "folder": "disk:"
+  },
+  {
+    "title": "Выход есть всегда 2. Стальные корсары",
+    "folder": "disk:"
+  },
+  {
+    "title": "Гроза чужих морей",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дилетант галактических войн 2. Адмирал галактической империи",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дилетант галактических войн",
+    "folder": "disk:"
+  },
+  {
+    "title": "Призрак неведомой войны 2. Осознание",
+    "folder": "disk:"
+  },
+  {
+    "title": "Призрак неведомой войны 3. Решение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Призрак неведомой войны",
+    "folder": "disk:"
+  },
+  {
+    "title": "Путь домой",
+    "folder": "disk:"
+  },
+  {
+    "title": "Серое проклятие",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стрелок",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дальняя застава",
+    "folder": "disk:"
+  },
+  {
+    "title": "Живучий",
+    "folder": "disk:"
+  },
+  {
+    "title": "Миры за гранью 1. Где-то там…",
+    "folder": "disk:"
+  },
+  {
+    "title": "Миры за гранью 2. Город Древних",
+    "folder": "disk:"
+  },
+  {
+    "title": "Миры за гранью 3. Нейтральные миры",
+    "folder": "disk:"
+  },
+  {
+    "title": "Миры за гранью 4. Мастер лута",
+    "folder": "disk:"
+  },
+  {
+    "title": "Неучтённый 2. Неизвестный с Драккара",
+    "folder": "disk:"
+  },
+  {
+    "title": "Неучтённый",
+    "folder": "disk:"
+  },
+  {
+    "title": "Некромант 1. Присяга",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пятнистый дракон 1. Пещерная тактика",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пятнистый дракон 2. Клыки и когти эскадрильи",
+    "folder": "disk:"
+  },
+  {
+    "title": "Из рук врага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космоопера 1. Пропавшая",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космоопера 2. Потерянная",
+    "folder": "disk:"
+  },
+  {
+    "title": "Обретенная",
+    "folder": "disk:"
+  },
+  {
+    "title": "Герой не нашего времени. Эпизод 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Герой не нашего времени. Эпизод 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космический скиталец 1. Принц со свалки",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космический скиталец 2. Беглец",
+    "folder": "disk:"
+  },
+  {
+    "title": "Космический скиталец 3. Управленец",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маг 1. Начало",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маг 2. Школа",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маг 3. Архимаг",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маг 4. Гранд-мастер",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мальчик из будущего",
+    "folder": "disk:"
+  },
+  {
+    "title": "Бестиарий спального района",
+    "folder": "disk:"
+  },
+  {
+    "title": "Война теней",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ключ от всех дверей",
+    "folder": "disk:"
+  },
+  {
+    "title": "Жандарм",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 1. Уркварт Ройхо",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 2. Черная свита",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 3. Протектор Севера",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 4. Колесо войны",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 5. Ройхо Ваирский",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 6. Имперская Окраина",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 7. Восточный фронт",
+    "folder": "disk:"
+  },
+  {
+    "title": "Империя Оствер 8. Тень императора",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кубанская Конфедерация 1. Солдат",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кубанская Конфедерация 2. Мечник",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кубанская Конфедерация 3. Приватир",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кубанская Конфедерация 4. Дальний поход",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кубанская Конфедерация 5. Граф Мечников",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь Сварога 1. Ведун",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь Сварога 2. Воин Яровита",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь Сварога 3. Северная война",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь Сварога 4. Тропы Трояна",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь Сварога 5. Большой погром",
+    "folder": "disk:"
+  },
+  {
+    "title": "Артефактор Горта 2. Бастион Одесса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Артефактор Горта",
+    "folder": "disk:"
+  },
+  {
+    "title": "Час «Ч»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маноратха",
+    "folder": "disk:"
+  },
+  {
+    "title": "Зерно жизни 1. Шаг в аномалию",
+    "folder": "disk:"
+  },
+  {
+    "title": "Зерно жизни 2. Ангарский Сокол",
+    "folder": "disk:"
+  },
+  {
+    "title": "Зерно жизни 3. Знак Сокола",
+    "folder": "disk:"
+  },
+  {
+    "title": "Зерно жизни 4. Хозяин Амура",
+    "folder": "disk:"
+  },
+  {
+    "title": "Адмирал Бахирев 1. Второй шанс адмирала Бахирева",
+    "folder": "disk:"
+  },
+  {
+    "title": "Адмирал Бахирев 2. Адмирал «Коронат»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Адмирал Бахирев 3. Комфлота Бахирев",
+    "folder": "disk:"
+  },
+  {
+    "title": "Морской волк 1. Арктический удар",
+    "folder": "disk:"
+  },
+  {
+    "title": "Морской волк 2. Время больших побед",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник 2. Огненные дороги Геона",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник 3. Битва за Танол",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник 4. И небеса разверзлись",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник 5. Долгая дорога домой",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник 6. Возвращение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Странник",
+    "folder": "disk:"
+  },
+  {
+    "title": "Черный властелин",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ангельская ярость",
+    "folder": "disk:"
+  },
+  {
+    "title": "Бейссел",
+    "folder": "disk:"
+  },
+  {
+    "title": "Инферналь Мерценариус",
+    "folder": "disk:"
+  },
+  {
+    "title": "Рассвет Тьмы 1. Договор",
+    "folder": "disk:"
+  },
+  {
+    "title": "01. Неправильный лекарь. часть 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "02. Неправильный лекарь. часть 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "03. Неправильный лекарь. часть 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "04. Неправильный лекарь. часть 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "05. Неправильный лекарь. часть 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "- Хранитель мечей Ст... - Летописи Разлома_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алмазный меч, Деревян... - Летописи Разлома_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алмазный меч, Деревян... - Летописи Разлома_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вернуть посох ( повесть) - Летописи Разлома",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дочь Некроманта - Летописи Разлома",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Войн... - Летописи Разлома_10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Войн... - Летописи Разлома_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Войн... - Летописи Разлома_9",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Война... - Летописи разлома_11",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Один... - Летописи Разлома_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель Мечей Один... - Летописи Разлома_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель мечей Рождение Мага - Летописи Разлома_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хранитель мечей Стра... - Летописи Разлома_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "The Witcher - задание «Ужасная незнакомка»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Белорские хроники",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ведьма-хранительница - Белорские хроники_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ведьмины байки",
+    "folder": "disk:"
+  },
+  {
+    "title": "Верность до гроба",
+    "folder": "disk:"
+  },
+  {
+    "title": "Верные враги - Белорские хроники_12",
+    "folder": "disk:"
+  },
+  {
+    "title": "Верховная Ведьма - Белорские хроники_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Незваная гостья",
+    "folder": "disk:"
+  },
+  {
+    "title": "Нелетописное",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пивовой - Белорские хроники_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Плюс на минус",
+    "folder": "disk:"
+  },
+  {
+    "title": "Профессия ведьма - Белорские хроники_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Рой",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стринги (шутка)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Узелок на удачу",
+    "folder": "disk:"
+  },
+  {
+    "title": "Умысел и домысел",
+    "folder": "disk:"
+  },
+  {
+    "title": "Хозяин",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Второй сын",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Деревянный культиватор",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Путь старых богов",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Возвращение Никкасу",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Второй сын 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Каменный культиватор",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Война крови",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Второй сын 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Стальной культиватор",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Алмазный культиватор",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Второй сын 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последний из рода Корто",
+    "folder": "disk:"
+  },
+  {
+    "title": "Порри Гаттер и Каменный Философ - 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Девять подвигов Сена Аесли - 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 01 - Нетривиальное решение и 02 в гостях у сказки",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 03 - Следствие ведут тестеры",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 04 - Фанат звездного конвоя",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 05 - Без страха и упрека",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 06 - Рождение Красного Дракона",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 07 - В тылу врага",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 08 - Дело о пропавшем патриархе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 09 - Защитники отечества",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 10 - Бабушку обидели",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 11 - Переполох в городе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 12 - Золотой галеон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 13 - Внучка наносит ответный удар",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 14 - Замок черного Барона",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 15 - Честная сделка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 16 - Ужасный Тумбарикиту",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 17 - Там, за перевалом",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 18 - Варварский кризис",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 19 - Суетный Новый Год",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 20 - Тайна Погребенного замка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 21 - Занимательное драконоводство",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 22 - Кубок Мардука",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 23 - ЖЭК экстрим травля",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 24 - ЖЭК экстрим вредитель",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 25 - Потерявшийся демон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 26 - Сокровища пиратского босса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 27 - Новогоднее приключение тестеров",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 28 - Отпуск зов природы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 29 - Отпуск генеральская охота",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 30 - Отпуск постскриптум",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 31 - Востание ботов",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 32 - Охота на снарка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 33 - Сбежавший город",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 34 - Они не пройдут",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 35 - Частная жизнь рейд-босса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 36 - Приключения Внучки и Кеши прогулка в Енотоград",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 37 - Приключения Внучки и Кеши - беглые мертвецы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 38 - Падение Красного Барона",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпизод 39 - Парк шестнадцатибитного периода",
+    "folder": "disk:"
+  },
+  {
+    "title": "1 Сегодня, мама!",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-2. Z Квази. Кайнозой (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-2. Джамп",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-2. Искатели неба",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-2. Трикс. Недотепа. Непоседа",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-3 Кей Дач",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-3. Дозоры. Ночной Дозор. Дневной Дозор. Сумеречный Дозор. Сборник",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-3. Лорд с планеты Земля",
+    "folder": "disk:"
+  },
+  {
+    "title": "1-4. Остров Русь",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Без паники!",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Век движущихся картинок",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Вечерняя беседа с господином особым послом",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Геном",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Дорога на Веллесберг",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. За лесом, где подлый враг…",
+    "folder": "disk:"
+  },
+  {
+    "title": "холодные игрушки",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. КВАZИ",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Лабиринт отражений",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Линия Грёз",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Лукьяненко. Застава",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Мужской разговор",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Не время для драконов",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Не спешу",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Недотепа",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Новый роман «Ремарка»",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Ночной Дозор (графическая новелла)",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Ночной Дозор (другое изд.)",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Ночной Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Поиски утраченного завтра",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Порог",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Приключения Стора",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Принцесса стоит смерти",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Рыцари Cорока Oстровов",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Сами мы не местные",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Семь дней до Мегиддо",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Слуга",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Стройка века",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Тринадцатый город",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Фугу в мундире",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Холодные берега",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Черновик",
+    "folder": "disk:"
+  },
+  {
+    "title": "1.Клинки_кардинала",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Лукьяненко, Холмогоров. Очаг",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Последний герой",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дневной Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Участковый",
+    "folder": "disk:"
+  },
+  {
+    "title": "11. Вечный Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "11. Офицер особых поручений",
+    "folder": "disk:"
+  },
+  {
+    "title": "Великое воплощение Абсолютного Вакуума",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сумеречный дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Шестой Дозор (др. изд.)",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Шестой Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Печать Сумрака",
+    "folder": "disk:"
+  },
+  {
+    "title": "14. Три Тощака",
+    "folder": "disk:"
+  },
+  {
+    "title": "Школьный Надзор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последний дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Теневой Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Невский Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мелкий Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "1990. В королевстве Кирпирляйн",
+    "folder": "disk:"
+  },
+  {
+    "title": "1991. Охота на дракона",
+    "folder": "disk:"
+  },
+  {
+    "title": "2 Остров Русь",
+    "folder": "disk:"
+  },
+  {
+    "title": "Люди",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Близится утро",
+    "folder": "disk:"
+  },
+  {
+    "title": "Масть",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Войны Сорока Островов (Часть первая)",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Восточная баллада о доблестном менте",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Делается велосипед",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Дневной Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Донырнуть до звезд",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Звёздная тень",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Императоры Иллюзий",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Инквизитор",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. История болезни или Игры, которые играют в людей",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Кайноzой",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Лукьяненко, Громов. Реверс",
+    "folder": "disk:"
+  },
+  {
+    "title": "антибиотик",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Не место для людей",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Не спешу",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Непоседа",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. От судьбы",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Планета, которой нет",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Предел",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Пристань Жёлтых Кораблей",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Провернуть назад!",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Спираль времени",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Способность спустить курок",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Сухими из воды",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Танцы на снегу",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Три дня Индиго",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Фальшивые зеркала",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Хождение в Кино",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Чистовик",
+    "folder": "disk:"
+  },
+  {
+    "title": "2000. Микрорассказы Интерпрессконов 1997-2000",
+    "folder": "disk:"
+  },
+  {
+    "title": "2000. Фантастика-2000",
+    "folder": "disk:"
+  },
+  {
+    "title": "2001. Фантастика-2001",
+    "folder": "disk:"
+  },
+  {
+    "title": "2002. Фантастика-2002. Выпуск 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "2002. Фантастика-2002. Выпуск 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "2003. Псы любви",
+    "folder": "disk:"
+  },
+  {
+    "title": "2003. Фантастика-2003. Выпуск 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "2004. Гуманный выстрел в голову",
+    "folder": "disk:"
+  },
+  {
+    "title": "2004. Фантастика-2004. Выпуск 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "2004. Фэнтези-2004",
+    "folder": "disk:"
+  },
+  {
+    "title": "кот",
+    "folder": "disk:"
+  },
+  {
+    "title": "2005. Поваренная книга Мардгайла",
+    "folder": "disk:"
+  },
+  {
+    "title": "2005. Фантастика-2005",
+    "folder": "disk:"
+  },
+  {
+    "title": "2006. Фантастика-2006. Выпуск 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "2007. Мифы мегаполиса",
+    "folder": "disk:"
+  },
+  {
+    "title": "2008. Eurocon-2008 (1). Убить Чужого",
+    "folder": "disk:"
+  },
+  {
+    "title": "2008. Eurocon-2008 (2). Спасти чужого",
+    "folder": "disk:"
+  },
+  {
+    "title": "2008. Космическая фантастика, или Космос будет нашим!",
+    "folder": "disk:"
+  },
+  {
+    "title": "2009. Фантастика-2009. Выпуск 2. Змеи Хроноса",
+    "folder": "disk:"
+  },
+  {
+    "title": "2011. Новые мифы мегаполиса",
+    "folder": "disk:"
+  },
+  {
+    "title": "2013. Дорога к Марсу",
+    "folder": "disk:"
+  },
+  {
+    "title": "2014. Новогодний Дозор. Лучшая фантастика-2014",
+    "folder": "disk:"
+  },
+  {
+    "title": "2015. Обыденный Дозор. Лучшая фантастика 2015» (Антология)",
+    "folder": "disk:"
+  },
+  {
+    "title": "2017. Затерянный дозор. Лучшая фантастика 2017",
+    "folder": "disk:"
+  },
+  {
+    "title": "2019. Время для мага. Лучшая фантастика 2020",
+    "folder": "disk:"
+  },
+  {
+    "title": "2019",
+    "folder": "disk:"
+  },
+  {
+    "title": "2022",
+    "folder": "disk:"
+  },
+  {
+    "title": "2021",
+    "folder": "disk:"
+  },
+  {
+    "title": "Новый Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Цветной дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Оперативный резерв",
+    "folder": "disk:"
+  },
+  {
+    "title": "Время желаний",
+    "folder": "disk:"
+  },
+  {
+    "title": "Шестой Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Одиночный Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Время инверсий",
+    "folder": "disk:"
+  },
+  {
+    "title": "Книжный Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "3 Царь, царевич, король, королевич...",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Визит",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Восьмой цвет радуги",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Выпаренные сюжеты",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Дюралевое небо",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Калеки",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Купи кота",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Лукьяненко, Тырин. Самоволка",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Месяц за Рубиконом",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Нарушение",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Нахимовский дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Нечего делить",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Периодическая тризна",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Почти весна",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Прозрачные витражи",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Профессионал",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Прыжок",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Стеклянное море",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Сумеречный Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Тени Снов",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Шаги за спиной",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Эволюция научного мировоззрения на примерах из популярной литературы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Глубокий Сумрак",
+    "folder": "disk:"
+  },
+  {
+    "title": "Севастопольский Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чужой Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "36. Вечный дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "4 Необязательные эпилог и примечания",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Апостолы инструмента",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Вкус свободы",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Волков. Ренегаты",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Дозор с бульвара Капуцинов",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Если бы я писал «Красную Шапочку»",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Именем земли",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Кровавая оргия в марсианском аду",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Лето волонтёра",
+    "folder": "disk:"
+  },
+  {
+    "title": "к Геркулесу",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Переговорщики",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Поезд в Тёплый Край",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Последний Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Сами мы не местные",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Совпадение",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Ахауля Ляляпта",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Васильев. Рекрут",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Доктор Лем и нанотехи",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Если вы свяжетесь прямо сейчас...",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Мелкий дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дозоры не работают вместе",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Очень важный груз",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Проводник Отсюда",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Человек, который многого не умел",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Чужая боль",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Девочка с китайскими зажигалками",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Казаков. Коллекционер",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Капитан",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Нечего делить",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Новый Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Участковый",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Хозяин дорог",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сын Дога",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Борода из ваты (Новогодний дозор)",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Наносказочка",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Новая, новая сказка...",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Последний шанс",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Слюсаренко. Синтез",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Без паники!",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Люди и не-люди",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Мы не рабы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тайный Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Предание о первом атеисте",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Холмогоров. Крылья",
+    "folder": "disk:"
+  },
+  {
+    "title": "8. Школьный Надзор",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Категория «Зет»",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Печать Сумрака",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Плетельщица Снов",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Поймать пятимерника!",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночной Дозор",
+    "folder": "disk:"
+  },
+  {
+    "title": "9. Тырин, Холмогоров. Разлом",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 1998 № 02",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 1998 № 03",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 1998 № 09",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 1999 № 03",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2000 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2000 № 07",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2000 № 11",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2001 № 01",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2001 № 06",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2001 № 09",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2002 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2002 № 08",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2002 № 09",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2002 № 12",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2003 № 05",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2003 № 06",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2004 № 02",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2004 № 05",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2004 № 07",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2004 № 12",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2005 № 02",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2005 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2005 № 06",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2005 № 09",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2006 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2006 № 12",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2009 № 03",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2009 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2009 № 10",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2010 № 03",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2012 № 05",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Если», 2015 № 04",
+    "folder": "disk:"
+  },
+  {
+    "title": "значит люди (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Фальшивые зеркала» (компиляция по учебнику литературы)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алешенька и бекасы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том 6. Контакт. Столкновение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Аргентумный ключ",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лето на Цеоде",
+    "folder": "disk:"
+  },
+  {
+    "title": "Атомный сон (Cборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Атомный сон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Бхеда",
+    "folder": "disk:"
+  },
+  {
+    "title": "Веер (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Книги 1-10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осенние визиты. Спектр. Кредо (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Витя Солнышкин и Иосиф Сталин",
+    "folder": "disk:"
+  },
+  {
+    "title": "Временная суета",
+    "folder": "disk:"
+  },
+  {
+    "title": "Выпуск 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Выпуск 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Все реки текут...",
+    "folder": "disk:"
+  },
+  {
+    "title": "Гаджет (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Гаджет",
+    "folder": "disk:"
+  },
+  {
+    "title": "Глубина (Диптаун 1-3)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Глухой телефон",
+    "folder": "disk:"
+  },
+  {
+    "title": "Голова в облаках",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мушкетер ищет фею",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дверь во тьму (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Двести первый шаг",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дозоры (Компиляция, книги 1-10)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дозоры (сборник).fb2",
+    "folder": "disk:"
+  },
+  {
+    "title": "От Ночного до Шестого (сборник 1-6)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Донырнуть до звезд (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Живи спокойно",
+    "folder": "disk:"
+  },
+  {
+    "title": "Живи, Донбасс! (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "И вот они идут на суд…",
+    "folder": "disk:"
+  },
+  {
+    "title": "Том III",
+    "folder": "disk:"
+  },
+  {
+    "title": "Именем Земли (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Именем Земли (сборник рассказов)",
+    "folder": "disk:"
+  },
+  {
+    "title": "2025",
+    "folder": "disk:"
+  },
+  {
+    "title": "Рыцари сорока островов. Лорд с планеты Земля. Мальчик и тьма (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кобланды-батыр и Барса-Кельмес",
+    "folder": "disk:"
+  },
+  {
+    "title": "Конец космической эры",
+    "folder": "disk:"
+  },
+  {
+    "title": "Конец легенды (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Конец легенды",
+    "folder": "disk:"
+  },
+  {
+    "title": "Конкуренты",
+    "folder": "disk:"
+  },
+  {
+    "title": "Конструктор и его Лего-Бог",
+    "folder": "disk:"
+  },
+  {
+    "title": "Кредо",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ласковые мечты полуночи",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лев Николаевич и негры",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ловец видений",
+    "folder": "disk:"
+  },
+  {
+    "title": "On-line интервью 24-04-02 на канале RUSSF",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Аэлита» по-французски",
+    "folder": "disk:"
+  },
+  {
+    "title": "«Исторические игры» Юрия Щербатых",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вечером в куплете",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вся эта ложь",
+    "folder": "disk:"
+  },
+  {
+    "title": "Истории фэндома, взгляд наискосок",
+    "folder": "disk:"
+  },
+  {
+    "title": "Краткий обзор новых книг по астрологии, эзотерике, психологии",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маус-Американус, или Видовая политкорректность",
+    "folder": "disk:"
+  },
+  {
+    "title": "Незнайка на Луне, Впечатления дилетанта",
+    "folder": "disk:"
+  },
+  {
+    "title": "Об авторе - Сергей Лукьяненко",
+    "folder": "disk:"
+  },
+  {
+    "title": "Об одиночестве и глупости, о чести и доброте",
+    "folder": "disk:"
+  },
+  {
+    "title": "Первые впечатления от «Атаки клонов»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Предисловие к сборнику Леонида Каганова «Коммутация»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Статьи для интернет-газеты «Взгляд»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Статьи для портала «Однако»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Фантастика пути - или, куда идти",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чужие и мы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чужие и я",
+    "folder": "disk:"
+  },
+  {
+    "title": "Как умирают Ёжики, или Смерть как животнотворное начало в идеологии некроромантизма",
+    "folder": "disk:"
+  },
+  {
+    "title": "Шкафы книг не читают",
+    "folder": "disk:"
+  },
+  {
+    "title": "Лунный Рейх (Задумка нового романа)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маги без времени",
+    "folder": "disk:"
+  },
+  {
+    "title": "Маленькое космическое путешествие",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мальчик и Тьма",
+    "folder": "disk:"
+  },
+  {
+    "title": "Мальчик-монстр",
+    "folder": "disk:"
+  },
+  {
+    "title": "Настоящая фантастика 2018 (Антология)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Не время для драконов (Компиляция, книги 1-2)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Неделя неудач",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ночь накануне",
+    "folder": "disk:"
+  },
+  {
+    "title": "Общий сбор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Один день в 2100 году",
+    "folder": "disk:"
+  },
+  {
+    "title": "Операция «Вирус»",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осенние визиты (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Паспортный режим",
+    "folder": "disk:"
+  },
+  {
+    "title": "Полуденный фокстрот",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последняя ночь колдуна",
+    "folder": "disk:"
+  },
+  {
+    "title": "Преемственность",
+    "folder": "disk:"
+  },
+  {
+    "title": "черный…",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пристань желтых кораблей (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Проводник отсюда (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Рыцари сорока островов (Сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Седьмой",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сердце снарка",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сказка о трусливом портняжке",
+    "folder": "disk:"
+  },
+  {
+    "title": "Слишком много неожиданностей",
+    "folder": "disk:"
+  },
+  {
+    "title": "Спектр",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вып. 09",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вып. 10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Такая работа",
+    "folder": "disk:"
+  },
+  {
+    "title": "Только небо, только ветер…",
+    "folder": "disk:"
+  },
+  {
+    "title": "2024",
+    "folder": "disk:"
+  },
+  {
+    "title": "Трасса 2050",
+    "folder": "disk:"
+  },
+  {
+    "title": "Удачи в Новом году!",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ушибленные одиночеством",
+    "folder": "disk:"
+  },
+  {
+    "title": "Форсайт",
+    "folder": "disk:"
+  },
+  {
+    "title": "Холодные звезды (сборник)",
+    "folder": "disk:"
+  },
+  {
+    "title": "Цена вопроса",
+    "folder": "disk:"
+  },
+  {
+    "title": "Человек, который разговаривал с ангелами",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чистовик",
+    "folder": "disk:"
+  },
+  {
+    "title": "Электорат",
+    "folder": "disk:"
+  },
+  {
+    "title": "слуга",
+    "folder": "disk:"
+  },
+  {
+    "title": "01. Легенда нубятника",
+    "folder": "disk:"
+  },
+  {
+    "title": "02. Три данжа",
+    "folder": "disk:"
+  },
+  {
+    "title": "03. Месть нуба",
+    "folder": "disk:"
+  },
+  {
+    "title": "04. Чертов данж",
+    "folder": "disk:"
+  },
+  {
+    "title": "05. Королевский квест",
+    "folder": "disk:"
+  },
+  {
+    "title": "06. Проклятие нуба",
+    "folder": "disk:"
+  },
+  {
+    "title": "07. Демонический рубеж",
+    "folder": "disk:"
+  },
+  {
+    "title": "08. Адская кампания",
+    "folder": "disk:"
+  },
+  {
+    "title": "09. Ритм войны",
+    "folder": "disk:"
+  },
+  {
+    "title": "10. Эффект дракона",
+    "folder": "disk:"
+  },
+  {
+    "title": "11. Кровавый колдун",
+    "folder": "disk:"
+  },
+  {
+    "title": "12. Кровавый бог",
+    "folder": "disk:"
+  },
+  {
+    "title": "13. Десятый храм",
+    "folder": "disk:"
+  },
+  {
+    "title": "14. Гномий Бог",
+    "folder": "disk:"
+  },
+  {
+    "title": "Serebryakov_Sistema_7_Hranitel-Chast-vtoraya.ccwsvA.576430",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #1) Восьмой уровень. Часть первая",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #2) Восьмой Уровень. Часть вторая",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #3) Восьмой Уровень. Часть третья",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #4) Девятый уровень. Часть первая.",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #5) Девятый уровень. Часть вторая.",
+    "folder": "disk:"
+  },
+  {
+    "title": "(Система #6) Хранитель",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алексей КАЛУГИН - Мечта на поражение - STALKER_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алексей Калугин - Дом на болоте - STALKER_12",
+    "folder": "disk:"
+  },
+  {
+    "title": "Андрей Левицкий - Выбор Оружия - STALKER_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Андрей Левицкий - Сага Смерти Мгла - STALKER_22",
+    "folder": "disk:"
+  },
+  {
+    "title": "Андрей Левицкий - Сердце Зоны - STALKER_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Василий Орехов - Зона поражения - STALKER_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Василий Орехов - Линия огня - STALKER_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Воины Зоны - STALKER_18",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вячеслав Шалыгин - Обратный отсчет 1 - STALKER_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дмитрий Янковский - Эпицентр удачи - STALKER_13",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пустые земли Пустые земли - STALKER",
+    "folder": "disk:"
+  },
+  {
+    "title": "РоманГлушков - Холодная кровь - STALKER_9",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сергей Недоруб Песочные часы - STALKER_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тени Чернобыля - STALKER_10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тринадцатый сектор - Вячеслав Шалыгин 3 - STALKER",
+    "folder": "disk:"
+  },
+  {
+    "title": "Черный Ангел - STALKER_16",
+    "folder": "disk:"
+  },
+  {
+    "title": "Черный Ангел - Вячеслав Шалыгинc 2 - STALKER",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чистое небо - STALKER_11",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дезертир",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сталкер",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сага Смерти Мгла",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сердце Зоны",
+    "folder": "disk:"
+  },
+  {
+    "title": "Контрольный выброс",
+    "folder": "disk:"
+  },
+  {
+    "title": "Воины Зоны",
+    "folder": "disk:"
+  },
+  {
+    "title": "Тринадцатый сектор",
+    "folder": "disk:"
+  },
+  {
+    "title": "Черный Ангел",
+    "folder": "disk:"
+  },
+  {
+    "title": "Эпицентр удачи",
+    "folder": "disk:"
+  },
+  {
+    "title": "Алексей Калугин Ржавчина - STALKER_4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Андрей Ливадный Титановая Лоза - STALKER_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Андрей Ливадный Черная Пустошь - STALKER_5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вячеслав Шалыгин Время огня - STALKER_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Вячеслав Шалыгин Противостояние - STALKER_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Роман Глушков Дрожь земли - STALKER_7",
+    "folder": "disk:"
+  },
+  {
+    "title": "Роман Глушков Стальная петля - STALKER_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пустые земли Пустые земли",
+    "folder": "disk:"
+  },
+  {
+    "title": "Свинцовый закат",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чистое небо",
+    "folder": "disk:"
+  },
+  {
+    "title": "Пикники на обочине",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дом на болоте",
+    "folder": "disk:"
+  },
+  {
+    "title": "ОБратный отсчет",
+    "folder": "disk:"
+  },
+  {
+    "title": "Песочные часы",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сталкер 8- Мечта на поражение",
+    "folder": "disk:"
+  },
+  {
+    "title": "Холодная кровь",
+    "folder": "disk:"
+  },
+  {
+    "title": "Линия огня",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чистое небо",
+    "folder": "disk:"
+  },
+  {
+    "title": "1_sumerki",
+    "folder": "disk:"
+  },
+  {
+    "title": "2_novolunie",
+    "folder": "disk:"
+  },
+  {
+    "title": "2_novolunie_per_ahmerova_a_",
+    "folder": "disk:"
+  },
+  {
+    "title": "3_zatmenie",
+    "folder": "disk:"
+  },
+  {
+    "title": "3_zatmenie_per_vasilenko_o_",
+    "folder": "disk:"
+  },
+  {
+    "title": "4_lomaya_rassvet",
+    "folder": "disk:"
+  },
+  {
+    "title": "4_rassvet",
+    "folder": "disk:"
+  },
+  {
+    "title": "5_solnce_polunochi_Fan",
+    "folder": "disk:"
+  },
+  {
+    "title": "5_solntse_polunochi",
+    "folder": "disk:"
+  },
+  {
+    "title": "6_zakat_vechnosti",
+    "folder": "disk:"
+  },
+  {
+    "title": "7__100-let",
+    "folder": "disk:"
+  },
+  {
+    "title": "8_Первая ночь Беллы и Эдварда",
+    "folder": "disk:"
+  },
+  {
+    "title": "9_Быть Джейкобом Блэком",
+    "folder": "disk:"
+  },
+  {
+    "title": "Dyavolskie Baly",
+    "folder": "disk:"
+  },
+  {
+    "title": "avidreaders.ru__korotkaya-vtoraya-zhizn-bri-tanner",
+    "folder": "disk:"
+  },
+  {
+    "title": "Солнце-полуночи-главы-18-27",
+    "folder": "disk:"
+  },
+  {
+    "title": "Цена крови - 1",
+    "folder": "disk:"
+  },
+  {
+    "title": "След крови - 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Проклятие крови - 3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Договор крови - 4",
+    "folder": "disk:"
+  },
+  {
+    "title": "Долг крови - 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "Haff_Tanya_Hroniki_krovi._Pentalogiya_(LP)_Readli.Net_274401_original_91ec2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Камень Огня",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kollins_Maks_Igry_s_kochei",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kollins_Maks_Pered_rassvetom",
+    "folder": "disk:"
+  },
+  {
+    "title": "Kollins_Maks_Posle_tmy",
+    "folder": "disk:"
+  },
+  {
+    "title": "Слово о драконе - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Адам и Ева - 2 - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Долг перед видом - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последний Повелитель - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Давно забытая планета - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дракон замка Конгов - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стать драконом - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осколки Эдема - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Иди, поймай свою звезду - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Попутный ветер - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Караван мертвецов - Слово о драконе",
+    "folder": "disk:"
+  },
+  {
+    "title": "Адам и Ева - 2 - Слово о драконе_10",
+    "folder": "disk:"
+  },
+  {
+    "title": "Байки у костра - Буриме",
+    "folder": "disk:"
+  },
+  {
+    "title": "Давно забытая планета - Слово о драконе_3",
+    "folder": "disk:"
+  },
+  {
+    "title": "Долг перед видом - Слово о драконе_11",
+    "folder": "disk:"
+  },
+  {
+    "title": "Дом Командора - Буриме",
+    "folder": "disk:"
+  },
+  {
+    "title": "Краткие полеты Стелси - Буриме",
+    "folder": "disk:"
+  },
+  {
+    "title": "Осколки Эдема - Слово о драконе_6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Попутный ветер - Слово о драконе_8",
+    "folder": "disk:"
+  },
+  {
+    "title": "Последний Повелитель - Слово о драконе_2",
+    "folder": "disk:"
+  },
+  {
+    "title": "Слово о драконе - Слово о драконе_1",
+    "folder": "disk:"
+  },
+  {
+    "title": "Спасатели - Буриме",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. Ездовой гном",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. Ездовой гном. Захребетье",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. Ездовой гном. Торг",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. Ездовой гном. Сила",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. Ездовой гном. Возрождение",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. Ездовой гном. Битва",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. Тенарская Яга",
+    "folder": "disk:"
+  },
+  {
+    "title": "Ездовой гном 7 Волкан",
+    "folder": "disk:"
+  },
+  {
+    "title": "1. strelok",
+    "folder": "disk:"
+  },
+  {
+    "title": "2. izvlechenie_troih",
+    "folder": "disk:"
+  },
+  {
+    "title": "3. besplodnye_zemli",
+    "folder": "disk:"
+  },
+  {
+    "title": "4. koldun_i_kristall",
+    "folder": "disk:"
+  },
+  {
+    "title": "5. volki_kali",
+    "folder": "disk:"
+  },
+  {
+    "title": "6. pesn_syuzanny",
+    "folder": "disk:"
+  },
+  {
+    "title": "7. temnaya_bashnya",
+    "folder": "disk:"
+  },
+  {
+    "title": "smirennye_sestry_elurii",
+    "folder": "disk:"
+  },
+  {
+    "title": "CertificateParser",
+    "folder": "disk:"
+  },
+  {
+    "title": "Clean_MVD",
+    "folder": "disk:"
+  },
+  {
+    "title": "Clean_MVD_Klinrai",
+    "folder": "disk:"
+  },
+  {
+    "title": "RUIPvsPRIUR_16.03.2026 версия 5",
+    "folder": "disk:"
+  },
+  {
+    "title": "ЕРН Макрос",
+    "folder": "disk:"
+  },
+  {
+    "title": "МВД Макрос",
+    "folder": "disk:"
+  },
+  {
+    "title": "МВД, ЕРН, ЗАГС+ДляУверсальнойПроверки версия 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "ОТБОР Текстовый Район",
+    "folder": "disk:"
+  },
+  {
+    "title": "ОТБОР Текстовый",
+    "folder": "disk:"
+  },
+  {
+    "title": "Просмотреть, редактировать, выгрузить версия 6",
+    "folder": "disk:"
+  },
+  {
+    "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
+    "folder": "disk:"
+  },
+  {
+    "title": "Стат52УИК_Комментарии",
+    "folder": "disk:"
+  },
+  {
+    "title": "отбор из других районов XLSX Версия 2 для либра офиса",
+    "folder": "disk:"
+  },
+  {
+    "title": "отбор из других районов XLSX Версия 2",
+    "folder": "disk:"
+  },
+  {
+    "title": "АвтоматПоискаПоБазеИзФайла",
+    "folder": "disk:"
+  },
+  {
+    "title": "CleanMVD",
+    "folder": "disk:"
+  },
+  {
+    "title": "MVD_v2",
+    "folder": "disk:"
+  },
+  {
+    "title": "SCRIPT-ZAGS",
+    "folder": "disk:"
+  },
+  {
+    "title": "Script_Dyblu",
+    "folder": "disk:"
+  },
+  {
+    "title": "WorkDIN_22.07.2026",
+    "folder": "disk:"
+  },
+  {
+    "title": "База167поФильтрам",
+    "folder": "disk:"
+  },
+  {
+    "title": "ОтчетБД",
+    "folder": "disk:"
+  },
+  {
+    "title": "ПоследнееИзДинамики",
+    "folder": "disk:"
+  },
+  {
+    "title": "СКРИПТ Проверка списков для Linux",
+    "folder": "disk:"
+  },
+  {
+    "title": "СнятьЗащутуСЛистаВxlsx",
+    "folder": "disk:"
+  },
+  {
+    "title": "Чужой без убытия",
+    "folder": "disk:"
+  }
+]
