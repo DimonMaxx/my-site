@@ -12,21 +12,16 @@ from google.oauth2.service_account import Credentials
 # КОНСТАНТЫ
 # ============================================================
 
-# ID Google-таблицы (из URL: /spreadsheets/d/<ID>/edit)
-# Задаётся через секрет SPREADSHEET_ID в GitHub Actions.
 SPREADSHEET_ID = os.environ.get(
     "SPREADSHEET_ID",
     "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← замените на реальный ID
 )
 
-# Имя таблицы (используется только для логов/фолбэка)
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
-# Путь к JSON сервисного аккаунта (fallback, если нет env)
 CREDENTIALS_FILE = os.environ.get("GOOGLE_CREDENTIALS_FILE", "credentials.json")
 
 
-# Конфиг листов: имя листа → путь к JSON-файлу
 SHEET_CONFIG = {
     "Книги":     {"json": "_content/books.json"},
     "Программы": {"json": "_content/programs.json"},
@@ -39,25 +34,28 @@ SHEET_CONFIG = {
 }
 
 
-# Соответствие русских заголовков колонок в Sheets → английским ключам в JSON
+# Соответствие русских заголовков колонок в Sheets → английским ключам в JSON.
+# Поддерживаем несколько вариантов для одного ключа, чтобы старые таблицы
+# не ломались.
 COLUMN_MAPPING = {
-    "Название":       "title",
-    "Автор":          "author",
-    "Описание":       "description",
-    "Формат":         "format",
-    "Размер":         "size",
-    "Ссылка":         "download_link",
-    "Обложка":        "cover",
-    "Папка":          "folder",
-    "Версия":         "version",
-    "Текст":          "text",
-    "Дата":           "date",
-    "Категория":      "category",
-    "Теги":           "tags",
+    "Название":              "title",
+    "Автор":                 "author",
+    "Описание":              "description",
+    "Формат":                "format",
+    "Размер (МБ)":           "size",
+    "Размер":                "size",
+    "Ссылка для скачивания": "download_link",
+    "Ссылка":                "download_link",
+    "Обложка":               "cover",
+    "Папка":                 "folder",
+    "Версия":                "version",
+    "Текст":                 "text",
+    "Дата":                  "date",
+    "Категория":             "category",
+    "Теги":                  "tags",
 }
 
 
-# Соответствие ключа раздела (как в config.js) → имени листа в Google Sheets
 SECTION_TO_SHEET = {
     "programs": "Программы",
     "books":    "Книги",
@@ -75,10 +73,7 @@ SECTION_TO_SHEET = {
 # ============================================================
 
 def normalize(s) -> str:
-    """
-    Нормализация строки для сравнения названий:
-    нижний регистр, без пробелов, дефисов, подчёркиваний, ё→е.
-    """
+    """Нормализация строки для сравнения названий."""
     if not s:
         return ""
     return (
@@ -95,12 +90,6 @@ def normalize(s) -> str:
 # ============================================================
 
 def _load_credentials_dict() -> dict:
-    """
-    Возвращает словарь с данными сервисного аккаунта.
-    Приоритет:
-        1) env GOOGLE_CREDENTIALS_JSON  (GitHub Actions)
-        2) файл credentials.json        (локально)
-    """
     raw = os.environ.get("GOOGLE_CREDENTIALS_JSON")
     if raw:
         try:
@@ -116,17 +105,11 @@ def _load_credentials_dict() -> dict:
 
     raise RuntimeError(
         "Не найдены credentials ни в GOOGLE_CREDENTIALS_JSON, "
-        f"ни в файле '{CREDENTIALS_FILE}'. "
-        "Задайте переменную окружения или положите файл рядом со скриптом."
+        f"ни в файле '{CREDENTIALS_FILE}'."
     )
 
 
 def get_gspread_client():
-    """
-    Создаёт авторизованный клиент gspread.
-    Работает и локально (credentials.json),
-    и в GitHub Actions (GOOGLE_CREDENTIALS_JSON).
-    """
     creds_dict = _load_credentials_dict()
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
