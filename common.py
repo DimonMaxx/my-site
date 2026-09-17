@@ -12,11 +12,17 @@ from google.oauth2.service_account import Credentials
 # КОНСТАНТЫ
 # ============================================================
 
+# ID Google-таблицы (из URL: /spreadsheets/d/<ID>/edit)
+# Задаётся через секрет SPREADSHEET_ID в GitHub Actions.
 SPREADSHEET_ID = os.environ.get(
     "SPREADSHEET_ID",
-    "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← при необходимости замените
+    "1kcG0TG4GZtSM2mypjgvNDUpIbLfIvcmW80_hBKA11nw",   # ← замените на реальный ID
 )
 
+# Имя таблицы (используется только для логов/фолбэка)
+SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
+
+# Путь к JSON сервисного аккаунта (fallback, если нет env)
 CREDENTIALS_FILE = os.environ.get("GOOGLE_CREDENTIALS_FILE", "credentials.json")
 
 
@@ -118,6 +124,8 @@ def _load_credentials_dict() -> dict:
 def get_gspread_client():
     """
     Создаёт авторизованный клиент gspread.
+    Работает и локально (credentials.json),
+    и в GitHub Actions (GOOGLE_CREDENTIALS_JSON).
     """
     creds_dict = _load_credentials_dict()
     scopes = [
