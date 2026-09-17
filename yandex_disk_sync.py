@@ -50,13 +50,13 @@ SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСа�
 
 # ВАЖНО: если публичная ссылка ведёт на КОРЕНЬ диска, укажите
 # относительный путь до нужной папки в поле "path".
-# Например: {"url": "...", "path": "/Программы"}
+# Например: {"url": "...", "path": "/Книги"}
 #
 # Если ссылка ведёт уже на нужную папку — оставьте "/".
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
-        "path": "/",
+        "path": "/Книги",
     },
     "Программы": {
         "url":  "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
@@ -1003,7 +1003,12 @@ def ensure_headers(sheet, headers: list):
     end_col_letter = chr(ord('A') + len(headers) - 1) if len(headers) <= 26 else "Z"
     range_a1 = f"A1:{end_col_letter}1"
     try:
-        sheet.update(range_a1, [headers], value_input_option="USER_ENTERED")
+        # Новый синтаксис gspread 6.x: сначала values, потом range_name
+        sheet.update(
+            values=[headers],
+            range_name=range_a1,
+            value_input_option="USER_ENTERED",
+        )
         print(f"    [+] Обновлены заголовки: {headers}")
     except Exception as e:
         print(f"    [!] Не удалось обновить заголовки: {e}")
