@@ -27,8 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Создаём credentials.json из секрета —
-      # на случай, если какой-то скрипт читает файл, а не env.
+      # На случай, если какой-то скрипт читает credentials.json как файл.
       # В репозиторий файл не коммитится (см. .gitignore).
       - name: Create credentials.json
         run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
@@ -39,7 +38,7 @@ jobs:
           YADISK_TOKEN:              ${{ secrets.YADISK_TOKEN }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GOOGLE_BOOKS_API_KEY:      ${{ secrets.GOOGLE_BOOKS_API_KEY }}
-          SPREADSHEET_NAME:          "Content"
+          SPREADSHEET_NAME:          "НаполнениеСайта"
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           WIKI_LANG:                 "ru"
           ENABLE_LLM_FALLBACK:       "0"
