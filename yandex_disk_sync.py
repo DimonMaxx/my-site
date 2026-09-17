@@ -6,7 +6,7 @@ yandex_disk_sync.py
 
 Источники описаний (в порядке приоритета):
     1. Google Books API
-    2. FantLab API (fantlab.ru) — русская фантастика
+    2. FantLab API (fantlab.ru)
     3. Wikipedia API
     4. Open Library API
     5. LLM (YandexGPT / OpenAI) — опционально
@@ -47,23 +47,58 @@ except ImportError:
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
+
+# ВАЖНО: если публичная ссылка ведёт на КОРЕНЬ диска, укажите
+# относительный путь до нужной папки в поле "path".
+# Например: {"url": "...", "path": "/Программы"}
+#
+# Если ссылка ведёт уже на нужную папку — оставьте "/".
 SECTIONS = {
-    "Книги":     "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
-    "Программы": "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
-    "Музыка":    "",
-    "Игры":      "",
-    "Статьи":    "",
-    "Фильмы":    "",
-    "Разное":    "",
-    "Новости":   "",
+    "Книги": {
+        "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
+        "path": "/",
+    },
+    "Программы": {
+        "url":  "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
+        "path": "/",
+    },
+    "Музыка":  {"url": "", "path": "/"},
+    "Игры":    {"url": "", "path": "/"},
+    "Статьи":  {"url": "", "path": "/"},
+    "Фильмы":  {"url": "", "path": "/"},
+    "Разное":  {"url": "", "path": "/"},
+    "Новости": {"url": "", "path": "/"},
 }
 
+
+# РУССКИЕ заголовки — их видит пользователь в Google Sheets,
+# и их читает generate_from_sheets.py через COLUMN_MAPPING.
 SHEET_HEADERS = {
-    "Книги":     ["title", "author", "format", "size",
-                  "download_link", "cover", "folder", "description"],
-    "Программы": ["title", "description", "version", "size",
-                  "download_link", "folder"],
+    "Книги":     ["Название", "Автор", "Формат", "Размер (МБ)",
+                  "Ссылка для скачивания", "Обложка", "Папка", "Описание"],
+    "Программы": ["Название", "Описание", "Версия", "Размер (МБ)",
+                  "Ссылка для скачивания", "Папка"],
 }
+
+
+# Обратное соответствие (RU → EN) — для сборки строк
+RU_TO_EN = {
+    "Название":              "title",
+    "Автор":                 "author",
+    "Описание":              "description",
+    "Формат":                "format",
+    "Размер (МБ)":           "size",
+    "Размер":                "size",
+    "Ссылка для скачивания": "download_link",
+    "Ссылка":                "download_link",
+    "Обложка":               "cover",
+    "Папка":                 "folder",
+    "Версия":                "version",
+    "Дата":                  "date",
+    "Категория":             "category",
+    "Теги":                  "tags",
+}
+
 
 ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".txt", ".djvu", ".mobi", ".azw3"}
 
@@ -73,28 +108,23 @@ CACHE_FILE = os.path.join(CACHE_DIR, "enrichment_cache.json")
 SUPABASE_URL    = "https://rmoonebbvpmvthvpcmpt.supabase.co"
 SUPABASE_BUCKET = "covers"
 
-# --- Google Books ---
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
 
-# --- FantLab ---
 FANTLAB_API        = "https://api.fantlab.ru"
 FANTLAB_SEARCH_URL = f"{FANTLAB_API}/search-works"
 FANTLAB_WORK_URL   = f"{FANTLAB_API}/work/{{work_id}}/extended"
 
-# --- Wikipedia ---
 WIKI_LANG = os.environ.get("WIKI_LANG", "ru")
 WIKI_API  = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
 
-# --- Open Library ---
 OPENLIBRARY_API = "https://openlibrary.org/search.json"
 
-# --- LLM ---
 YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 
 HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
-SLEEP_BEFORE_LISTDIR   = 1.5   # принудительная пауза перед обходом Яндекс.Диска
+SLEEP_BEFORE_LISTDIR   = 1.5
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
 
@@ -186,7 +216,7 @@ def cache_key(title: str, author: str) -> str:
 
 
 # ============================================================
-# ВАЛИДАЦИЯ РЕЗУЛЬТАТОВ ОБОГАЩЕНИЯ
+# ВАЛИДАЦИЯ ОБОГАЩЕНИЯ
 # ============================================================
 
 def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
@@ -255,6 +285,13 @@ def get_public_key(public_url: str) -> str:
     return m.group(1)
 
 
+def _strip_disk_prefix(path: str) -> str:
+    """Убирает префикс 'disk:' из пути, который возвращает yadisk."""
+    if path and path.startswith("disk:"):
+        return path[len("disk:"):]
+    return path or "/"
+
+
 def list_public_files_recursive(client, public_key: str,
                                 path: str = "/",
                                 depth: int = 0,
@@ -264,7 +301,8 @@ def list_public_files_recursive(client, public_key: str,
         print(f"    [!] Достигнута максимальная глубина {max_depth} в {path}")
         return result
 
-    # Небольшая пауза, чтобы Яндекс.Диск не отдал кэшированный ответ
+    # Принудительная пауза на верхнем уровне — чтобы Яндекс.Диск
+    # не отдал закэшированный результат.
     if depth == 0:
         time.sleep(SLEEP_BEFORE_LISTDIR)
 
@@ -284,10 +322,11 @@ def list_public_files_recursive(client, public_key: str,
                 )
             elif item.type == "file":
                 ext = os.path.splitext(item.name)[1].lower()
+                clean_path = _strip_disk_prefix(item.path)
                 result.append({
                     "name":      item.name,
-                    "path":      item.path,
-                    "full_path": item.path,
+                    "path":      clean_path,
+                    "full_path": clean_path,
                     "size":      getattr(item, "size", 0) or 0,
                     "ext":       ext,
                     "modified":  getattr(item, "modified", "") or "",
@@ -305,8 +344,24 @@ def make_download_link(public_key: str, full_path: str) -> str:
     return f"https://disk.yandex.ru/d/{public_key}?path={quote(full_path)}"
 
 
+def print_root_diagnostics(client, public_key: str, path: str = "/"):
+    """Печатает первые 20 элементов указанной папки — чтобы понять структуру."""
+    try:
+        time.sleep(SLEEP_BEFORE_LISTDIR)
+        items = list(client.listdir(path, public_key=public_key))
+    except Exception as e:
+        print(f"  [!] Не удалось получить содержимое {path}: {e}")
+        return
+    print(f"  Содержимое '{path}' ({len(items)} элементов):")
+    for it in items[:20]:
+        kind = "DIR " if it.type == "dir" else "FILE"
+        print(f"    [{kind}] {it.name}")
+    if len(items) > 20:
+        print(f"    ... и ещё {len(items) - 20}")
+
+
 # ============================================================
-# ПАРСИНГ ИМЕНИ ФАЙЛА
+# ПАРСИНГ ИМЕНИ
 # ============================================================
 
 SEPARATORS = [" - ", " — ", " – ", " –– "]
@@ -379,11 +434,7 @@ def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
     if not q_parts:
         return {}
 
-    params = {
-        "q": " ".join(q_parts),
-        "maxResults": 3,
-        "printType": "books",
-    }
+    params = {"q": " ".join(q_parts), "maxResults": 3, "printType": "books"}
     if api_key:
         params["key"] = api_key
 
@@ -426,11 +477,7 @@ def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
 # ============================================================
 
 def _fantlab_search_works(query: str, limit: int = 5) -> list:
-    """Поиск произведений в библиографической базе FantLab."""
-    params = {
-        "q": query,
-        "onlymatches": 1,
-    }
+    params = {"q": query, "onlymatches": 1}
     try:
         r = requests.get(
             FANTLAB_SEARCH_URL,
@@ -456,7 +503,6 @@ def _fantlab_search_works(query: str, limit: int = 5) -> list:
 
 
 def _fantlab_get_work(work_id: int) -> dict:
-    """Получение расширенной информации о произведении."""
     try:
         r = requests.get(
             FANTLAB_WORK_URL.format(work_id=work_id),
@@ -472,10 +518,6 @@ def _fantlab_get_work(work_id: int) -> dict:
 
 
 def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
-    """
-    Выбирает наиболее релевантное совпадение из результатов поиска.
-    Приоритет: точное совпадение названия + автор.
-    """
     title_l = (title or "").lower()
     author_l = (author or "").lower()
 
@@ -484,8 +526,6 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
 
     for m in matches:
         score = 0
-
-        # Названия
         names = " ".join(filter(None, [
             m.get("rusname", ""),
             m.get("name", ""),
@@ -499,7 +539,6 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
         ):
             score += 1
 
-        # Автор
         authors_str = " ".join(filter(None, [
             m.get("all_autor_rusname", ""),
             m.get("autor1_rusname", ""),
@@ -516,7 +555,6 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
             best_score = score
             best = m
 
-    # Если совсем нет совпадений — возвращаем лучший по весу
     if best is None and matches:
         best = max(matches, key=lambda x: x.get("weight", 0) or 0)
 
@@ -524,32 +562,21 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
 
 
 def _clean_fantlab_text(text: str) -> str:
-    """Убирает HTML-теги и лишние пробелы из описания FantLab."""
     if not text:
         return ""
-    # Убираем <a href="...">...</a> → оставляем текст
     text = re.sub(r"<a[^>]*>(.*?)</a>", r"\1", text, flags=re.DOTALL)
-    # Убираем остальные HTML-теги
     text = re.sub(r"<[^>]+>", "", text)
-    # Убираем bb-теги вида [user]...[/user]
     text = re.sub(r"\[/?[a-zA-Z_]+\]", "", text)
-    # Схлопываем пробелы
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
 
 def fantlab_lookup(title: str, author: str) -> dict:
-    """
-    Ищет описание книги через API FantLab.
-    Возвращает {description, cover, source, title} или {}.
-    """
     if not title:
         return {}
 
-    # Формируем поисковый запрос
     query_parts = [title]
     if author:
-        # FantLab в поиске использует "+" как разделитель
         query_parts.append(author)
     query = " ".join(query_parts)
 
@@ -557,7 +584,6 @@ def fantlab_lookup(title: str, author: str) -> dict:
     time.sleep(SLEEP_BETWEEN_REQUESTS)
 
     if not matches:
-        # Второй запрос — только по названию
         matches = _fantlab_search_works(title, limit=5)
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
@@ -581,7 +607,6 @@ def fantlab_lookup(title: str, author: str) -> dict:
     if not desc or len(desc) < 50:
         return {}
 
-    # Обложка (может быть в поле image)
     cover = ""
     img = work.get("image") or {}
     if isinstance(img, dict):
@@ -604,8 +629,7 @@ def fantlab_lookup(title: str, author: str) -> dict:
 def _wiki_request(params: dict) -> dict:
     try:
         r = requests.get(
-            WIKI_API,
-            params=params,
+            WIKI_API, params=params,
             headers={"User-Agent": USER_AGENT},
             timeout=HTTP_TIMEOUT,
         )
@@ -619,12 +643,8 @@ def _wiki_request(params: dict) -> dict:
 
 def _wiki_search_page(query: str) -> tuple:
     data = _wiki_request({
-        "action":      "query",
-        "format":      "json",
-        "list":        "search",
-        "srsearch":    query,
-        "srlimit":     1,
-        "srnamespace": 0,
+        "action": "query", "format": "json", "list": "search",
+        "srsearch": query, "srlimit": 1, "srnamespace": 0,
     })
     hits = (data.get("query") or {}).get("search") or []
     if not hits:
@@ -634,13 +654,8 @@ def _wiki_search_page(query: str) -> tuple:
 
 def _wiki_get_extract(pageid: int) -> str:
     data = _wiki_request({
-        "action":      "query",
-        "format":      "json",
-        "prop":        "extracts",
-        "pageids":     pageid,
-        "explaintext": 1,
-        "exintro":     1,
-        "redirects":   1,
+        "action": "query", "format": "json", "prop": "extracts",
+        "pageids": pageid, "explaintext": 1, "exintro": 1, "redirects": 1,
     })
     pages = (data.get("query") or {}).get("pages") or {}
     for _, page in pages.items():
@@ -673,11 +688,8 @@ def wikipedia_lookup(title: str, author: str) -> dict:
     if author:
         queries.append(f"{title} {author} роман")
     queries += [
-        f"{title} (роман)",
-        f"{title} (книга)",
-        f"{title} (повесть)",
-        f"{title} (рассказ)",
-        f"{title} (литературное произведение)",
+        f"{title} (роман)", f"{title} (книга)", f"{title} (повесть)",
+        f"{title} (рассказ)", f"{title} (литературное произведение)",
     ]
     if author:
         queries.append(f"{title} {author}")
@@ -739,10 +751,7 @@ def openlibrary_lookup(title: str, author: str) -> dict:
         found_title = d.get("title", "") or ""
         if not _title_words_overlap(title, found_title):
             authors_list = d.get("author_name") or []
-            if not any(
-                _author_mentioned(author, " ".join(authors_list))
-                for _ in [0]
-            ):
+            if not any(_author_mentioned(author, " ".join(authors_list)) for _ in [0]):
                 continue
 
         desc = ""
@@ -851,10 +860,6 @@ def llm_lookup(title: str, author: str) -> dict:
 # ============================================================
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
-    """
-    Порядок: Google Books → FantLab → Wikipedia → Open Library → LLM.
-    Результат валидируется и кэшируется.
-    """
     ck = cache_key(title, author)
 
     cached = cache.get(ck)
@@ -866,14 +871,12 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
     meta = {}
 
-    # 1. Google Books
     try:
         meta = google_books_lookup(title, author, gb_key)
     except Exception as e:
         print(f"    [!] Google Books fallback: {e}")
     time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 2. FantLab
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = fantlab_lookup(title, author)
@@ -881,7 +884,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] FantLab fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 3. Wikipedia
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = wikipedia_lookup(title, author)
@@ -889,7 +891,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 4. Open Library
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = openlibrary_lookup(title, author)
@@ -897,7 +898,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # 5. LLM
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = llm_lookup(title, author)
@@ -975,14 +975,38 @@ def open_spreadsheet(gs_client):
     return gs_client.open(SPREADSHEET_NAME)
 
 
-def get_or_create_sheet(sh, name: str, headers: list):
+def get_or_create_sheet(sh, name: str):
     try:
         return sh.worksheet(name)
     except gspread.WorksheetNotFound:
         print(f"  [!] Лист '{name}' не найден, создаю...")
-        sheet = sh.add_worksheet(title=name, rows=2000, cols=len(headers) + 2)
-        sheet.append_row(headers)
+        sheet = sh.add_worksheet(title=name, rows=2000, cols=12)
         return sheet
+
+
+def ensure_headers(sheet, headers: list):
+    """
+    Проверяет, что первая строка листа = headers.
+    Если заголовки отличаются — перезаписывает первую строку.
+    Данные ниже не трогает.
+    """
+    try:
+        current = sheet.row_values(1)
+    except Exception:
+        current = []
+    current_clean = [c.strip() for c in current if c is not None]
+    headers_clean = [h.strip() for h in headers]
+
+    if current_clean[:len(headers_clean)] == headers_clean:
+        return
+
+    end_col_letter = chr(ord('A') + len(headers) - 1) if len(headers) <= 26 else "Z"
+    range_a1 = f"A1:{end_col_letter}1"
+    try:
+        sheet.update(range_a1, [headers], value_input_option="USER_ENTERED")
+        print(f"    [+] Обновлены заголовки: {headers}")
+    except Exception as e:
+        print(f"    [!] Не удалось обновить заголовки: {e}")
 
 
 def load_existing_keys(sheet) -> set:
@@ -992,14 +1016,16 @@ def load_existing_keys(sheet) -> set:
         return set()
     if not rows:
         return set()
+
     header = [h.strip().lower() for h in rows[0]]
     idx = None
-    for cand in ("download_link", "ссылка", "link"):
+    for cand in ("ссылка для скачивания", "ссылка", "download_link", "link"):
         if cand in header:
             idx = header.index(cand)
             break
     if idx is None:
         return set()
+
     keys = set()
     for r in rows[1:]:
         if len(r) > idx and r[idx].strip():
@@ -1095,8 +1121,16 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             "folder":        folder,
             "description":   enriched.get("description", ""),
             "version":       "",
+            "date":          "",
+            "category":      "",
+            "tags":          "",
         }
-        rows.append([record.get(h, "") for h in headers])
+
+        row = []
+        for ru in headers:
+            en = RU_TO_EN.get(ru, ru)
+            row.append(record.get(en, ""))
+        rows.append(row)
 
     return rows
 
@@ -1105,17 +1139,23 @@ def build_rows_for_section(section: str, files: list, public_key: str,
 # СИНХРОНИЗАЦИЯ РАЗДЕЛА
 # ============================================================
 
-def sync_section(section: str, public_url: str, gs_client,
+def sync_section(section: str, section_cfg: dict, gs_client,
                  cache: dict, supabase, diag: Diag):
     print(f"\n=== Раздел: {section} ===")
+
+    public_url = section_cfg.get("url", "")
+    start_path = section_cfg.get("path", "/") or "/"
+
     if not public_url:
         print("  Пустая ссылка, пропускаю.")
         return
+
     if section not in SHEET_HEADERS:
         print(f"  Раздел '{section}' не настроен, пропускаю.")
         return
 
-    print(f"Источник: {public_url}")
+    print(f"Источник:   {public_url}")
+    print(f"Подпапка:   {start_path}")
 
     if yadisk is None:
         print("  [!] yadisk не установлен, пропускаю.")
@@ -1136,7 +1176,14 @@ def sync_section(section: str, public_url: str, gs_client,
             print(f"  [!] Ошибка проверки токена: {e}")
             return
 
-        files = list_public_files_recursive(client, public_key)
+        # Диагностика: что лежит на верхнем уровне
+        print_root_diagnostics(client, public_key, "/")
+
+        # Если задан start_path != "/" — диагностируем и его
+        if start_path != "/":
+            print_root_diagnostics(client, public_key, start_path)
+
+        files = list_public_files_recursive(client, public_key, path=start_path)
 
     diag.found = len(files)
     print(f"  Найдено файлов: {len(files)}")
@@ -1156,13 +1203,16 @@ def sync_section(section: str, public_url: str, gs_client,
         print(f"  [!] Не удалось открыть таблицу: {e}")
         return
 
+    sheet = get_or_create_sheet(sh, section)
     headers = SHEET_HEADERS[section]
-    sheet = get_or_create_sheet(sh, section, headers)
+    ensure_headers(sheet, headers)
 
     existing = load_existing_keys(sheet)
-    print(f"  Существующих строк с download_link: {len(existing)}")
+    print(f"  Существующих строк с ссылкой: {len(existing)}")
 
-    link_idx = headers.index("download_link")
+    link_ru = "Ссылка для скачивания"
+    link_idx = headers.index(link_ru) if link_ru in headers else 0
+
     new_rows = []
     upd_count = 0
     for row in rows:
@@ -1226,10 +1276,10 @@ def main():
     grand_kept     = 0
     grand_enriched = 0
 
-    for section, url in SECTIONS.items():
+    for section, cfg in SECTIONS.items():
         diag = Diag()
         try:
-            sync_section(section, url, gs_client, cache, supabase, diag)
+            sync_section(section, cfg, gs_client, cache, supabase, diag)
         except Exception as e:
             print(f"\n[!!!] Ошибка в разделе {section}: {e}")
             traceback.print_exc()
