@@ -43,7 +43,9 @@ except ImportError:
 # КОНФИГУРАЦИЯ
 # ============================================================
 
-SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "Content")
+# ID таблицы — обязательно через env, чтобы открывать по ключу, а не по имени.
+SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
+SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
 SECTIONS = {
     "Книги":     "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
@@ -62,7 +64,6 @@ SHEET_HEADERS = {
                   "download_link", "cover", "folder", "description"],
     "Программы": ["title", "description", "version", "size",
                   "download_link", "folder"],
-    # Остальные разделы пока не синхронизируются — добавьте при необходимости.
 }
 
 ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".txt", ".djvu", ".mobi", ".azw3"}
@@ -84,7 +85,7 @@ OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
 
-USER_AGENT = "ContentSyncBot/1.0 (https://github.com/your/repo)"
+USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
 
 
 # Слова-маркеры, по которым понимаем, что статья Wikipedia — про книгу
@@ -94,6 +95,11 @@ BOOK_MARKERS = (
     "novel", "book", "story", "written by", "author",
     "сборник", "эпопея", "цикл",
 )
+
+
+# Символы CP866-«псевдографики», которые появляются при битой кодировке.
+# ВАЖНО: буквы Ё здесь быть не должно — она есть в нормальных названиях!
+_CP866_JUNK = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
 
 
 # ============================================================
@@ -176,9 +182,6 @@ def cache_key(title: str, author: str) -> str:
 # ВАЛИДАЦИЯ РЕЗУЛЬТАТОВ ОБОГАЩЕНИЯ
 # ============================================================
 
-_CP866_JUNK = set("╞░─┘╦╪╟Ё┌┐└┴┬├┤│╫╬═║╔╗╚╝")
-
-
 def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
     """Проверяет, что текст похож на описание книги/произведения."""
     text = (desc or "").lower()
@@ -225,15 +228,12 @@ def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
 
     src = (meta.get("source") or "none").lower()
 
-    # Надёжные источники — доверяем
     if src in ("google_books", "openai", "yandexgpt", "none"):
         return True
 
-    # Wikipedia — проверяем, что статья про книгу
     if src.startswith("wikipedia"):
         return _looks_like_book_article(desc, title, author)
 
-    # Open Library — проверяем название или автора
     if src == "openlibrary":
         return (
             _title_words_overlap(title, meta.get("title", ""))
@@ -315,6 +315,9 @@ def _is_garbage_stem(stem: str) -> bool:
     # fanfic_1234567
     if re.match(r"^fanfic_\d+$", s, re.IGNORECASE):
         return True
+    # только цифры и точки (например, "107156017")
+    if re.match(r"^[\d\.\s]+$", s):
+        return True
     # только звёздочки/тире/подчёркивания/точки
     if re.match(r"^[\*\-_\.\s]+$", s):
         return True
@@ -324,7 +327,7 @@ def _is_garbage_stem(stem: str) -> bool:
     # слишком короткое
     if len(s) < 2:
         return True
-    # название из одного символа / мусорных токенов
+    # нет ни одной буквы длиной ≥ 2
     if not re.search(r"[A-Za-zА-Яа-яЁё]{2,}", s):
         return True
     return False
@@ -334,7 +337,7 @@ def parse_book_name(filename: str) -> dict:
     """
     Разбирает имя файла вида:
       'АРКАДИЙ СТРУГАЦКИЙ, БОРИС СТРУГАЦКИЙ - ЗА МИЛЛИАРД ЛЕТ ДО КОНЦА СВЕТА.txt'
-    Возвращает {title, author} или пустой dict, если имя мусорное.
+    Возвращает {title, author} или пустые значения, если имя мусорное.
     """
     stem = os.path.splitext(filename)[0].strip()
 
@@ -498,7 +501,7 @@ def wikipedia_lookup(title: str, author: str) -> dict:
     """
     Ищет статью Wikipedia про книгу.
     Строгая проверка: результат принимается, только если он похож
-    на описание книги/произведения, а не на что-то постороннее.
+    на описание книги/произведения.
     """
     if not title:
         return {}
@@ -531,7 +534,6 @@ def wikipedia_lookup(title: str, author: str) -> dict:
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
 
-        # Ключевая проверка: похоже ли на книгу
         if not _looks_like_book_article(extract, title, author):
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
@@ -572,9 +574,7 @@ def openlibrary_lookup(title: str, author: str) -> dict:
     docs = data.get("docs") or []
     for d in docs:
         found_title = d.get("title", "") or ""
-        # проверяем совпадение названия, иначе пропускаем
         if not _title_words_overlap(title, found_title):
-            # или хотя бы автор совпадает
             authors_list = d.get("author_name") or []
             if not any(
                 _author_mentioned(author, " ".join(authors_list))
@@ -694,7 +694,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     """
     ck = cache_key(title, author)
 
-    # 1. Кэш — используем только если результат валиден
     cached = cache.get(ck)
     if cached is not None and _result_is_acceptable(cached, title, author):
         src = cached.get("source", "none")
@@ -704,14 +703,12 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
     meta = {}
 
-    # Google Books
     try:
         meta = google_books_lookup(title, author, gb_key)
     except Exception as e:
         print(f"    [!] Google Books fallback: {e}")
     time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Wikipedia
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = wikipedia_lookup(title, author)
@@ -719,7 +716,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Open Library
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = openlibrary_lookup(title, author)
@@ -727,7 +723,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # LLM
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = llm_lookup(title, author)
@@ -735,7 +730,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] LLM fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Финальная проверка
     if meta and not _result_is_acceptable(meta, title, author):
         meta = {}
 
@@ -796,6 +790,19 @@ def get_gspread_client():
     ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
+
+
+def open_spreadsheet(gs_client):
+    """
+    Открывает таблицу:
+      1) по ID (предпочтительно),
+      2) по имени — только если ID не задан.
+    """
+    if SPREADSHEET_ID:
+        print(f"Открываю таблицу по ID: {SPREADSHEET_ID}")
+        return gs_client.open_by_key(SPREADSHEET_ID)
+    print(f"SPREADSHEET_ID не задан, открываю по имени: {SPREADSHEET_NAME}")
+    return gs_client.open(SPREADSHEET_NAME)
 
 
 def get_or_create_sheet(sh, name: str, headers: list):
@@ -870,12 +877,10 @@ def build_rows_for_section(section: str, files: list, public_key: str,
         name = f["name"]
         ext  = f["ext"]
 
-        # 1. Фильтр по расширению
         if section == "Книги" and ALLOWED_EXTS and ext not in ALLOWED_EXTS:
             log_skip(diag, "bad_ext", name, f"(ext={ext})")
             continue
 
-        # 2. Парсинг имени
         meta = parse_book_name(name)
         title  = meta["title"]
         author = meta["author"]
@@ -884,32 +889,27 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             log_skip(diag, "garbage", name)
             continue
 
-        # 3. Ссылка
         link = make_download_link(public_key, f["full_path"])
         if not link:
             log_skip(diag, "empty_link", name)
             continue
 
-        # 4. Дедупликация
         key = (title.lower(), author.lower())
         if key in seen:
             log_skip(diag, "dup_title", name, f"(title={title})")
             continue
         seen.add(key)
 
-        # 5. Обогащение
         enriched = {"description": "", "cover": "", "source": "none"}
         if section == "Книги":
             enriched = enrich_book(title, author, cache, diag)
             if enriched.get("description"):
                 diag.enriched += 1
 
-        # 6. Обложка
         cover = enriched.get("cover", "")
         if cover and supabase:
             cover = upload_cover_to_supabase(cover, supabase) or cover
 
-        # 7. Метаданные
         fmt = ext.lstrip(".")
         size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
         parts = f["full_path"].strip("/").split("/")
@@ -981,9 +981,9 @@ def sync_section(section: str, public_url: str, gs_client,
         return
 
     try:
-        sh = gs_client.open(SPREADSHEET_NAME)
+        sh = open_spreadsheet(gs_client)
     except Exception as e:
-        print(f"  [!] Не удалось открыть таблицу '{SPREADSHEET_NAME}': {e}")
+        print(f"  [!] Не удалось открыть таблицу: {e}")
         return
 
     headers = SHEET_HEADERS[section]
@@ -1030,6 +1030,10 @@ def main():
         print(f"[!] Не удалось подключиться к Google Sheets: {e}")
         return
     print("Клиент создан.")
+
+    if not SPREADSHEET_ID:
+        print("[!] SPREADSHEET_ID не задан — открытие по имени может не работать. "
+              "Задайте секрет SPREADSHEET_ID в GitHub Actions.")
 
     print("Загрузка кэша обогащения...")
     cache = load_cache()
