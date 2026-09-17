@@ -6,9 +6,10 @@ yandex_disk_sync.py
 
 Источники описаний (в порядке приоритета):
     1. Google Books API
-    2. Wikipedia API
-    3. Open Library API
-    4. LLM (YandexGPT / OpenAI) — опционально
+    2. FantLab API (fantlab.ru) — русская фантастика
+    3. Wikipedia API
+    4. Open Library API
+    5. LLM (YandexGPT / OpenAI) — опционально
 """
 
 import os
@@ -43,7 +44,6 @@ except ImportError:
 # КОНФИГУРАЦИЯ
 # ============================================================
 
-# ID таблицы — обязательно через env, чтобы открывать по ключу, а не по имени.
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
@@ -58,7 +58,6 @@ SECTIONS = {
     "Новости":   "",
 }
 
-# Заголовки для каждого листа. Если раздела нет — он пропускается.
 SHEET_HEADERS = {
     "Книги":     ["title", "author", "format", "size",
                   "download_link", "cover", "folder", "description"],
@@ -74,21 +73,31 @@ CACHE_FILE = os.path.join(CACHE_DIR, "enrichment_cache.json")
 SUPABASE_URL    = "https://rmoonebbvpmvthvpcmpt.supabase.co"
 SUPABASE_BUCKET = "covers"
 
+# --- Google Books ---
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
-OPENLIBRARY_API  = "https://openlibrary.org/search.json"
-WIKI_LANG        = os.environ.get("WIKI_LANG", "ru")
-WIKI_API         = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
 
+# --- FantLab ---
+FANTLAB_API        = "https://api.fantlab.ru"
+FANTLAB_SEARCH_URL = f"{FANTLAB_API}/search-works"
+FANTLAB_WORK_URL   = f"{FANTLAB_API}/work/{{work_id}}/extended"
+
+# --- Wikipedia ---
+WIKI_LANG = os.environ.get("WIKI_LANG", "ru")
+WIKI_API  = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
+
+# --- Open Library ---
+OPENLIBRARY_API = "https://openlibrary.org/search.json"
+
+# --- LLM ---
 YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 
 HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
+SLEEP_BEFORE_LISTDIR   = 1.5   # принудительная пауза перед обходом Яндекс.Диска
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
 
-
-# Слова-маркеры, по которым понимаем, что статья Wikipedia — про книгу
 BOOK_MARKERS = (
     "книга", "роман", "повесть", "рассказ", "произведение",
     "автор", "писател", "фантаст", "литератур", "трилогия",
@@ -96,9 +105,7 @@ BOOK_MARKERS = (
     "сборник", "эпопея", "цикл",
 )
 
-
-# Символы CP866-«псевдографики», которые появляются при битой кодировке.
-# ВАЖНО: буквы Ё здесь быть не должно — она есть в нормальных названиях!
+# Символы CP866-«псевдографики». Буквы Ё здесь быть не должно!
 _CP866_JUNK = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
 
 
@@ -183,7 +190,6 @@ def cache_key(title: str, author: str) -> str:
 # ============================================================
 
 def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
-    """Проверяет, что текст похож на описание книги/произведения."""
     text = (desc or "").lower()
     if not text:
         return False
@@ -199,7 +205,6 @@ def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
 
 
 def _title_words_overlap(q_title: str, found_title: str) -> bool:
-    """Совпадение значимых слов в названиях ≥ 50%."""
     q = set(re.findall(r"\w+", (q_title or "").lower()))
     f = set(re.findall(r"\w+", (found_title or "").lower()))
     q = {w for w in q if len(w) > 3}
@@ -216,10 +221,6 @@ def _author_mentioned(author: str, text: str) -> bool:
 
 
 def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
-    """
-    Проверяет, что результат обогащения не является мусором.
-    Пустой результат — валиден (значит, ничего не нашли).
-    """
     if not isinstance(meta, dict):
         return False
     desc = (meta.get("description") or "").strip()
@@ -228,7 +229,7 @@ def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
 
     src = (meta.get("source") or "none").lower()
 
-    if src in ("google_books", "openai", "yandexgpt", "none"):
+    if src in ("google_books", "fantlab", "openai", "yandexgpt", "none"):
         return True
 
     if src.startswith("wikipedia"):
@@ -262,6 +263,10 @@ def list_public_files_recursive(client, public_key: str,
     if depth > max_depth:
         print(f"    [!] Достигнута максимальная глубина {max_depth} в {path}")
         return result
+
+    # Небольшая пауза, чтобы Яндекс.Диск не отдал кэшированный ответ
+    if depth == 0:
+        time.sleep(SLEEP_BEFORE_LISTDIR)
 
     try:
         items = list(client.listdir(path, public_key=public_key))
@@ -308,43 +313,30 @@ SEPARATORS = [" - ", " — ", " – ", " –– "]
 
 
 def _is_garbage_stem(stem: str) -> bool:
-    """Отсев мусорных имён файлов."""
     if not stem:
         return True
     s = stem.strip()
-    # fanfic_1234567
     if re.match(r"^fanfic_\d+$", s, re.IGNORECASE):
         return True
-    # только цифры и точки (например, "107156017")
     if re.match(r"^[\d\.\s]+$", s):
         return True
-    # только звёздочки/тире/подчёркивания/точки
     if re.match(r"^[\*\-_\.\s]+$", s):
         return True
-    # битая CP866-кодировка
     if any(ch in s for ch in _CP866_JUNK):
         return True
-    # слишком короткое
     if len(s) < 2:
         return True
-    # нет ни одной буквы длиной ≥ 2
     if not re.search(r"[A-Za-zА-Яа-яЁё]{2,}", s):
         return True
     return False
 
 
 def parse_book_name(filename: str) -> dict:
-    """
-    Разбирает имя файла вида:
-      'АРКАДИЙ СТРУГАЦКИЙ, БОРИС СТРУГАЦКИЙ - ЗА МИЛЛИАРД ЛЕТ ДО КОНЦА СВЕТА.txt'
-    Возвращает {title, author} или пустые значения, если имя мусорное.
-    """
     stem = os.path.splitext(filename)[0].strip()
 
     if _is_garbage_stem(stem):
         return {"title": "", "author": ""}
 
-    # Чистим мусорные суффиксы
     stem = re.sub(r"\s*\(\d+\)\s*$", "", stem)
     stem = re.sub(r"\s*\[.*?\]\s*", " ", stem)
     stem = re.sub(r"\s+", " ", stem).strip()
@@ -430,7 +422,183 @@ def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 2: WIKIPEDIA
+# ИСТОЧНИК 2: FANTLAB
+# ============================================================
+
+def _fantlab_search_works(query: str, limit: int = 5) -> list:
+    """Поиск произведений в библиографической базе FantLab."""
+    params = {
+        "q": query,
+        "onlymatches": 1,
+    }
+    try:
+        r = requests.get(
+            FANTLAB_SEARCH_URL,
+            params=params,
+            headers={"User-Agent": USER_AGENT},
+            timeout=HTTP_TIMEOUT,
+        )
+        if r.status_code != 200:
+            return []
+        data = r.json()
+    except Exception as e:
+        print(f"    [!] FantLab search ошибка: {e}")
+        return []
+
+    if isinstance(data, dict):
+        matches = data.get("matches") or []
+    elif isinstance(data, list):
+        matches = data
+    else:
+        matches = []
+
+    return matches[:limit]
+
+
+def _fantlab_get_work(work_id: int) -> dict:
+    """Получение расширенной информации о произведении."""
+    try:
+        r = requests.get(
+            FANTLAB_WORK_URL.format(work_id=work_id),
+            headers={"User-Agent": USER_AGENT},
+            timeout=HTTP_TIMEOUT,
+        )
+        if r.status_code != 200:
+            return {}
+        return r.json() or {}
+    except Exception as e:
+        print(f"    [!] FantLab work ошибка: {e}")
+        return {}
+
+
+def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
+    """
+    Выбирает наиболее релевантное совпадение из результатов поиска.
+    Приоритет: точное совпадение названия + автор.
+    """
+    title_l = (title or "").lower()
+    author_l = (author or "").lower()
+
+    best = None
+    best_score = -1
+
+    for m in matches:
+        score = 0
+
+        # Названия
+        names = " ".join(filter(None, [
+            m.get("rusname", ""),
+            m.get("name", ""),
+            m.get("fullname", ""),
+        ])).lower()
+
+        if title_l and title_l in names:
+            score += 3
+        elif title_l and any(
+            w in names for w in title_l.split() if len(w) > 3
+        ):
+            score += 1
+
+        # Автор
+        authors_str = " ".join(filter(None, [
+            m.get("all_autor_rusname", ""),
+            m.get("autor1_rusname", ""),
+            m.get("autor2_rusname", ""),
+            m.get("autor3_rusname", ""),
+        ])).lower()
+
+        if author_l:
+            surname = author_l.split()[-1]
+            if len(surname) > 3 and surname in authors_str:
+                score += 3
+
+        if score > best_score:
+            best_score = score
+            best = m
+
+    # Если совсем нет совпадений — возвращаем лучший по весу
+    if best is None and matches:
+        best = max(matches, key=lambda x: x.get("weight", 0) or 0)
+
+    return best or {}
+
+
+def _clean_fantlab_text(text: str) -> str:
+    """Убирает HTML-теги и лишние пробелы из описания FantLab."""
+    if not text:
+        return ""
+    # Убираем <a href="...">...</a> → оставляем текст
+    text = re.sub(r"<a[^>]*>(.*?)</a>", r"\1", text, flags=re.DOTALL)
+    # Убираем остальные HTML-теги
+    text = re.sub(r"<[^>]+>", "", text)
+    # Убираем bb-теги вида [user]...[/user]
+    text = re.sub(r"\[/?[a-zA-Z_]+\]", "", text)
+    # Схлопываем пробелы
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def fantlab_lookup(title: str, author: str) -> dict:
+    """
+    Ищет описание книги через API FantLab.
+    Возвращает {description, cover, source, title} или {}.
+    """
+    if not title:
+        return {}
+
+    # Формируем поисковый запрос
+    query_parts = [title]
+    if author:
+        # FantLab в поиске использует "+" как разделитель
+        query_parts.append(author)
+    query = " ".join(query_parts)
+
+    matches = _fantlab_search_works(query, limit=5)
+    time.sleep(SLEEP_BETWEEN_REQUESTS)
+
+    if not matches:
+        # Второй запрос — только по названию
+        matches = _fantlab_search_works(title, limit=5)
+        time.sleep(SLEEP_BETWEEN_REQUESTS)
+
+    if not matches:
+        return {}
+
+    best = _fantlab_pick_best(matches, title, author)
+    work_id = best.get("work_id")
+    if not work_id:
+        return {}
+
+    work = _fantlab_get_work(int(work_id))
+    time.sleep(SLEEP_BETWEEN_REQUESTS)
+
+    if not work:
+        return {}
+
+    desc = _clean_fantlab_text(
+        work.get("work_description") or work.get("work_description_author") or ""
+    )
+    if not desc or len(desc) < 50:
+        return {}
+
+    # Обложка (может быть в поле image)
+    cover = ""
+    img = work.get("image") or {}
+    if isinstance(img, dict):
+        cover = img.get("url") or ""
+        if cover and not cover.startswith("http"):
+            cover = "https://fantlab.ru" + cover
+
+    return {
+        "description": desc,
+        "cover":       cover,
+        "source":      "fantlab",
+        "title":       work.get("work_name_orig") or work.get("work_name") or "",
+    }
+
+
+# ============================================================
+# ИСТОЧНИК 3: WIKIPEDIA
 # ============================================================
 
 def _wiki_request(params: dict) -> dict:
@@ -498,11 +666,6 @@ def _wiki_first_paragraphs(text: str, max_chars: int = 800) -> str:
 
 
 def wikipedia_lookup(title: str, author: str) -> dict:
-    """
-    Ищет статью Wikipedia про книгу.
-    Строгая проверка: результат принимается, только если он похож
-    на описание книги/произведения.
-    """
     if not title:
         return {}
 
@@ -552,7 +715,7 @@ def wikipedia_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 3: OPEN LIBRARY
+# ИСТОЧНИК 4: OPEN LIBRARY
 # ============================================================
 
 def openlibrary_lookup(title: str, author: str) -> dict:
@@ -606,7 +769,7 @@ def openlibrary_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК 4: LLM
+# ИСТОЧНИК 5: LLM
 # ============================================================
 
 def llm_lookup(title: str, author: str) -> dict:
@@ -689,7 +852,7 @@ def llm_lookup(title: str, author: str) -> dict:
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     """
-    Порядок: Google Books → Wikipedia → Open Library → LLM.
+    Порядок: Google Books → FantLab → Wikipedia → Open Library → LLM.
     Результат валидируется и кэшируется.
     """
     ck = cache_key(title, author)
@@ -703,12 +866,22 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
     gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
     meta = {}
 
+    # 1. Google Books
     try:
         meta = google_books_lookup(title, author, gb_key)
     except Exception as e:
         print(f"    [!] Google Books fallback: {e}")
     time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 2. FantLab
+    if not _result_is_acceptable(meta, title, author):
+        try:
+            meta = fantlab_lookup(title, author)
+        except Exception as e:
+            print(f"    [!] FantLab fallback: {e}")
+        time.sleep(SLEEP_BETWEEN_REQUESTS)
+
+    # 3. Wikipedia
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = wikipedia_lookup(title, author)
@@ -716,6 +889,7 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 4. Open Library
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = openlibrary_lookup(title, author)
@@ -723,6 +897,7 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag) -> dict:
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 5. LLM
     if not _result_is_acceptable(meta, title, author):
         try:
             meta = llm_lookup(title, author)
@@ -793,11 +968,6 @@ def get_gspread_client():
 
 
 def open_spreadsheet(gs_client):
-    """
-    Открывает таблицу:
-      1) по ID (предпочтительно),
-      2) по имени — только если ID не задан.
-    """
     if SPREADSHEET_ID:
         print(f"Открываю таблицу по ID: {SPREADSHEET_ID}")
         return gs_client.open_by_key(SPREADSHEET_ID)
@@ -1032,8 +1202,7 @@ def main():
     print("Клиент создан.")
 
     if not SPREADSHEET_ID:
-        print("[!] SPREADSHEET_ID не задан — открытие по имени может не работать. "
-              "Задайте секрет SPREADSHEET_ID в GitHub Actions.")
+        print("[!] SPREADSHEET_ID не задан — открытие по имени может не работать.")
 
     print("Загрузка кэша обогащения...")
     cache = load_cache()
