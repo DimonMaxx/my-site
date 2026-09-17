@@ -48,19 +48,16 @@ SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
 
-# ВАЖНО: если публичная ссылка ведёт на КОРЕНЬ диска, укажите
-# относительный путь до нужной папки в поле "path".
-# Например: {"url": "...", "path": "/Книги"}
-#
-# Если ссылка ведёт уже на нужную папку — оставьте "/".
+# ВАЖНО: оба публичных ключа (Книги и Программы) ведут на КОРЕНЬ диска,
+# поэтому используем ОДИН public_key, а разделы различаем через "path".
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
         "path": "/Книги",
     },
     "Программы": {
-        "url":  "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
-        "path": "/",
+        "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
+        "path": "/Программы",
     },
     "Музыка":  {"url": "", "path": "/"},
     "Игры":    {"url": "", "path": "/"},
@@ -101,6 +98,11 @@ RU_TO_EN = {
 
 
 ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".txt", ".djvu", ".mobi", ".azw3"}
+
+# Какие расширения считаем «программами» — чтобы не тащить в Программы книги
+PROGRAM_EXTS = {".rar", ".zip", ".7z", ".xlsm", ".xlsx", ".xls",
+                ".ods", ".odt", ".docx", ".doc", ".exe", ".msi", ".bat",
+                ".ps1", ".py", ".sh"}
 
 CACHE_DIR  = "_cache"
 CACHE_FILE = os.path.join(CACHE_DIR, "enrichment_cache.json")
@@ -156,6 +158,7 @@ class Diag:
             "bad_ext":     0,
             "bad_name":    0,
             "garbage":     0,
+            "wrong_ext":   0,
             "other":       0,
         }
         self.skip_samples = []
@@ -301,8 +304,6 @@ def list_public_files_recursive(client, public_key: str,
         print(f"    [!] Достигнута максимальная глубина {max_depth} в {path}")
         return result
 
-    # Принудительная пауза на верхнем уровне — чтобы Яндекс.Диск
-    # не отдал закэшированный результат.
     if depth == 0:
         time.sleep(SLEEP_BEFORE_LISTDIR)
 
@@ -419,6 +420,25 @@ def parse_book_name(filename: str) -> dict:
     title  = re.sub(r"\s+", " ", title).strip(" ,;")
 
     return {"title": title, "author": author}
+
+
+def parse_program_name(filename: str) -> dict:
+    """
+    Для программ используется имя файла без расширения как название.
+    Пытаемся выцепить версию из имени (v1.0, версия 2, и т.п.).
+    """
+    stem = os.path.splitext(filename)[0].strip()
+    stem = re.sub(r"\s+", " ", stem).strip()
+
+    if not stem:
+        return {"title": "", "version": ""}
+
+    version = ""
+    m = re.search(r"\b[vV]?(\d+(?:\.\d+){1,3})\b", stem)
+    if m:
+        version = m.group(1)
+
+    return {"title": stem, "version": version}
 
 
 # ============================================================
@@ -985,11 +1005,6 @@ def get_or_create_sheet(sh, name: str):
 
 
 def ensure_headers(sheet, headers: list):
-    """
-    Проверяет, что первая строка листа = headers.
-    Если заголовки отличаются — перезаписывает первую строку.
-    Данные ниже не трогает.
-    """
     try:
         current = sheet.row_values(1)
     except Exception:
@@ -1003,7 +1018,6 @@ def ensure_headers(sheet, headers: list):
     end_col_letter = chr(ord('A') + len(headers) - 1) if len(headers) <= 26 else "Z"
     range_a1 = f"A1:{end_col_letter}1"
     try:
-        # Новый синтаксис gspread 6.x: сначала values, потом range_name
         sheet.update(
             values=[headers],
             range_name=range_a1,
@@ -1064,13 +1078,9 @@ def append_rows_safe(sheet, rows: list, batch_size: int = 200):
 # СБОРКА СТРОК
 # ============================================================
 
-def build_rows_for_section(section: str, files: list, public_key: str,
-                           cache: dict, supabase, diag: Diag) -> list:
-    headers = SHEET_HEADERS.get(section)
-    if headers is None:
-        print(f"  [!] Нет заголовков для раздела '{section}', пропускаю.")
-        return []
-
+def build_book_rows(files: list, public_key: str,
+                    cache: dict, supabase, diag: Diag) -> list:
+    headers = SHEET_HEADERS["Книги"]
     rows = []
     seen = set()
 
@@ -1078,7 +1088,7 @@ def build_rows_for_section(section: str, files: list, public_key: str,
         name = f["name"]
         ext  = f["ext"]
 
-        if section == "Книги" and ALLOWED_EXTS and ext not in ALLOWED_EXTS:
+        if ALLOWED_EXTS and ext not in ALLOWED_EXTS:
             log_skip(diag, "bad_ext", name, f"(ext={ext})")
             continue
 
@@ -1101,11 +1111,9 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             continue
         seen.add(key)
 
-        enriched = {"description": "", "cover": "", "source": "none"}
-        if section == "Книги":
-            enriched = enrich_book(title, author, cache, diag)
-            if enriched.get("description"):
-                diag.enriched += 1
+        enriched = enrich_book(title, author, cache, diag)
+        if enriched.get("description"):
+            diag.enriched += 1
 
         cover = enriched.get("cover", "")
         if cover and supabase:
@@ -1126,9 +1134,60 @@ def build_rows_for_section(section: str, files: list, public_key: str,
             "folder":        folder,
             "description":   enriched.get("description", ""),
             "version":       "",
-            "date":          "",
-            "category":      "",
-            "tags":          "",
+        }
+
+        row = []
+        for ru in headers:
+            en = RU_TO_EN.get(ru, ru)
+            row.append(record.get(en, ""))
+        rows.append(row)
+
+    return rows
+
+
+def build_program_rows(files: list, public_key: str, diag: Diag) -> list:
+    headers = SHEET_HEADERS["Программы"]
+    rows = []
+    seen = set()
+
+    for f in files:
+        name = f["name"]
+        ext  = f["ext"]
+
+        if ext not in PROGRAM_EXTS:
+            log_skip(diag, "wrong_ext", name, f"(ext={ext})")
+            continue
+
+        meta = parse_program_name(name)
+        title   = meta["title"]
+        version = meta["version"]
+
+        if not title:
+            log_skip(diag, "garbage", name)
+            continue
+
+        link = make_download_link(public_key, f["full_path"])
+        if not link:
+            log_skip(diag, "empty_link", name)
+            continue
+
+        key = title.lower()
+        if key in seen:
+            log_skip(diag, "dup_title", name, f"(title={title})")
+            continue
+        seen.add(key)
+
+        size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
+        parts = f["full_path"].strip("/").split("/")
+        folder = parts[0] if len(parts) >= 2 else ""
+
+        record = {
+            "title":         title,
+            "description":   "",
+            "version":       version,
+            "size":          str(size_mb),
+            "download_link": link,
+            "folder":        folder,
         }
 
         row = []
@@ -1181,10 +1240,8 @@ def sync_section(section: str, section_cfg: dict, gs_client,
             print(f"  [!] Ошибка проверки токена: {e}")
             return
 
-        # Диагностика: что лежит на верхнем уровне
         print_root_diagnostics(client, public_key, "/")
 
-        # Если задан start_path != "/" — диагностируем и его
         if start_path != "/":
             print_root_diagnostics(client, public_key, start_path)
 
@@ -1193,8 +1250,13 @@ def sync_section(section: str, section_cfg: dict, gs_client,
     diag.found = len(files)
     print(f"  Найдено файлов: {len(files)}")
 
-    rows = build_rows_for_section(section, files, public_key,
-                                  cache, supabase, diag)
+    if section == "Книги":
+        rows = build_book_rows(files, public_key, cache, supabase, diag)
+    elif section == "Программы":
+        rows = build_program_rows(files, public_key, diag)
+    else:
+        rows = []
+
     diag.kept = len(rows)
     diag.report()
 
