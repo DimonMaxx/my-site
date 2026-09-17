@@ -48,8 +48,7 @@ SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
 
-# ВАЖНО: оба публичных ключа (Книги и Программы) ведут на КОРЕНЬ диска,
-# поэтому используем ОДИН public_key, а разделы различаем через "path".
+# Публичные ссылки ведут на КОРЕНЬ ресурса, разделы различаем через "path".
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
@@ -99,7 +98,7 @@ RU_TO_EN = {
 
 ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".txt", ".djvu", ".mobi", ".azw3"}
 
-# Какие расширения считаем «программами» — чтобы не тащить в Программы книги
+# Расширения, которые считаем «программами» — чтобы книги не попадали в раздел
 PROGRAM_EXTS = {".rar", ".zip", ".7z", ".xlsm", ".xlsx", ".xls",
                 ".ods", ".odt", ".docx", ".doc", ".exe", ".msi", ".bat",
                 ".ps1", ".py", ".sh"}
@@ -345,13 +344,13 @@ def make_download_link(public_key: str, full_path: str) -> str:
     return f"https://disk.yandex.ru/d/{public_key}?path={quote(full_path)}"
 
 
-def print_root_diagnostics(client, public_key: str, path: str = "/"):
-    """Печатает первые 20 элементов указанной папки — чтобы понять структуру."""
+def print_folder_diagnostics(client, public_key: str, path: str = "/"):
+    """Печатает первые 20 элементов папки — для наглядности в логе."""
     try:
         time.sleep(SLEEP_BEFORE_LISTDIR)
         items = list(client.listdir(path, public_key=public_key))
     except Exception as e:
-        print(f"  [!] Не удалось получить содержимое {path}: {e}")
+        print(f"  [!] Не удалось получить содержимое '{path}': {e}")
         return
     print(f"  Содержимое '{path}' ({len(items)} элементов):")
     for it in items[:20]:
@@ -359,6 +358,41 @@ def print_root_diagnostics(client, public_key: str, path: str = "/"):
         print(f"    [{kind}] {it.name}")
     if len(items) > 20:
         print(f"    ... и ещё {len(items) - 20}")
+
+
+def _extract_folder(full_path: str, start_path: str) -> str:
+    """
+    Возвращает первую подпапку внутри start_path.
+
+    Например:
+      full_path = '/Книги/АРКАДИЙ СТРУГАЦКИЙ/файл.txt', start_path = '/Книги'
+      → 'АРКАДИЙ СТРУГАЦКИЙ'
+
+      full_path = '/Программы/Макросы/Clean_MVD.ods', start_path = '/Программы'
+      → 'Макросы'
+
+      full_path = '/Программы/CertificateParser.rar', start_path = '/Программы'
+      → ''  (файл лежит прямо в разделе, без подпапки)
+    """
+    sp = (start_path or "/").strip("/")
+    fp = (full_path or "").strip("/")
+
+    if sp and fp.startswith(sp + "/"):
+        rel = fp[len(sp) + 1:]
+    elif sp and fp == sp:
+        rel = ""
+    else:
+        rel = fp
+
+    if not rel:
+        return ""
+
+    parts = rel.split("/")
+    # parts[0] — имя файла, если файл лежит прямо в start_path
+    # parts[0] — имя подпапки, если файл внутри подпапки
+    if len(parts) >= 2:
+        return parts[0]
+    return ""
 
 
 # ============================================================
@@ -423,10 +457,6 @@ def parse_book_name(filename: str) -> dict:
 
 
 def parse_program_name(filename: str) -> dict:
-    """
-    Для программ используется имя файла без расширения как название.
-    Пытаемся выцепить версию из имени (v1.0, версия 2, и т.п.).
-    """
     stem = os.path.splitext(filename)[0].strip()
     stem = re.sub(r"\s+", " ", stem).strip()
 
@@ -1078,7 +1108,7 @@ def append_rows_safe(sheet, rows: list, batch_size: int = 200):
 # СБОРКА СТРОК
 # ============================================================
 
-def build_book_rows(files: list, public_key: str,
+def build_book_rows(files: list, public_key: str, start_path: str,
                     cache: dict, supabase, diag: Diag) -> list:
     headers = SHEET_HEADERS["Книги"]
     rows = []
@@ -1121,8 +1151,7 @@ def build_book_rows(files: list, public_key: str,
 
         fmt = ext.lstrip(".")
         size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
-        parts = f["full_path"].strip("/").split("/")
-        folder = parts[0] if len(parts) >= 2 else ""
+        folder = _extract_folder(f["full_path"], start_path)
 
         record = {
             "title":         title,
@@ -1145,7 +1174,8 @@ def build_book_rows(files: list, public_key: str,
     return rows
 
 
-def build_program_rows(files: list, public_key: str, diag: Diag) -> list:
+def build_program_rows(files: list, public_key: str, start_path: str,
+                       diag: Diag) -> list:
     headers = SHEET_HEADERS["Программы"]
     rows = []
     seen = set()
@@ -1178,8 +1208,7 @@ def build_program_rows(files: list, public_key: str, diag: Diag) -> list:
         seen.add(key)
 
         size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
-        parts = f["full_path"].strip("/").split("/")
-        folder = parts[0] if len(parts) >= 2 else ""
+        folder = _extract_folder(f["full_path"], start_path)
 
         record = {
             "title":         title,
@@ -1240,10 +1269,7 @@ def sync_section(section: str, section_cfg: dict, gs_client,
             print(f"  [!] Ошибка проверки токена: {e}")
             return
 
-        print_root_diagnostics(client, public_key, "/")
-
-        if start_path != "/":
-            print_root_diagnostics(client, public_key, start_path)
+        print_folder_diagnostics(client, public_key, start_path)
 
         files = list_public_files_recursive(client, public_key, path=start_path)
 
@@ -1251,9 +1277,10 @@ def sync_section(section: str, section_cfg: dict, gs_client,
     print(f"  Найдено файлов: {len(files)}")
 
     if section == "Книги":
-        rows = build_book_rows(files, public_key, cache, supabase, diag)
+        rows = build_book_rows(files, public_key, start_path,
+                               cache, supabase, diag)
     elif section == "Программы":
-        rows = build_program_rows(files, public_key, diag)
+        rows = build_program_rows(files, public_key, start_path, diag)
     else:
         rows = []
 
