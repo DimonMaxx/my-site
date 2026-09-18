@@ -5,8 +5,8 @@ yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
 Порядок источников описания:
-    0. Сам файл (fb2/txt) — читаем первые 64 КБ и парсим аннотацию
-    1. FantLab API — самое точное описание книги
+    0. Сам файл (fb2/txt) — читаем первые 128 КБ и парсим аннотацию
+    1. FantLab API
     2. Wikipedia API — только если статья именно про книгу
     3. Open Library API
     4. Google Books API
@@ -116,8 +116,6 @@ WIKI_API  = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
 
 OPENLIBRARY_API = "https://openlibrary.org/search.json"
 
-YANDEX_PUBLIC_API = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
-
 YANDEX_GPT_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 
@@ -125,12 +123,11 @@ HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
 SLEEP_BEFORE_LISTDIR   = 1.5
 
-FILE_HEAD_BYTES = 64 * 1024
+# Увеличили, чтобы целиком захватить <description> в fb2
+FILE_HEAD_BYTES = 128 * 1024
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
 
-# Маркеры, что текст похож на описание книги. НЕ используются в одиночку —
-# обязательно нужно совпадение по названию (см. ниже).
 BOOK_MARKERS = (
     "книга", "роман", "повесть", "рассказ", "произведение",
     "сборник", "трилогия", "эпопея", "цикл", "литератур",
@@ -226,29 +223,27 @@ def cache_key(title: str, author: str) -> str:
 # ============================================================
 
 _STOP_WORDS = {
-    "или", "или", "как", "для", "при", "над", "под", "без", "про",
+    "или", "как", "для", "при", "над", "под", "без", "про",
     "the", "and", "for", "with", "from", "that", "this", "into",
-    "его", "её", "ее", "их", "все", "весь", "весь", "себя",
+    "его", "её", "ее", "их", "все", "весь", "себя", "это",
 }
 
 
+def _normalize_for_match(text: str) -> str:
+    """Нижний регистр, только буквы и цифры, схлопнутые пробелы."""
+    if not text:
+        return ""
+    t = str(text).lower()
+    t = t.replace("ё", "е")
+    t = re.sub(r"[^\w\s]", " ", t, flags=re.UNICODE)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
 def _significant_words(text: str) -> list:
-    """Возвращает значимые слова (длиной > 3, не стоп-слова)."""
-    words = re.findall(r"[a-zA-Zа-яА-ЯёЁ]{4,}", (text or "").lower())
+    """Слова длиной >= 4, не стоп-слова."""
+    words = re.findall(r"[a-zа-я0-9]{4,}", _normalize_for_match(text))
     return [w for w in words if w not in _STOP_WORDS]
-
-
-def _title_match_ratio(title_a: str, title_b: str) -> float:
-    """
-    Доля значимых слов из title_a, найденных в title_b.
-    1.0 = все слова совпали, 0.0 = ничего.
-    """
-    words_a = _significant_words(title_a)
-    if not words_a:
-        return 0.0
-    text_b = (title_b or "").lower()
-    matched = sum(1 for w in words_a if w in text_b)
-    return matched / len(words_a)
 
 
 def _author_surname(author: str) -> str:
@@ -257,8 +252,7 @@ def _author_surname(author: str) -> str:
     parts = [p for p in re.split(r"[,\s]+", author.strip()) if p]
     if not parts:
         return ""
-    # Берём самую длинную часть — обычно фамилия
-    surname = max(parts, key=len).lower()
+    surname = max(parts, key=len).lower().replace("ё", "е")
     return surname if len(surname) > 3 else ""
 
 
@@ -266,7 +260,43 @@ def _author_match(author: str, text: str) -> bool:
     surname = _author_surname(author)
     if not surname:
         return False
-    return surname in (text or "").lower()
+    return surname in _normalize_for_match(text)
+
+
+def _title_phrase_matches(title: str, text: str) -> bool:
+    """
+    Возвращает True, если название книги надёжно присутствует в тексте.
+    Требует:
+      - или прямого вхождения всей фразы (≥ 2 слова),
+      - или ≥ 2 значимых слова + маркер книги / автор.
+    """
+    title_norm = _normalize_for_match(title).rstrip(" .")
+    text_norm  = _normalize_for_match(text)
+
+    if not title_norm or not text_norm:
+        return False
+
+    # 1. Прямое вхождение всей фразы (если в названии ≥ 2 слова)
+    title_words_all = title_norm.split()
+    if len(title_words_all) >= 2 and title_norm in text_norm:
+        return True
+
+    # 2. Совпадение значимых слов
+    title_words = [w for w in title_words_all if len(w) >= 4]
+    if not title_words:
+        # Название короткое — принимаем только точное вхождение
+        return title_norm in text_norm
+
+    text_words = set(text_norm.split())
+    matched = [w for w in title_words if w in text_words]
+    ratio = len(matched) / len(title_words)
+
+    # Требуем минимум 2 совпадения и ≥ 60% покрытия
+    if len(matched) >= 2 and ratio >= 0.6:
+        text_l = text.lower()
+        has_marker = any(m in text_l for m in BOOK_MARKERS)
+        return has_marker
+    return False
 
 
 # ============================================================
@@ -275,32 +305,10 @@ def _author_match(author: str, text: str) -> bool:
 
 def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
     """
-    Возвращает True, только если описание действительно про книгу с
-    заданным названием (а не про автора или посторонний предмет).
-
-    Основной критерий — упоминание названия книги. Только автор —
-    НЕ достаточно (это признак биографической статьи).
+    Строгая проверка: статья должна быть про книгу с заданным названием.
+    Требуем ≥ 2 значимых слов из названия + маркер книги.
     """
-    text = (desc or "").strip()
-    if not text:
-        return False
-
-    # 1. Название книги должно быть упомянуто в тексте (≥ 50% слов)
-    title_ratio = _title_match_ratio(title, text)
-    if title_ratio < 0.5:
-        return False
-
-    # 2. Должны быть маркеры книги (роман/повесть/рассказ...)
-    text_l = text.lower()
-    if any(m in text_l for m in BOOK_MARKERS):
-        return True
-
-    # 3. Или хотя бы автор упомянут рядом с названием
-    if author and _author_match(author, text):
-        return True
-
-    # Если упомянуто только название без контекста — считаем недостаточным
-    return False
+    return _title_phrase_matches(title, desc)
 
 
 def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
@@ -323,10 +331,7 @@ def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
         return _looks_like_book_article(desc, title, author)
 
     if src == "openlibrary":
-        return (
-            _title_match_ratio(title, meta.get("title", "")) >= 0.5
-            or _author_match(author, desc)
-        )
+        return _title_phrase_matches(title, meta.get("title", "") or desc)
 
     return True
 
@@ -462,31 +467,6 @@ def _strip_xml(text: str) -> str:
     return text
 
 
-def _get_public_download_url(public_key: str, path: str):
-    candidates = [path]
-    if path.startswith("disk:"):
-        candidates.append(path[len("disk:"):])
-    else:
-        candidates.append("disk:" + path)
-
-    for p in candidates:
-        try:
-            r = requests.get(
-                YANDEX_PUBLIC_API,
-                params={"public_key": public_key, "path": p},
-                headers={"User-Agent": USER_AGENT},
-                timeout=HTTP_TIMEOUT,
-            )
-            if r.status_code == 200:
-                data = r.json()
-                href = data.get("href")
-                if href:
-                    return href
-        except Exception:
-            continue
-    return None
-
-
 def _fetch_head(url: str, max_bytes: int = FILE_HEAD_BYTES) -> bytes:
     try:
         r = requests.get(
@@ -572,14 +552,14 @@ _TXT_FIELD_TITLE = re.compile(
 )
 _TXT_FIELD_ANNOT = re.compile(
     r"^\s*(?:Аннотация|Annotation|Описание|Description|"
-    r"Аннотация книги|Краткое описание|Аннотация:)\s*[:\-]\s*(.+?)(?=\n\s*\n|\Z)",
+    r"Аннотация книги|Краткое описание)\s*[:\-]\s*(.+?)(?=\n\s*\n|\Z)",
     re.IGNORECASE | re.MULTILINE | re.DOTALL,
 )
 
 
 def _parse_txt(head: bytes) -> dict:
     text = _decode_text(head)
-    head_text = text[:10_000]
+    head_text = text[:20_000]
 
     result = {}
 
@@ -604,11 +584,44 @@ def _parse_txt(head: bytes) -> dict:
     return result
 
 
-def extract_meta_from_file(public_key: str, full_path: str, ext: str) -> dict:
+def extract_meta_from_file(client, public_key: str,
+                           full_path: str, ext: str) -> dict:
+    """
+    Извлекает метаданные из fb2/txt через yadisk-клиент.
+    Клиент получает прямую ссылку на скачивание правильно.
+    """
     if ext not in (".fb2", ".txt"):
         return {}
 
-    download_url = _get_public_download_url(public_key, full_path)
+    if client is None:
+        print("    [!] yadisk-клиент не передан в extract_meta_from_file")
+        return {}
+
+    download_url = None
+    try:
+        link = client.get_public_download_link(public_key, path=full_path)
+        if hasattr(link, "href"):
+            download_url = link.href
+        elif isinstance(link, str):
+            download_url = link
+        else:
+            download_url = str(link) if link else None
+    except Exception as e:
+        print(f"    [!] get_public_download_link({full_path}): {e}")
+        return {}
+
+    if not download_url:
+        # Попробуем второй вариант — с префиксом disk:
+        try:
+            link = client.get_public_download_link(
+                public_key, path="disk:" + full_path.lstrip("/")
+            )
+            download_url = getattr(link, "href", None) or (
+                link if isinstance(link, str) else None
+            )
+        except Exception:
+            pass
+
     if not download_url:
         return {}
 
@@ -617,10 +630,13 @@ def extract_meta_from_file(public_key: str, full_path: str, ext: str) -> dict:
         return {}
 
     if ext == ".fb2":
-        return _parse_fb2(head)
-    if ext == ".txt":
-        return _parse_txt(head)
-    return {}
+        parsed = _parse_fb2(head)
+    elif ext == ".txt":
+        parsed = _parse_txt(head)
+    else:
+        parsed = {}
+
+    return parsed or {}
 
 
 # ============================================================
@@ -745,12 +761,7 @@ def _fantlab_get_work(work_id: int) -> dict:
 
 
 def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
-    """
-    Возвращает наиболее релевантное произведение ИЛИ {} если ничего
-    достаточно похожего не нашлось.
-    """
     title_l = (title or "").lower()
-    author_l = (author or "").lower()
     surname = _author_surname(author)
 
     best = None
@@ -765,17 +776,15 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
             m.get("fullname", ""),
         ])).lower()
 
-        # Совпадение по названию
         if title_l and title_l in names:
             score += 3
-        elif title_l:
-            title_ratio = _title_match_ratio(title_l, names)
-            if title_ratio >= 0.5:
-                score += 2
-            elif title_ratio > 0:
-                score += 1
+        elif _title_phrase_matches(title, names):
+            score += 2
+        elif title_l and any(
+            w in names for w in title_l.split() if len(w) > 3
+        ):
+            score += 1
 
-        # Совпадение по автору
         authors_str = " ".join(filter(None, [
             m.get("all_autor_rusname", ""),
             m.get("autor1_rusname", ""),
@@ -790,7 +799,6 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
             best_score = score
             best = m
 
-    # Требуем хотя бы частичное совпадение (иначе это не наша книга)
     if best is None or best_score < 2:
         return {}
 
@@ -843,12 +851,11 @@ def fantlab_lookup(title: str, author: str) -> dict:
     if not desc or len(desc) < 50:
         return {}
 
-    # Проверяем, что описание действительно про книгу — упоминается
-    # название или автор.
-    work_name = (work.get("work_name") or work.get("work_name_orig") or "").lower()
-    if not (_title_match_ratio(title, desc) >= 0.3
+    # Финальная проверка — описание должно содержать название или автора
+    work_name = work.get("work_name") or work.get("work_name_orig") or ""
+    if not (_title_phrase_matches(title, desc)
             or _author_match(author, desc)
-            or _title_match_ratio(title, work_name) >= 0.5):
+            or _title_phrase_matches(title, work_name)):
         return {}
 
     cover = ""
@@ -862,7 +869,7 @@ def fantlab_lookup(title: str, author: str) -> dict:
         "description": desc,
         "cover":       cover,
         "source":      "fantlab",
-        "title":       work.get("work_name_orig") or work.get("work_name") or "",
+        "title":       work_name,
     }
 
 
@@ -926,38 +933,28 @@ def _wiki_first_paragraphs(text: str, max_chars: int = 800) -> str:
 
 def _wiki_page_title_looks_like_book(page_title: str, title: str,
                                      author: str) -> bool:
-    """
-    Проверяет, что заголовок найденной страницы похож на название книги,
-    а не на «Фамилия, Имя Отчество» (страница автора).
-    """
     pt = (page_title or "").strip()
     if not pt:
         return False
 
-    # Признак страницы автора: паттерн "Фамилия, Имя Отчество"
+    # Паттерн биографии: "Фамилия, Имя Отчество"
     if re.match(r"^[А-ЯЁ][а-яё]+\s*,\s*[А-ЯЁ][а-яё]+(\s+[А-ЯЁ][а-яё]+)?$", pt):
         return False
 
-    # Признак: страница автора, если совпадает с фамилией и в title книги
-    # нет этой фамилии.
+    # Если заголовок страницы содержит фамилию автора, но не название книги —
+    # скорее всего это статья про автора.
     surname = _author_surname(author)
     if surname and surname in pt.lower():
-        # Если в самом названии книги тоже есть фамилия — это может быть книга
-        if surname not in (title or "").lower():
+        if not _title_phrase_matches(title, pt):
             return False
 
     return True
 
 
 def wikipedia_lookup(title: str, author: str) -> dict:
-    """
-    Ищем статью именно про КНИГУ (а не про автора).
-    Порядок: сначала только по названию с уточнением, в конце — с автором.
-    """
     if not title:
         return {}
 
-    # Запросы от наиболее специфичных к наименее
     queries = [
         f'"{title}" роман',
         f'"{title}" книга',
@@ -981,8 +978,6 @@ def wikipedia_lookup(title: str, author: str) -> dict:
             continue
         seen_pages.add(pageid)
 
-        # 1. Заголовок страницы должен быть похож на название книги,
-        #    а не на биографию автора.
         if not _wiki_page_title_looks_like_book(page_title, title, author):
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
@@ -992,7 +987,6 @@ def wikipedia_lookup(title: str, author: str) -> dict:
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
 
-        # 2. Проверяем текст: должен упоминать название книги.
         if not _looks_like_book_article(extract, title, author):
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
@@ -1027,15 +1021,13 @@ def openlibrary_lookup(title: str, author: str) -> dict:
             return {}
         data = r.json()
     except Exception as e:
-        print(f"    [!] Open Library ошибка: {e}")
+        # OpenLibrary часто таймаутит — молча пропускаем
         return {}
 
     docs = data.get("docs") or []
     for d in docs:
         found_title = d.get("title", "") or ""
-
-        # Обязательное совпадение по названию (иначе пропускаем)
-        if _title_match_ratio(title, found_title) < 0.5:
+        if not _title_phrase_matches(title, found_title):
             continue
 
         desc = ""
@@ -1082,8 +1074,6 @@ def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
         r = requests.get(GOOGLE_BOOKS_API, params=params,
                          headers={"User-Agent": USER_AGENT},
                          timeout=HTTP_TIMEOUT)
-        if r.status_code == 429:
-            return {}
         if r.status_code != 200:
             return {}
         data = r.json()
@@ -1195,11 +1185,12 @@ def llm_lookup(title: str, author: str) -> dict:
 # ============================================================
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag,
-                public_key: str = "", file_info: dict = None) -> dict:
+                client=None, public_key: str = "",
+                file_info: dict = None) -> dict:
     """
     Порядок:
         1. Кэш
-        2. Сам файл (fb2/txt аннотация)
+        2. Сам файл (fb2/txt)
         3. FantLab
         4. Wikipedia
         5. OpenLibrary
@@ -1216,11 +1207,11 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
 
     meta = {}
 
-    # 1. Сам файл
-    if file_info and public_key:
+    # 1. Из самого файла
+    if file_info and public_key and client is not None:
         try:
             file_meta = extract_meta_from_file(
-                public_key,
+                client, public_key,
                 file_info.get("full_path", ""),
                 file_info.get("ext", ""),
             )
@@ -1289,7 +1280,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] LLM fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Финальная валидация
     if meta.get("description") and not _result_is_acceptable(meta, title, author):
         meta.pop("description", None)
 
@@ -1474,7 +1464,7 @@ def append_rows_safe(sheet, rows: list, batch_size: int = 200):
 # СБОРКА СТРОК
 # ============================================================
 
-def build_book_rows(files: list, public_key: str, start_path: str,
+def build_book_rows(files: list, client, public_key: str, start_path: str,
                     cache: dict, supabase, diag: Diag) -> list:
     headers = SHEET_HEADERS["Книги"]
     rows = []
@@ -1504,6 +1494,7 @@ def build_book_rows(files: list, public_key: str, start_path: str,
 
         enriched = enrich_book(
             title0, author0, cache, diag,
+            client=client,
             public_key=public_key,
             file_info=f,
         )
@@ -1656,7 +1647,7 @@ def sync_section(section: str, section_cfg: dict, gs_client,
         print(f"  Найдено файлов: {len(files)}")
 
         if section == "Книги":
-            rows = build_book_rows(files, public_key, start_path,
+            rows = build_book_rows(files, client, public_key, start_path,
                                    cache, supabase, diag)
         elif section == "Программы":
             rows = build_program_rows(files, public_key, start_path, diag)
