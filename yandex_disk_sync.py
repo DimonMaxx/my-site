@@ -49,7 +49,6 @@ SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
 
-# Публичные ссылки ведут на КОРЕНЬ ресурса, разделы различаем через "path".
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
@@ -68,8 +67,6 @@ SECTIONS = {
 }
 
 
-# РУССКИЕ заголовки — их видит пользователь в Google Sheets,
-# и их читает generate_from_sheets.py через COLUMN_MAPPING.
 SHEET_HEADERS = {
     "Книги":     ["Название", "Автор", "Формат", "Размер (МБ)",
                   "Ссылка для скачивания", "Обложка", "Папка", "Описание"],
@@ -128,7 +125,6 @@ HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
 SLEEP_BEFORE_LISTDIR   = 1.5
 
-# Сколько байт файла читать при парсинге fb2/txt
 FILE_HEAD_BYTES = 64 * 1024
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
@@ -140,7 +136,6 @@ BOOK_MARKERS = (
     "сборник", "эпопея", "цикл",
 )
 
-# Символы CP866-«псевдографики». Буквы Ё здесь быть не должно!
 _CP866_JUNK = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
 
 
@@ -153,6 +148,8 @@ class Diag:
         self.found    = 0
         self.kept     = 0
         self.enriched = 0
+        self.updated  = 0
+        self.added    = 0
         self.sources  = {}
         self.skipped  = {
             "empty_title": 0,
@@ -172,6 +169,8 @@ class Diag:
         print(f"  Найдено файлов:      {self.found}")
         print(f"  Оставлено к записи:  {self.kept}")
         print(f"  Обогащено описаний:  {self.enriched}")
+        print(f"  Обновлено строк:     {self.updated}")
+        print(f"  Добавлено строк:     {self.added}")
         if self.sources:
             print("  Источники описаний:")
             for src, cnt in sorted(self.sources.items(), key=lambda x: -x[1]):
@@ -259,14 +258,17 @@ def _author_mentioned(author: str, text: str) -> bool:
 def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
     if not isinstance(meta, dict):
         return False
+
     desc = (meta.get("description") or "").strip()
+    src  = (meta.get("source") or "none").lower()
+
+    if not desc and src == "none":
+        return False
+
     if not desc:
         return True
 
-    src = (meta.get("source") or "none").lower()
-
-    # Доверенные источники
-    if src in ("google_books", "fantlab", "file", "openai", "yandexgpt", "none"):
+    if src in ("google_books", "fantlab", "file", "openai", "yandexgpt"):
         return True
 
     if src.startswith("wikipedia"):
@@ -364,11 +366,6 @@ def print_folder_diagnostics(client, public_key: str, path: str = "/"):
 
 
 def _extract_folder(full_path: str, start_path: str) -> str:
-    """
-    Возвращает первую подпапку внутри start_path.
-    Например: full_path = '/Книги/АРКАДИЙ СТРУГАЦКИЙ/файл.txt', start_path = '/Книги'
-    → 'АРКАДИЙ СТРУГАЦКИЙ'
-    """
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
 
@@ -393,7 +390,6 @@ def _extract_folder(full_path: str, start_path: str) -> str:
 # ============================================================
 
 def _decode_text(data: bytes) -> str:
-    """Пытается декодировать байты в текст, перебирая типичные кодировки."""
     for enc in ("utf-8-sig", "utf-8", "cp1251", "koi8-r", "cp866"):
         try:
             return data.decode(enc)
@@ -403,7 +399,6 @@ def _decode_text(data: bytes) -> str:
 
 
 def _strip_xml(text: str) -> str:
-    """Убирает XML/HTML теги и декодирует базовые сущности."""
     if not text:
         return ""
     text = re.sub(r"<[^>]+>", " ", text)
@@ -420,10 +415,6 @@ def _strip_xml(text: str) -> str:
 
 
 def _get_public_download_url(public_key: str, path: str):
-    """
-    Получает прямую ссылку на скачивание файла из публичного ресурса
-    Яндекс.Диска. Не требует OAuth-токена.
-    """
     candidates = [path]
     if path.startswith("disk:"):
         candidates.append(path[len("disk:"):])
@@ -449,7 +440,6 @@ def _get_public_download_url(public_key: str, path: str):
 
 
 def _fetch_head(url: str, max_bytes: int = FILE_HEAD_BYTES) -> bytes:
-    """Скачивает первые max_bytes файла (не весь)."""
     try:
         r = requests.get(
             url, stream=True, timeout=HTTP_TIMEOUT,
@@ -473,10 +463,6 @@ def _fetch_head(url: str, max_bytes: int = FILE_HEAD_BYTES) -> bytes:
 
 
 def _parse_fb2(head: bytes) -> dict:
-    """
-    Разбирает fb2: вытаскивает book-title, авторов и annotation из <description>.
-    Возвращает {title, author, description} (частично).
-    """
     text = _decode_text(head)
 
     m = re.search(r"<description\b.*?</description>", text,
@@ -487,7 +473,6 @@ def _parse_fb2(head: bytes) -> dict:
 
     result = {}
 
-    # Название
     m = re.search(r"<book-title>(.*?)</book-title>", block,
                   re.DOTALL | re.IGNORECASE)
     if m:
@@ -495,7 +480,6 @@ def _parse_fb2(head: bytes) -> dict:
         if t:
             result["title"] = t[:300]
 
-    # Авторы (их может быть несколько)
     authors = re.findall(r"<author>(.*?)</author>", block,
                          re.DOTALL | re.IGNORECASE)
     author_names = []
@@ -520,7 +504,6 @@ def _parse_fb2(head: bytes) -> dict:
     if author_names:
         result["author"] = ", ".join(author_names)[:300]
 
-    # Аннотация
     m = re.search(r"<annotation>(.*?)</annotation>", block,
                   re.DOTALL | re.IGNORECASE)
     if m:
@@ -531,7 +514,6 @@ def _parse_fb2(head: bytes) -> dict:
     return result
 
 
-# Регулярки для разбора заголовков txt
 _TXT_FIELD_AUTHOR = re.compile(
     r"^\s*(?:Автор|Author|АВТОР)\s*[:\-]\s*(.+?)\s*$",
     re.IGNORECASE | re.MULTILINE,
@@ -548,10 +530,6 @@ _TXT_FIELD_ANNOT = re.compile(
 
 
 def _parse_txt(head: bytes) -> dict:
-    """
-    Разбирает txt: ищет строки вида «Автор: ...», «Название: ...», «Аннотация: ...».
-    Читает только начало файла (первые ~10 КБ).
-    """
     text = _decode_text(head)
     head_text = text[:10_000]
 
@@ -579,10 +557,6 @@ def _parse_txt(head: bytes) -> dict:
 
 
 def extract_meta_from_file(public_key: str, full_path: str, ext: str) -> dict:
-    """
-    Пытается вытащить метаданные прямо из файла на Яндекс.Диске.
-    Скачивает только первые FILE_HEAD_BYTES байт.
-    """
     if ext not in (".fb2", ".txt"):
         return {}
 
@@ -678,7 +652,7 @@ def parse_program_name(filename: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК: GOOGLE BOOKS
+# GOOGLE BOOKS
 # ============================================================
 
 def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
@@ -698,6 +672,9 @@ def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
         r = requests.get(GOOGLE_BOOKS_API, params=params,
                          headers={"User-Agent": USER_AGENT},
                          timeout=HTTP_TIMEOUT)
+        if r.status_code == 429:
+            print("    [!] Google Books: 429 (превышен лимит запросов)")
+            return {}
         if r.status_code != 200:
             return {}
         data = r.json()
@@ -729,7 +706,7 @@ def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК: FANTLAB
+# FANTLAB
 # ============================================================
 
 def _fantlab_search_works(query: str, limit: int = 5) -> list:
@@ -879,7 +856,7 @@ def fantlab_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК: WIKIPEDIA
+# WIKIPEDIA
 # ============================================================
 
 def _wiki_request(params: dict) -> dict:
@@ -983,7 +960,7 @@ def wikipedia_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК: OPEN LIBRARY
+# OPEN LIBRARY
 # ============================================================
 
 def openlibrary_lookup(title: str, author: str) -> dict:
@@ -1034,7 +1011,7 @@ def openlibrary_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
-# ИСТОЧНИК: LLM
+# LLM
 # ============================================================
 
 def llm_lookup(title: str, author: str) -> dict:
@@ -1117,19 +1094,6 @@ def llm_lookup(title: str, author: str) -> dict:
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag,
                 public_key: str = "", file_info: dict = None) -> dict:
-    """
-    Порядок:
-        1. Кэш
-        2. Сам файл (fb2/txt аннотация)
-        3. Google Books
-        4. FantLab
-        5. Wikipedia
-        6. Open Library
-        7. LLM
-
-    В результат может быть добавлено поле "_file_title" / "_file_author",
-    если удалось вытащить более точные данные из самого файла.
-    """
     ck = cache_key(title, author)
 
     cached = cache.get(ck)
@@ -1140,7 +1104,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
 
     meta = {}
 
-    # ---- 1. Сам файл ----
     if file_info and public_key:
         try:
             file_meta = extract_meta_from_file(
@@ -1155,18 +1118,16 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
                         "cover":       "",
                         "source":      "file",
                     }
-                # Если в файле более точный title/author — запомним
                 if file_meta.get("title"):
                     meta["_file_title"] = file_meta["title"]
                 if file_meta.get("author"):
                     meta["_file_author"] = file_meta["author"]
                 if meta.get("description"):
-                    print(f"    [+] Описание взято из файла ({file_info.get('ext','')}): "
+                    print(f"    [+] Описание из файла ({file_info.get('ext','')}): "
                           f"{title[:60]!r}")
         except Exception as e:
             print(f"    [!] File parse fallback: {e}")
 
-    # ---- 2. Google Books ----
     if not meta.get("description"):
         gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
         try:
@@ -1177,7 +1138,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] Google Books fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # ---- 3. FantLab ----
     if not meta.get("description"):
         try:
             fl_meta = fantlab_lookup(title, author)
@@ -1187,7 +1147,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] FantLab fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # ---- 4. Wikipedia ----
     if not meta.get("description"):
         try:
             wiki_meta = wikipedia_lookup(title, author)
@@ -1197,7 +1156,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # ---- 5. Open Library ----
     if not meta.get("description"):
         try:
             ol_meta = openlibrary_lookup(title, author)
@@ -1207,7 +1165,6 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # ---- 6. LLM ----
     if not meta.get("description"):
         try:
             llm_meta = llm_lookup(title, author)
@@ -1217,12 +1174,10 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             print(f"    [!] LLM fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    # Проверяем валидность
     if meta.get("description") and not _result_is_acceptable(meta, title, author):
         meta.pop("description", None)
 
-    if "source" not in meta or not meta.get("description"):
-        # Сохраняем _file_title/_file_author если были
+    if not meta.get("description"):
         keep_title  = meta.get("_file_title")
         keep_author = meta.get("_file_author")
         meta = {"description": "", "cover": "", "source": "none"}
@@ -1230,6 +1185,10 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
             meta["_file_title"] = keep_title
         if keep_author:
             meta["_file_author"] = keep_author
+
+        src = "none"
+        diag.sources[src] = diag.sources.get(src, 0) + 1
+        return meta
 
     src = meta.get("source", "none")
     diag.sources[src] = diag.sources.get(src, 0) + 1
@@ -1328,13 +1287,17 @@ def ensure_headers(sheet, headers: list):
         print(f"    [!] Не удалось обновить заголовки: {e}")
 
 
-def load_existing_keys(sheet) -> set:
+def load_existing_rows(sheet) -> dict:
+    """
+    Возвращает словарь {ссылка: номер_строки} для существующих данных.
+    Строка 1 — заголовок, поэтому данные начинаются с 2.
+    """
     try:
         rows = sheet.get_all_values()
     except Exception:
-        return set()
-    if not rows:
-        return set()
+        return {}
+    if not rows or len(rows) < 2:
+        return {}
 
     header = [h.strip().lower() for h in rows[0]]
     idx = None
@@ -1343,13 +1306,42 @@ def load_existing_keys(sheet) -> set:
             idx = header.index(cand)
             break
     if idx is None:
-        return set()
+        return {}
 
-    keys = set()
-    for r in rows[1:]:
+    result = {}
+    for i, r in enumerate(rows[1:], start=2):
         if len(r) > idx and r[idx].strip():
-            keys.add(r[idx].strip())
-    return keys
+            result[r[idx].strip()] = i
+    return result
+
+
+def batch_update_rows(sheet, updates: list):
+    """
+    updates: список словарей
+        {"range": "A5:H5", "values": [[...]]}
+    Возвращает число успешно обновлённых строк.
+    """
+    if not updates:
+        return 0
+
+    total = len(updates)
+    updated = 0
+    chunk = 100
+
+    for i in range(0, total, chunk):
+        part = updates[i:i + chunk]
+        try:
+            sheet.batch_update(
+                part,
+                value_input_option="USER_ENTERED",
+            )
+            updated += len(part)
+            print(f"    [+] Обновлено {updated}/{total}")
+        except Exception as e:
+            print(f"    [!] Ошибка batch_update на батче {i//chunk}: {e}")
+        time.sleep(0.5)
+
+    return updated
 
 
 def append_rows_safe(sheet, rows: list, batch_size: int = 200):
@@ -1406,18 +1398,15 @@ def build_book_rows(files: list, public_key: str, start_path: str,
             log_skip(diag, "empty_link", name)
             continue
 
-        # Обогащение
         enriched = enrich_book(
             title0, author0, cache, diag,
             public_key=public_key,
             file_info=f,
         )
 
-        # Если файл дал более точные title/author — используем их
         title  = enriched.get("_file_title")  or title0
         author = enriched.get("_file_author") or author0
 
-        # Дедупликация после обогащения
         key = (title.lower(), author.lower())
         if key in seen:
             log_skip(diag, "dup_title", name, f"(title={title})")
@@ -1453,8 +1442,9 @@ def build_book_rows(files: list, public_key: str, start_path: str,
             row.append(record.get(en, ""))
         rows.append(row)
 
-        if idx % 50 == 0:
-            print(f"    ... обработано {idx}/{total}, записей: {len(rows)}")
+        if idx % 100 == 0:
+            print(f"    ... обработано {idx}/{total}, записей: {len(rows)}, "
+                  f"обогащено: {diag.enriched}")
 
     return rows
 
@@ -1586,27 +1576,36 @@ def sync_section(section: str, section_cfg: dict, gs_client,
     headers = SHEET_HEADERS[section]
     ensure_headers(sheet, headers)
 
-    existing = load_existing_keys(sheet)
-    print(f"  Существующих строк с ссылкой: {len(existing)}")
+    existing = load_existing_rows(sheet)
+    print(f"  Существующих строк: {len(existing)}")
 
     link_ru = "Ссылка для скачивания"
     link_idx = headers.index(link_ru) if link_ru in headers else 0
+    n_cols = len(headers)
+    end_col_letter = chr(ord('A') + n_cols - 1)
 
-    new_rows = []
-    upd_count = 0
+    updates = []
+    to_add = []
     for row in rows:
-        if row[link_idx] in existing:
-            upd_count += 1
-            continue
-        new_rows.append(row)
+        link = row[link_idx]
+        if link in existing:
+            row_num = existing[link]
+            rng = f"A{row_num}:{end_col_letter}{row_num}"
+            updates.append({"range": rng, "values": [row]})
+        else:
+            to_add.append(row)
 
-    print(f"    Совпало с существующими: {upd_count}")
-    print(f"    Новых строк к записи:     {len(new_rows)}")
+    print(f"    К обновлению:  {len(updates)}")
+    print(f"    К добавлению:  {len(to_add)}")
 
-    added, failed = append_rows_safe(sheet, new_rows)
-    print(f"    Добавлено новых строк:    {added}")
-    if failed:
-        print(f"    [!] Не удалось записать:  {failed}")
+    if updates:
+        diag.updated = batch_update_rows(sheet, updates)
+
+    if to_add:
+        added, failed = append_rows_safe(sheet, to_add)
+        diag.added = added
+        if failed:
+            print(f"    [!] Не удалось записать:  {failed}")
 
 
 # ============================================================
