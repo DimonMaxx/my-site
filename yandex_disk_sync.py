@@ -5,7 +5,7 @@ yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
 Порядок источников описания:
-    1. Сам файл (fb2/txt) — читаем первые 128 КБ и парсим аннотацию
+    1. Сам файл (fb2/txt) — читаем первые 256 КБ и парсим аннотацию
     2. FantLab API
     3. Wikipedia API (строгая проверка)
     4. Open Library
@@ -116,7 +116,6 @@ WIKI_API  = f"https://{WIKI_LANG}.wikipedia.org/w/api.php"
 
 OPENLIBRARY_API = "https://openlibrary.org/search.json"
 
-# Публичный API Яндекс.Диска — работает БЕЗ токена для публичных ресурсов
 YANDEX_PUBLIC_DOWNLOAD_API = \
     "https://cloud-api.yandex.net/v1/disk/public/resources/download"
 
@@ -127,7 +126,6 @@ HTTP_TIMEOUT = 20
 SLEEP_BETWEEN_REQUESTS = 0.4
 SLEEP_BEFORE_LISTDIR   = 1.5
 
-# 256 КБ — хватает для <description> в fb2 (включая длинные аннотации)
 FILE_HEAD_BYTES = 256 * 1024
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
@@ -139,6 +137,9 @@ BOOK_MARKERS = (
 )
 
 _CP866_JUNK = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
+
+# Одноразовый debug-вывод для запроса download link
+_DOWNLOAD_DEBUG_DONE = False
 
 
 # ============================================================
@@ -267,10 +268,6 @@ def _author_match(author: str, text: str) -> bool:
 
 
 def _title_phrase_matches(title: str, text: str) -> bool:
-    """
-    True, если название книги надёжно присутствует в тексте.
-    Требует: прямую фразу (≥2 слова) ИЛИ ≥2 значимых слов + маркер книги.
-    """
     title_norm = _normalize_for_match(title).rstrip(" .")
     text_norm  = _normalize_for_match(text)
 
@@ -435,25 +432,48 @@ def _extract_folder(full_path: str, start_path: str) -> str:
 # ПУБЛИЧНЫЙ API ЯНДЕКС.ДИСКА — получение прямой ссылки
 # ============================================================
 
-def _get_public_download_url(public_key: str, path: str):
+def _get_public_download_url(public_key: str, path: str,
+                             start_path: str = ""):
     """
-    Получает прямую ссылку на скачивание файла через публичный API
-    Яндекс.Диска. Работает БЕЗ OAuth-токена.
-    Перебирает варианты пути: '/Книги/...' и 'disk:/Книги/...'.
+    Получает прямую ссылку на скачивание файла через публичный API.
+    Пробует несколько вариантов пути, потому что публичный ресурс
+    может указывать как на корень диска, так и на вложенную папку.
+
+    Возвращает href или None. Первый вызов печатает debug-информацию.
     """
+    global _DOWNLOAD_DEBUG_DONE
+
     if not public_key or not path:
         return None
 
     p = path.strip()
-    candidates = []
     if p.startswith("disk:"):
-        candidates.append(p)
-        candidates.append(p[len("disk:"):])
-    else:
-        candidates.append(p)
-        candidates.append("disk:" + p)
+        p = p[len("disk:"):]
 
-    for candidate in candidates:
+    variants = []
+
+    # 1. Оригинальный путь как есть
+    variants.append(p)
+    if not p.startswith("disk:"):
+        variants.append("disk:" + p)
+
+    # 2. Путь без start_path (если public_key уже указывает на подпапку)
+    if start_path and start_path != "/":
+        sp = start_path.rstrip("/")
+        if p.startswith(sp + "/"):
+            rel = p[len(sp):]
+            variants.append(rel)
+            variants.append("disk:" + rel)
+
+    # 3. Ведущий слэш убираем/добавляем как доп. попытки
+    variants.append(p.lstrip("/"))
+    variants.append("/" + p.lstrip("/"))
+
+    seen = set()
+    for candidate in variants:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
         try:
             r = requests.get(
                 YANDEX_PUBLIC_DOWNLOAD_API,
@@ -461,12 +481,20 @@ def _get_public_download_url(public_key: str, path: str):
                 headers={"User-Agent": USER_AGENT},
                 timeout=HTTP_TIMEOUT,
             )
+            if not _DOWNLOAD_DEBUG_DONE:
+                print(f"    [debug] download path={candidate[:100]!r} "
+                      f"status={r.status_code} "
+                      f"body={r.text[:160]!r}")
+                _DOWNLOAD_DEBUG_DONE = True
             if r.status_code == 200:
                 data = r.json() or {}
                 href = data.get("href")
                 if href:
                     return href
-        except Exception:
+        except Exception as e:
+            if not _DOWNLOAD_DEBUG_DONE:
+                print(f"    [debug] download error: {e}")
+                _DOWNLOAD_DEBUG_DONE = True
             continue
 
     return None
@@ -534,7 +562,6 @@ def _parse_fb2(head: bytes) -> dict:
 
     result = {}
 
-    # Название
     m = re.search(r"<book-title>(.*?)</book-title>", block,
                   re.DOTALL | re.IGNORECASE)
     if m:
@@ -542,7 +569,6 @@ def _parse_fb2(head: bytes) -> dict:
         if t:
             result["title"] = t[:300]
 
-    # Авторы
     authors = re.findall(r"<author>(.*?)</author>", block,
                          re.DOTALL | re.IGNORECASE)
     author_names = []
@@ -567,7 +593,6 @@ def _parse_fb2(head: bytes) -> dict:
     if author_names:
         result["author"] = ", ".join(author_names)[:300]
 
-    # Аннотация
     m = re.search(r"<annotation>(.*?)</annotation>", block,
                   re.DOTALL | re.IGNORECASE)
     if m:
@@ -620,7 +645,8 @@ def _parse_txt(head: bytes) -> dict:
     return result
 
 
-def extract_meta_from_file(public_key: str, full_path: str, ext: str) -> dict:
+def extract_meta_from_file(public_key: str, full_path: str, ext: str,
+                           start_path: str = "") -> dict:
     """
     Извлекает метаданные из fb2/txt через публичный API Яндекс.Диска.
     Скачивает только первые FILE_HEAD_BYTES байт.
@@ -628,7 +654,9 @@ def extract_meta_from_file(public_key: str, full_path: str, ext: str) -> dict:
     if ext not in (".fb2", ".txt"):
         return {}
 
-    download_url = _get_public_download_url(public_key, full_path)
+    download_url = _get_public_download_url(
+        public_key, full_path, start_path=start_path
+    )
     if not download_url:
         return {}
 
@@ -934,7 +962,6 @@ def _wiki_page_title_looks_like_book(page_title: str, title: str,
     pt = (page_title or "").strip()
     if not pt:
         return False
-    # "Фамилия, Имя Отчество"
     if re.match(r"^[А-ЯЁ][а-яё]+\s*,\s*[А-ЯЁ][а-яё]+(\s+[А-ЯЁ][а-яё]+)?$", pt):
         return False
     surname = _author_surname(author)
@@ -1174,7 +1201,8 @@ def llm_lookup(title: str, author: str) -> dict:
 # ============================================================
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag,
-                public_key: str = "", file_info: dict = None) -> dict:
+                public_key: str = "", file_info: dict = None,
+                start_path: str = "") -> dict:
     """
     Порядок:
         1. Кэш
@@ -1204,6 +1232,7 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
                 public_key,
                 file_info.get("full_path", ""),
                 file_info.get("ext", ""),
+                start_path=start_path,
             )
             if file_meta:
                 if file_meta.get("description"):
@@ -1487,6 +1516,7 @@ def build_book_rows(files: list, public_key: str, start_path: str,
             title0, author0, cache, diag,
             public_key=public_key,
             file_info=f,
+            start_path=start_path,
         )
 
         title  = enriched.get("_file_title")  or title0
