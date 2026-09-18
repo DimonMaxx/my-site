@@ -6,11 +6,11 @@ yandex_disk_sync.py
 
 Порядок источников описания:
     0. Сам файл (fb2/txt) — читаем первые 64 КБ и парсим аннотацию
-    1. Google Books API
-    2. FantLab API (fantlab.ru)
-    3. Wikipedia API
-    4. Open Library API
-    5. LLM (YandexGPT / OpenAI) — опционально
+    1. FantLab API — самое точное описание книги
+    2. Wikipedia API — только если статья именно про книгу
+    3. Open Library API
+    4. Google Books API
+    5. LLM (опционально)
 """
 
 import os
@@ -129,11 +129,12 @@ FILE_HEAD_BYTES = 64 * 1024
 
 USER_AGENT = "ContentSyncBot/1.0 (https://github.com/DimonMaxx/my-site)"
 
+# Маркеры, что текст похож на описание книги. НЕ используются в одиночку —
+# обязательно нужно совпадение по названию (см. ниже).
 BOOK_MARKERS = (
     "книга", "роман", "повесть", "рассказ", "произведение",
-    "автор", "писател", "фантаст", "литератур", "трилогия",
-    "novel", "book", "story", "written by", "author",
-    "сборник", "эпопея", "цикл",
+    "сборник", "трилогия", "эпопея", "цикл", "литератур",
+    "novel", "book", "story",
 )
 
 _CP866_JUNK = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
@@ -221,38 +222,85 @@ def cache_key(title: str, author: str) -> str:
 
 
 # ============================================================
+# УТИЛИТЫ СОПОСТАВЛЕНИЯ
+# ============================================================
+
+_STOP_WORDS = {
+    "или", "или", "как", "для", "при", "над", "под", "без", "про",
+    "the", "and", "for", "with", "from", "that", "this", "into",
+    "его", "её", "ее", "их", "все", "весь", "весь", "себя",
+}
+
+
+def _significant_words(text: str) -> list:
+    """Возвращает значимые слова (длиной > 3, не стоп-слова)."""
+    words = re.findall(r"[a-zA-Zа-яА-ЯёЁ]{4,}", (text or "").lower())
+    return [w for w in words if w not in _STOP_WORDS]
+
+
+def _title_match_ratio(title_a: str, title_b: str) -> float:
+    """
+    Доля значимых слов из title_a, найденных в title_b.
+    1.0 = все слова совпали, 0.0 = ничего.
+    """
+    words_a = _significant_words(title_a)
+    if not words_a:
+        return 0.0
+    text_b = (title_b or "").lower()
+    matched = sum(1 for w in words_a if w in text_b)
+    return matched / len(words_a)
+
+
+def _author_surname(author: str) -> str:
+    if not author:
+        return ""
+    parts = [p for p in re.split(r"[,\s]+", author.strip()) if p]
+    if not parts:
+        return ""
+    # Берём самую длинную часть — обычно фамилия
+    surname = max(parts, key=len).lower()
+    return surname if len(surname) > 3 else ""
+
+
+def _author_match(author: str, text: str) -> bool:
+    surname = _author_surname(author)
+    if not surname:
+        return False
+    return surname in (text or "").lower()
+
+
+# ============================================================
 # ВАЛИДАЦИЯ ОБОГАЩЕНИЯ
 # ============================================================
 
 def _looks_like_book_article(desc: str, title: str, author: str) -> bool:
-    text = (desc or "").lower()
+    """
+    Возвращает True, только если описание действительно про книгу с
+    заданным названием (а не про автора или посторонний предмет).
+
+    Основной критерий — упоминание названия книги. Только автор —
+    НЕ достаточно (это признак биографической статьи).
+    """
+    text = (desc or "").strip()
     if not text:
         return False
-    if any(m in text for m in BOOK_MARKERS):
+
+    # 1. Название книги должно быть упомянуто в тексте (≥ 50% слов)
+    title_ratio = _title_match_ratio(title, text)
+    if title_ratio < 0.5:
+        return False
+
+    # 2. Должны быть маркеры книги (роман/повесть/рассказ...)
+    text_l = text.lower()
+    if any(m in text_l for m in BOOK_MARKERS):
         return True
-    if author:
-        surname = author.strip().split()[-1].lower()
-        if len(surname) > 3 and surname in text:
-            return True
-    if title and title.lower() in text[:400]:
+
+    # 3. Или хотя бы автор упомянут рядом с названием
+    if author and _author_match(author, text):
         return True
+
+    # Если упомянуто только название без контекста — считаем недостаточным
     return False
-
-
-def _title_words_overlap(q_title: str, found_title: str) -> bool:
-    q = set(re.findall(r"\w+", (q_title or "").lower()))
-    f = set(re.findall(r"\w+", (found_title or "").lower()))
-    q = {w for w in q if len(w) > 3}
-    if not q:
-        return False
-    return len(q & f) / len(q) >= 0.5
-
-
-def _author_mentioned(author: str, text: str) -> bool:
-    if not author:
-        return False
-    surname = author.strip().split()[-1].lower()
-    return len(surname) > 3 and surname in (text or "").lower()
 
 
 def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
@@ -268,7 +316,7 @@ def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
     if not desc:
         return True
 
-    if src in ("google_books", "fantlab", "file", "openai", "yandexgpt"):
+    if src in ("file", "fantlab", "google_books", "openai", "yandexgpt"):
         return True
 
     if src.startswith("wikipedia"):
@@ -276,8 +324,8 @@ def _result_is_acceptable(meta: dict, title: str, author: str) -> bool:
 
     if src == "openlibrary":
         return (
-            _title_words_overlap(title, meta.get("title", ""))
-            or _author_mentioned(author, desc)
+            _title_match_ratio(title, meta.get("title", "")) >= 0.5
+            or _author_match(author, desc)
         )
 
     return True
@@ -524,7 +572,7 @@ _TXT_FIELD_TITLE = re.compile(
 )
 _TXT_FIELD_ANNOT = re.compile(
     r"^\s*(?:Аннотация|Annotation|Описание|Description|"
-    r"Аннотация книги|Краткое описание)\s*[:\-]\s*(.+?)(?=\n\s*\n|\Z)",
+    r"Аннотация книги|Краткое описание|Аннотация:)\s*[:\-]\s*(.+?)(?=\n\s*\n|\Z)",
     re.IGNORECASE | re.MULTILINE | re.DOTALL,
 )
 
@@ -652,60 +700,6 @@ def parse_program_name(filename: str) -> dict:
 
 
 # ============================================================
-# GOOGLE BOOKS
-# ============================================================
-
-def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
-    q_parts = []
-    if title:
-        q_parts.append(f'intitle:"{title}"')
-    if author:
-        q_parts.append(f'inauthor:"{author}"')
-    if not q_parts:
-        return {}
-
-    params = {"q": " ".join(q_parts), "maxResults": 3, "printType": "books"}
-    if api_key:
-        params["key"] = api_key
-
-    try:
-        r = requests.get(GOOGLE_BOOKS_API, params=params,
-                         headers={"User-Agent": USER_AGENT},
-                         timeout=HTTP_TIMEOUT)
-        if r.status_code == 429:
-            print("    [!] Google Books: 429 (превышен лимит запросов)")
-            return {}
-        if r.status_code != 200:
-            return {}
-        data = r.json()
-    except Exception as e:
-        print(f"    [!] Google Books ошибка: {e}")
-        return {}
-
-    items = data.get("items") or []
-    for it in items:
-        info = it.get("volumeInfo", {})
-        desc = (info.get("description") or "").strip()
-        if not desc:
-            continue
-        return {
-            "description": desc,
-            "cover":       (info.get("imageLinks") or {}).get("thumbnail", ""),
-            "source":      "google_books",
-            "title":       info.get("title", ""),
-        }
-    return {}
-
-
-def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
-    res = _google_books_query(title, author, api_key)
-    if res:
-        return res
-    time.sleep(SLEEP_BETWEEN_REQUESTS)
-    return _google_books_query(title, "", api_key)
-
-
-# ============================================================
 # FANTLAB
 # ============================================================
 
@@ -751,27 +745,37 @@ def _fantlab_get_work(work_id: int) -> dict:
 
 
 def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
+    """
+    Возвращает наиболее релевантное произведение ИЛИ {} если ничего
+    достаточно похожего не нашлось.
+    """
     title_l = (title or "").lower()
     author_l = (author or "").lower()
+    surname = _author_surname(author)
 
     best = None
     best_score = -1
 
     for m in matches:
         score = 0
+
         names = " ".join(filter(None, [
             m.get("rusname", ""),
             m.get("name", ""),
             m.get("fullname", ""),
         ])).lower()
 
+        # Совпадение по названию
         if title_l and title_l in names:
             score += 3
-        elif title_l and any(
-            w in names for w in title_l.split() if len(w) > 3
-        ):
-            score += 1
+        elif title_l:
+            title_ratio = _title_match_ratio(title_l, names)
+            if title_ratio >= 0.5:
+                score += 2
+            elif title_ratio > 0:
+                score += 1
 
+        # Совпадение по автору
         authors_str = " ".join(filter(None, [
             m.get("all_autor_rusname", ""),
             m.get("autor1_rusname", ""),
@@ -779,19 +783,18 @@ def _fantlab_pick_best(matches: list, title: str, author: str) -> dict:
             m.get("autor3_rusname", ""),
         ])).lower()
 
-        if author_l:
-            surname = author_l.split()[-1]
-            if len(surname) > 3 and surname in authors_str:
-                score += 3
+        if surname and surname in authors_str:
+            score += 3
 
         if score > best_score:
             best_score = score
             best = m
 
-    if best is None and matches:
-        best = max(matches, key=lambda x: x.get("weight", 0) or 0)
+    # Требуем хотя бы частичное совпадение (иначе это не наша книга)
+    if best is None or best_score < 2:
+        return {}
 
-    return best or {}
+    return best
 
 
 def _clean_fantlab_text(text: str) -> str:
@@ -838,6 +841,14 @@ def fantlab_lookup(title: str, author: str) -> dict:
         work.get("work_description") or work.get("work_description_author") or ""
     )
     if not desc or len(desc) < 50:
+        return {}
+
+    # Проверяем, что описание действительно про книгу — упоминается
+    # название или автор.
+    work_name = (work.get("work_name") or work.get("work_name_orig") or "").lower()
+    if not (_title_match_ratio(title, desc) >= 0.3
+            or _author_match(author, desc)
+            or _title_match_ratio(title, work_name) >= 0.5):
         return {}
 
     cover = ""
@@ -913,19 +924,52 @@ def _wiki_first_paragraphs(text: str, max_chars: int = 800) -> str:
     return joined.strip()
 
 
+def _wiki_page_title_looks_like_book(page_title: str, title: str,
+                                     author: str) -> bool:
+    """
+    Проверяет, что заголовок найденной страницы похож на название книги,
+    а не на «Фамилия, Имя Отчество» (страница автора).
+    """
+    pt = (page_title or "").strip()
+    if not pt:
+        return False
+
+    # Признак страницы автора: паттерн "Фамилия, Имя Отчество"
+    if re.match(r"^[А-ЯЁ][а-яё]+\s*,\s*[А-ЯЁ][а-яё]+(\s+[А-ЯЁ][а-яё]+)?$", pt):
+        return False
+
+    # Признак: страница автора, если совпадает с фамилией и в title книги
+    # нет этой фамилии.
+    surname = _author_surname(author)
+    if surname and surname in pt.lower():
+        # Если в самом названии книги тоже есть фамилия — это может быть книга
+        if surname not in (title or "").lower():
+            return False
+
+    return True
+
+
 def wikipedia_lookup(title: str, author: str) -> dict:
+    """
+    Ищем статью именно про КНИГУ (а не про автора).
+    Порядок: сначала только по названию с уточнением, в конце — с автором.
+    """
     if not title:
         return {}
 
-    queries = []
-    if author:
-        queries.append(f"{title} {author} роман")
-    queries += [
-        f"{title} (роман)", f"{title} (книга)", f"{title} (повесть)",
-        f"{title} (рассказ)", f"{title} (литературное произведение)",
+    # Запросы от наиболее специфичных к наименее
+    queries = [
+        f'"{title}" роман',
+        f'"{title}" книга',
+        f'"{title}" повесть',
+        f'{title} (роман)',
+        f'{title} (книга)',
+        f'{title} (повесть)',
+        f'{title} (рассказ)',
+        f'{title} (литературное произведение)',
     ]
     if author:
-        queries.append(f"{title} {author}")
+        queries.append(f'{title} {author} роман')
 
     seen_pages = set()
     for q in queries:
@@ -937,11 +981,18 @@ def wikipedia_lookup(title: str, author: str) -> dict:
             continue
         seen_pages.add(pageid)
 
+        # 1. Заголовок страницы должен быть похож на название книги,
+        #    а не на биографию автора.
+        if not _wiki_page_title_looks_like_book(page_title, title, author):
+            time.sleep(SLEEP_BETWEEN_REQUESTS)
+            continue
+
         extract = _wiki_get_extract(pageid)
         if not extract or len(extract) < 150:
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
 
+        # 2. Проверяем текст: должен упоминать название книги.
         if not _looks_like_book_article(extract, title, author):
             time.sleep(SLEEP_BETWEEN_REQUESTS)
             continue
@@ -982,10 +1033,10 @@ def openlibrary_lookup(title: str, author: str) -> dict:
     docs = data.get("docs") or []
     for d in docs:
         found_title = d.get("title", "") or ""
-        if not _title_words_overlap(title, found_title):
-            authors_list = d.get("author_name") or []
-            if not any(_author_mentioned(author, " ".join(authors_list)) for _ in [0]):
-                continue
+
+        # Обязательное совпадение по названию (иначе пропускаем)
+        if _title_match_ratio(title, found_title) < 0.5:
+            continue
 
         desc = ""
         fs = d.get("first_sentence")
@@ -1011,6 +1062,59 @@ def openlibrary_lookup(title: str, author: str) -> dict:
 
 
 # ============================================================
+# GOOGLE BOOKS
+# ============================================================
+
+def _google_books_query(title: str, author: str, api_key: str = "") -> dict:
+    q_parts = []
+    if title:
+        q_parts.append(f'intitle:"{title}"')
+    if author:
+        q_parts.append(f'inauthor:"{author}"')
+    if not q_parts:
+        return {}
+
+    params = {"q": " ".join(q_parts), "maxResults": 3, "printType": "books"}
+    if api_key:
+        params["key"] = api_key
+
+    try:
+        r = requests.get(GOOGLE_BOOKS_API, params=params,
+                         headers={"User-Agent": USER_AGENT},
+                         timeout=HTTP_TIMEOUT)
+        if r.status_code == 429:
+            return {}
+        if r.status_code != 200:
+            return {}
+        data = r.json()
+    except Exception as e:
+        print(f"    [!] Google Books ошибка: {e}")
+        return {}
+
+    items = data.get("items") or []
+    for it in items:
+        info = it.get("volumeInfo", {})
+        desc = (info.get("description") or "").strip()
+        if not desc:
+            continue
+        return {
+            "description": desc,
+            "cover":       (info.get("imageLinks") or {}).get("thumbnail", ""),
+            "source":      "google_books",
+            "title":       info.get("title", ""),
+        }
+    return {}
+
+
+def google_books_lookup(title: str, author: str, api_key: str = "") -> dict:
+    res = _google_books_query(title, author, api_key)
+    if res:
+        return res
+    time.sleep(SLEEP_BETWEEN_REQUESTS)
+    return _google_books_query(title, "", api_key)
+
+
+# ============================================================
 # LLM
 # ============================================================
 
@@ -1020,8 +1124,8 @@ def llm_lookup(title: str, author: str) -> dict:
 
     provider = os.environ.get("LLM_PROVIDER", "yandexgpt").lower()
     prompt = (
-        "Ты библиотекарь. Кратко опиши книгу в 2–3 предложениях "
-        "без спойлеров и без вступления.\n"
+        "Ты библиотекарь. Кратко опиши именно книгу (не автора!) "
+        "в 2–3 предложениях, без спойлеров и без вступления.\n"
         f"Автор: {author or 'неизвестен'}\n"
         f"Название: {title}"
     )
@@ -1049,7 +1153,6 @@ def llm_lookup(title: str, author: str) -> dict:
                 timeout=60,
             )
             if r.status_code != 200:
-                print(f"    [!] OpenAI {r.status_code}: {r.text[:200]}")
                 return {}
             text = r.json()["choices"][0]["message"]["content"].strip()
             return {"description": text, "cover": "", "source": "openai"}
@@ -1079,7 +1182,6 @@ def llm_lookup(title: str, author: str) -> dict:
             timeout=60,
         )
         if r.status_code != 200:
-            print(f"    [!] YandexGPT {r.status_code}: {r.text[:200]}")
             return {}
         text = r.json()["result"]["alternatives"][0]["message"]["text"].strip()
         return {"description": text, "cover": "", "source": "yandexgpt"}
@@ -1094,6 +1196,16 @@ def llm_lookup(title: str, author: str) -> dict:
 
 def enrich_book(title: str, author: str, cache: dict, diag: Diag,
                 public_key: str = "", file_info: dict = None) -> dict:
+    """
+    Порядок:
+        1. Кэш
+        2. Сам файл (fb2/txt аннотация)
+        3. FantLab
+        4. Wikipedia
+        5. OpenLibrary
+        6. Google Books
+        7. LLM
+    """
     ck = cache_key(title, author)
 
     cached = cache.get(ck)
@@ -1104,6 +1216,7 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
 
     meta = {}
 
+    # 1. Сам файл
     if file_info and public_key:
         try:
             file_meta = extract_meta_from_file(
@@ -1122,58 +1235,61 @@ def enrich_book(title: str, author: str, cache: dict, diag: Diag,
                     meta["_file_title"] = file_meta["title"]
                 if file_meta.get("author"):
                     meta["_file_author"] = file_meta["author"]
-                if meta.get("description"):
-                    print(f"    [+] Описание из файла ({file_info.get('ext','')}): "
-                          f"{title[:60]!r}")
         except Exception as e:
             print(f"    [!] File parse fallback: {e}")
 
-    if not meta.get("description"):
-        gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
-        try:
-            gb_meta = google_books_lookup(title, author, gb_key)
-            if gb_meta:
-                meta.update(gb_meta)
-        except Exception as e:
-            print(f"    [!] Google Books fallback: {e}")
-        time.sleep(SLEEP_BETWEEN_REQUESTS)
-
+    # 2. FantLab
     if not meta.get("description"):
         try:
             fl_meta = fantlab_lookup(title, author)
-            if fl_meta:
+            if fl_meta and _result_is_acceptable(fl_meta, title, author):
                 meta.update(fl_meta)
         except Exception as e:
             print(f"    [!] FantLab fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 3. Wikipedia
     if not meta.get("description"):
         try:
             wiki_meta = wikipedia_lookup(title, author)
-            if wiki_meta:
+            if wiki_meta and _result_is_acceptable(wiki_meta, title, author):
                 meta.update(wiki_meta)
         except Exception as e:
             print(f"    [!] Wikipedia fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 4. Open Library
     if not meta.get("description"):
         try:
             ol_meta = openlibrary_lookup(title, author)
-            if ol_meta:
+            if ol_meta and _result_is_acceptable(ol_meta, title, author):
                 meta.update(ol_meta)
         except Exception as e:
             print(f"    [!] Open Library fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # 5. Google Books
+    if not meta.get("description"):
+        gb_key = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
+        try:
+            gb_meta = google_books_lookup(title, author, gb_key)
+            if gb_meta and _result_is_acceptable(gb_meta, title, author):
+                meta.update(gb_meta)
+        except Exception as e:
+            print(f"    [!] Google Books fallback: {e}")
+        time.sleep(SLEEP_BETWEEN_REQUESTS)
+
+    # 6. LLM
     if not meta.get("description"):
         try:
             llm_meta = llm_lookup(title, author)
-            if llm_meta:
+            if llm_meta and _result_is_acceptable(llm_meta, title, author):
                 meta.update(llm_meta)
         except Exception as e:
             print(f"    [!] LLM fallback: {e}")
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
+    # Финальная валидация
     if meta.get("description") and not _result_is_acceptable(meta, title, author):
         meta.pop("description", None)
 
@@ -1288,10 +1404,6 @@ def ensure_headers(sheet, headers: list):
 
 
 def load_existing_rows(sheet) -> dict:
-    """
-    Возвращает словарь {ссылка: номер_строки} для существующих данных.
-    Строка 1 — заголовок, поэтому данные начинаются с 2.
-    """
     try:
         rows = sheet.get_all_values()
     except Exception:
@@ -1316,11 +1428,6 @@ def load_existing_rows(sheet) -> dict:
 
 
 def batch_update_rows(sheet, updates: list):
-    """
-    updates: список словарей
-        {"range": "A5:H5", "values": [[...]]}
-    Возвращает число успешно обновлённых строк.
-    """
     if not updates:
         return 0
 
@@ -1331,10 +1438,7 @@ def batch_update_rows(sheet, updates: list):
     for i in range(0, total, chunk):
         part = updates[i:i + chunk]
         try:
-            sheet.batch_update(
-                part,
-                value_input_option="USER_ENTERED",
-            )
+            sheet.batch_update(part, value_input_option="USER_ENTERED")
             updated += len(part)
             print(f"    [+] Обновлено {updated}/{total}")
         except Exception as e:
