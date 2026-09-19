@@ -5,17 +5,14 @@ yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
 Порядок источников описания:
-    1. Сам файл (fb2/txt) — читаем из него аннотацию
-    2. FantLab API
-    3. Wikipedia API (строгая проверка)
-    4. Open Library
-    5. Google Books
-    6. LLM (опционально)
+    1. Сам файл (fb2/txt)
+    2. FantLab → Wikipedia → OpenLibrary → Google Books → LLM
 
-Существующие строки обновляются по download_link (уникален, не режется Sheets).
+Существующие строки обновляются по download_link (уникален).
 """
 
 import os
+import io
 import re
 import json
 import time
@@ -46,6 +43,8 @@ except ImportError:
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
+# ВАЖНО: path — путь в аккаунте владельца токена (yadisk).
+# Он же — префикс, который отрезается для публичного API.
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
@@ -53,7 +52,7 @@ SECTIONS = {
     },
     "Программы": {
         "url":  "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
-        "path": "/",
+        "path": "/Программы",
     },
     "Музыка":  {"url": "", "path": "/"},
     "Игры":    {"url": "", "path": "/"},
@@ -87,7 +86,7 @@ ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".djvu", ".mobi", ".txt",
 
 PROGRAM_EXTS = {".rar", ".zip", ".7z", ".xlsm", ".xlsx", ".xls",
                 ".ods", ".odt", ".exe", ".msi", ".bat", ".ps1",
-                ".py", ".sh", ".docx", ".doc"}
+                ".py", ".sh"}
 
 PARSEABLE_EXTS = {".fb2", ".txt"}
 
@@ -113,7 +112,6 @@ MAX_TXT_HEAD    = 30_000
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
               "AppleWebKit/537.36 (KHTML, like Gecko) "
               "Chrome/120.0 Safari/537.36")
-
 HEADERS = {"User-Agent": USER_AGENT}
 
 BOOK_MARKERS = (
@@ -170,7 +168,7 @@ def log_skip(diag, reason, name):
 
 
 # ============================================================
-# УТИЛИТЫ СОПОСТАВЛЕНИЯ (для валидации внешних источников)
+# УТИЛИТЫ СОПОСТАВЛЕНИЯ
 # ============================================================
 
 _STOP_WORDS = {"или", "как", "для", "при", "над", "под", "без", "про",
@@ -198,9 +196,7 @@ def _author_surname(author):
 
 def _author_match(author, text):
     surname = _author_surname(author)
-    if not surname:
-        return False
-    return surname in _normalize_for_match(text)
+    return bool(surname) and surname in _normalize_for_match(text)
 
 
 def _title_phrase_matches(title, text):
@@ -208,15 +204,12 @@ def _title_phrase_matches(title, text):
     text_norm  = _normalize_for_match(text)
     if not title_norm or not text_norm:
         return False
-
     title_words_all = title_norm.split()
     if len(title_words_all) >= 2 and title_norm in text_norm:
         return True
-
     title_words = [w for w in title_words_all if len(w) >= 4]
     if not title_words:
         return title_norm in text_norm
-
     text_words = set(text_norm.split())
     matched = [w for w in title_words if w in text_words]
     if not matched:
@@ -258,7 +251,6 @@ def parse_book_name(filename):
     stem = os.path.splitext(filename)[0].strip()
     if _is_garbage_stem(stem):
         return {"title": "", "author": ""}
-
     stem = re.sub(r"\s*\(\d+\)\s*$", "", stem)
     stem = re.sub(r"\s*\[.*?\]\s*", " ", stem)
     stem = re.sub(r"\s+", " ", stem).strip()
@@ -274,13 +266,11 @@ def parse_book_name(filename):
                 author = head
                 title  = tail
                 break
-
     if not author and "." in title:
         m = re.match(r"^([А-ЯA-Z][^.]{1,60}\.)\s+(.+)$", title)
         if m:
             author = m.group(1).strip()
             title  = m.group(2).strip()
-
     author = re.sub(r"\s+", " ", author).strip(" ,;")
     title  = re.sub(r"\s+", " ", title).strip(" ,;")
     return {"title": title, "author": author}
@@ -315,6 +305,23 @@ def _strip_disk_prefix(path):
     return path or "/"
 
 
+def _to_public_path(full_path, start_path):
+    """
+    Преобразует путь yadisk в путь публичного API.
+    yadisk возвращает путь в аккаунте владельца: /Книги/Автор/file.fb2
+    Публичный API ожидает путь относительно корня ПУБЛИЧНОЙ папки: /Автор/file.fb2
+    """
+    if not full_path:
+        return ""
+    sp = (start_path or "/").strip("/")
+    if not sp:
+        return full_path
+    prefix = "/" + sp + "/"
+    if full_path.startswith(prefix):
+        return "/" + full_path[len(prefix):]
+    return full_path
+
+
 def list_public_files_recursive(client, public_key, path="/", depth=0,
                                 max_depth=30):
     result = []
@@ -322,13 +329,11 @@ def list_public_files_recursive(client, public_key, path="/", depth=0,
         return result
     if depth == 0:
         time.sleep(SLEEP_BEFORE_LISTDIR)
-
     try:
         items = list(client.listdir(path, public_key=public_key))
     except Exception as e:
         print(f"    [!] Ошибка listdir({path}): {e}")
         return result
-
     for item in items:
         try:
             if item.type == "dir":
@@ -346,7 +351,6 @@ def list_public_files_recursive(client, public_key, path="/", depth=0,
                     "full_path": clean_path,
                     "size":      getattr(item, "size", 0) or 0,
                     "ext":       ext,
-                    "modified":  getattr(item, "modified", "") or "",
                 })
         except Exception as e:
             print(f"    [!] Ошибка обработки элемента: {e}")
@@ -369,28 +373,26 @@ def print_folder_diagnostics(client, public_key, path="/"):
         print(f"    ... и ещё {len(items) - 15}")
 
 
-def make_download_link(public_url, full_path):
-    return f"{public_url}?path={quote(full_path)}"
+def make_download_link(public_url, public_path):
+    return f"{public_url}?path={quote(public_path)}"
 
 
-def get_download_url(public_url, path):
-    """
-    Временная прямая ссылка на скачивание.
-    public_key — ПОЛНАЯ ссылка (https://disk.yandex.ru/d/...).
-    """
+def get_download_url(public_url, public_path):
+    """Прямая временная ссылка на скачивание через публичный API."""
     dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
-    params = {"public_key": public_url, "path": path}
+    params = {"public_key": public_url, "path": public_path}
     try:
-        resp = requests.get(dl_api, params=params, headers=HEADERS,
-                            timeout=HTTP_TIMEOUT)
-        if resp.status_code == 200:
-            return resp.json().get('href')
+        r = requests.get(dl_api, params=params, headers=HEADERS,
+                         timeout=HTTP_TIMEOUT)
+        if r.status_code == 200:
+            return r.json().get('href')
     except Exception as e:
-        print(f"    [!] download URL для {path}: {e}")
+        print(f"    [!] download URL для {public_path}: {e}")
     return None
 
 
 def _extract_folder(full_path, start_path):
+    """Первая подпапка внутри start_path."""
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
     if sp and fp.startswith(sp + "/"):
@@ -411,34 +413,52 @@ def _extract_folder(full_path, start_path):
 # СКАЧИВАНИЕ ФАЙЛА
 # ============================================================
 
-def _fetch_file_content(f, public_url, max_bytes=None):
-    if not f.get('download_url'):
-        f['download_url'] = get_download_url(public_url, f['path'])
-    if not f['download_url']:
-        return b""
+def _fetch_file_content(client, f, public_url, public_path,
+                        max_bytes=None):
+    """
+    Скачивает содержимое файла.
+    Сначала — публичный API (без токена).
+    Если не сработал — через yadisk-клиент.
+    """
+    # 1) Через публичный API
+    dl_url = get_download_url(public_url, public_path)
+    if dl_url:
+        try:
+            if max_bytes:
+                r = requests.get(dl_url, headers=HEADERS, timeout=60,
+                                 stream=True)
+                r.raise_for_status()
+                buf = bytearray()
+                try:
+                    for chunk in r.iter_content(chunk_size=16384):
+                        if not chunk:
+                            break
+                        buf.extend(chunk)
+                        if len(buf) >= max_bytes:
+                            break
+                finally:
+                    r.close()
+                return bytes(buf)
+            else:
+                r = requests.get(dl_url, headers=HEADERS, timeout=60)
+                if r.status_code == 200:
+                    return r.content
+        except Exception as e:
+            print(f"      Публичный API не отдал {f['name']}: {e}")
 
-    try:
-        if max_bytes:
-            r = requests.get(f['download_url'], headers=HEADERS,
-                             timeout=60, stream=True)
-            r.raise_for_status()
-            buf = bytearray()
-            try:
-                for chunk in r.iter_content(chunk_size=16384):
-                    if not chunk:
-                        break
-                    buf.extend(chunk)
-                    if len(buf) >= max_bytes:
-                        break
-            finally:
-                r.close()
-            return bytes(buf)
-        else:
-            r = requests.get(f['download_url'], headers=HEADERS, timeout=60)
-            if r.status_code == 200:
-                return r.content
-    except Exception as e:
-        print(f"      Ошибка скачивания {f['name']}: {e}")
+    # 2) Fallback через yadisk-клиент
+    if client is not None and f.get('path'):
+        try:
+            buf = io.BytesIO()
+            if max_bytes:
+                client.download(f['path'], buf,
+                                byte_range=(0, max_bytes - 1))
+            else:
+                client.download(f['path'], buf)
+            return buf.getvalue()
+        except Exception as e:
+            print(f"      yadisk.download не отдал {f['name']}: {e}")
+
     return b""
 
 
@@ -449,7 +469,6 @@ def _fetch_file_content(f, public_url, max_bytes=None):
 def parse_fb2(content_bytes):
     result = {'title': '', 'author': '', 'description': '',
               'cover_data': None, 'cover_ext': ''}
-
     text = None
     for enc in ('utf-8', 'windows-1251', 'koi8-r'):
         try:
@@ -459,7 +478,6 @@ def parse_fb2(content_bytes):
             continue
     if text is None:
         return result
-
     text = text.lstrip('\ufeff')
     try:
         root = ET.fromstring(text)
@@ -605,15 +623,12 @@ def parse_txt(content_bytes):
     result = {'title': '', 'author': '', 'description': ''}
     head = content_bytes[:MAX_TXT_HEAD]
     text = _decode_bytes(head)
-
     m = _TXT_FIELD_AUTHOR.search(text)
     if m:
         result['author'] = m.group(1).strip()[:300]
-
     m = _TXT_FIELD_TITLE.search(text)
     if m:
         result['title'] = m.group(1).strip()[:300]
-
     m = _TXT_FIELD_ANNOT.search(text)
     if m:
         desc = re.sub(r"\s+", " ", m.group(1)).strip()
@@ -621,7 +636,6 @@ def parse_txt(content_bytes):
             if len(desc) > MAX_DESC_LEN:
                 desc = desc[:MAX_DESC_LEN] + '...'
             result['description'] = desc
-
     return result
 
 
@@ -632,7 +646,6 @@ def parse_txt(content_bytes):
 def _fantlab_lookup(title, author):
     if not title:
         return {}
-
     def _search(q, limit=5):
         try:
             r = requests.get(FANTLAB_SEARCH, params={"q": q, "onlymatches": 1},
@@ -689,7 +702,6 @@ def _fantlab_lookup(title, author):
     work_id = best.get("work_id")
     if not work_id:
         return {}
-
     try:
         r = requests.get(FANTLAB_WORK.format(id=work_id),
                          headers=HEADERS, timeout=15)
@@ -710,27 +722,22 @@ def _fantlab_lookup(title, author):
         return {}
     if len(desc) > MAX_DESC_LEN:
         desc = desc[:MAX_DESC_LEN] + "..."
-
     cover = ""
     img = work.get("image") or {}
     if isinstance(img, dict):
         cover = img.get("url") or ""
         if cover and not cover.startswith("http"):
             cover = "https://fantlab.ru" + cover
-
     return {"description": desc, "cover": cover, "source": "fantlab"}
 
 
 def _wikipedia_lookup(title, author):
     if not title:
         return {}
-
     def _req(params):
         try:
             r = requests.get(WIKI_API, params=params, headers=HEADERS, timeout=15)
-            if r.status_code != 200:
-                return {}
-            return r.json()
+            return r.json() if r.status_code == 200 else {}
         except Exception:
             return {}
 
@@ -753,10 +760,8 @@ def _wikipedia_lookup(title, author):
                 return t
         return ""
 
-    queries = [
-        f'"{title}" роман', f'"{title}" книга', f'"{title}" повесть',
-        f'{title} (роман)', f'{title} (книга)', f'{title} (повесть)',
-    ]
+    queries = [f'"{title}" роман', f'"{title}" книга', f'"{title}" повесть',
+               f'{title} (роман)', f'{title} (книга)', f'{title} (повесть)']
     if author:
         queries.append(f'{title} {author} роман')
 
@@ -767,12 +772,10 @@ def _wikipedia_lookup(title, author):
             time.sleep(SLEEP_BETWEEN)
             continue
         seen.add(pageid)
-
         pt = (page_title or "").strip()
         if re.match(r"^[А-ЯЁ][а-яё]+\s*,\s*[А-ЯЁ][а-яё]+", pt):
             time.sleep(SLEEP_BETWEEN)
             continue
-
         text = _extract(pageid)
         if not text or len(text) < 150:
             time.sleep(SLEEP_BETWEEN)
@@ -780,13 +783,11 @@ def _wikipedia_lookup(title, author):
         if not _title_phrase_matches(title, text):
             time.sleep(SLEEP_BETWEEN)
             continue
-
         paras = [p.strip() for p in text.split("\n") if p.strip()][:3]
         desc = "\n\n".join(paras)[:MAX_DESC_LEN]
         if desc:
             return {"description": desc, "cover": "", "source": "wikipedia"}
         time.sleep(SLEEP_BETWEEN)
-
     return {}
 
 
@@ -804,7 +805,6 @@ def _openlibrary_lookup(title, author):
         docs = (r.json() or {}).get("docs") or []
     except Exception:
         return {}
-
     for d in docs:
         found = d.get("title", "") or ""
         if not _title_phrase_matches(title, found):
@@ -866,7 +866,6 @@ def _llm_lookup(title, author):
     prompt = ("Ты библиотекарь. Кратко опиши именно книгу (не автора!) "
               "в 2–3 предложениях, без спойлеров и без вступления.\n"
               f"Автор: {author or 'неизвестен'}\nНазвание: {title}")
-
     if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
@@ -887,7 +886,6 @@ def _llm_lookup(title, author):
             return {"description": text, "cover": "", "source": "openai"}
         except Exception:
             return {}
-
     api_key   = os.environ.get("YANDEX_GPT_API_KEY")
     folder_id = os.environ.get("YANDEX_FOLDER_ID")
     if not api_key or not folder_id:
@@ -911,11 +909,9 @@ def _llm_lookup(title, author):
 
 
 def enrich_book(title, author, cache, diag):
-    """Файл → FantLab → Wikipedia → OpenLibrary → GoogleBooks → LLM."""
     ck = hashlib.sha1(
         f"{(title or '').lower()}|{(author or '').lower()}".encode()
     ).hexdigest()
-
     if ck in cache:
         meta = cache[ck]
         src = meta.get("source", "none")
@@ -933,7 +929,6 @@ def enrich_book(title, author, cache, diag):
         except Exception:
             pass
         time.sleep(SLEEP_BETWEEN)
-
     cache[ck] = meta
     if meta:
         src = meta.get("source", "none")
@@ -942,7 +937,7 @@ def enrich_book(title, author, cache, diag):
 
 
 # ============================================================
-# ЗАГРУЗКА ОБЛОЖЕК В SUPABASE
+# ОБЛОЖКИ
 # ============================================================
 
 def upload_cover_to_supabase(cover_data, ext, book_title):
@@ -989,7 +984,6 @@ def open_spreadsheet(gs_client):
     if SPREADSHEET_ID:
         print(f"Открываю таблицу по ID: {SPREADSHEET_ID}")
         return gs_client.open_by_key(SPREADSHEET_ID)
-    print(f"SPREADSHEET_ID не задан, открываю по имени: {SPREADSHEET_NAME}")
     return gs_client.open(SPREADSHEET_NAME)
 
 
@@ -1015,20 +1009,18 @@ def ensure_headers(sheet, headers):
     try:
         sheet.update(values=[headers], range_name=range_a1,
                      value_input_option="USER_ENTERED")
-        print(f"    [+] Обновлены заголовки: {headers}")
+        print(f"    [+] Обновлены заголовки")
     except Exception as e:
         print(f"    [!] Заголовки: {e}")
 
 
 def load_existing_rows(sheet):
-    """{download_link: номер строки}"""
     try:
         rows = sheet.get_all_values()
     except Exception:
         return {}
     if not rows or len(rows) < 2:
         return {}
-
     header = [h.strip().lower() for h in rows[0]]
     idx = None
     for cand in ("ссылка для скачивания", "ссылка", "download_link", "link"):
@@ -1037,7 +1029,6 @@ def load_existing_rows(sheet):
             break
     if idx is None:
         return {}
-
     result = {}
     for i, r in enumerate(rows[1:], start=2):
         if len(r) > idx and r[idx].strip():
@@ -1088,7 +1079,7 @@ def append_rows_safe(sheet, rows, batch_size=200):
 # СБОРКА СТРОК
 # ============================================================
 
-def build_book_rows(files, public_url, start_path, cache, diag):
+def build_book_rows(client, files, public_url, start_path, cache, diag):
     headers = SHEET_HEADERS["Книги"]
     rows = []
     seen_links = set()
@@ -1109,29 +1100,28 @@ def build_book_rows(files, public_url, start_path, cache, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        link = make_download_link(public_url, f["full_path"])
+        # Публичный путь (для download_link и публичного API)
+        public_path = _to_public_path(f["full_path"], start_path)
+        link = make_download_link(public_url, public_path)
         if link in seen_links:
             log_skip(diag, "dup_link", name)
             continue
         seen_links.add(link)
 
-        # ---- 1. Парсим fb2/txt ----
+        # ---- 1. Файл (fb2/txt) ----
         file_data = {}
         if ext in PARSEABLE_EXTS:
             max_b = MAX_TXT_HEAD if ext == ".txt" else None
-            content = _fetch_file_content(f, public_url, max_bytes=max_b)
+            content = _fetch_file_content(client, f, public_url,
+                                          public_path, max_bytes=max_b)
             if content:
-                if ext == ".fb2":
-                    file_data = parse_fb2(content)
-                elif ext == ".txt":
-                    file_data = parse_txt(content)
+                file_data = parse_fb2(content) if ext == ".fb2" \
+                    else parse_txt(content)
 
         title  = file_data.get("title")  or title0
         author = file_data.get("author") or author0
         description = file_data.get("description", "")
-        source = "file" if description else ""
 
-        # Если автор пуст — из папки
         if not author:
             folder_for_author = _extract_folder(f["full_path"], start_path)
             if folder_for_author:
@@ -1141,13 +1131,11 @@ def build_book_rows(files, public_url, start_path, cache, diag):
             diag.from_file += 1
             diag.sources["file"] = diag.sources.get("file", 0) + 1
 
-        # ---- 2. Обогащение внешними источниками ----
+        # ---- 2. Внешние источники ----
         if not description:
             ext_meta = enrich_book(title, author, cache, diag)
             if ext_meta.get("description"):
                 description = ext_meta["description"]
-                if ext_meta.get("source"):
-                    source = ext_meta["source"]
 
         # ---- 3. Обложка ----
         cover = ""
@@ -1187,7 +1175,7 @@ def build_book_rows(files, public_url, start_path, cache, diag):
             row.append(record.get(en, ""))
         rows.append(row)
 
-        if idx % 100 == 0:
+        if idx % 50 == 0:
             print(f"    ... обработано {idx}/{total}, записей: {len(rows)}, "
                   f"из файлов: {diag.from_file}")
 
@@ -1214,7 +1202,8 @@ def build_program_rows(files, public_url, start_path, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        link = make_download_link(public_url, f["full_path"])
+        public_path = _to_public_path(f["full_path"], start_path)
+        link = make_download_link(public_url, public_path)
         if link in seen_links:
             log_skip(diag, "dup_link", name)
             continue
@@ -1231,13 +1220,11 @@ def build_program_rows(files, public_url, start_path, diag):
             "download_link": link,
             "folder":        folder,
         }
-
         row = []
         for ru in headers:
             en = RU_TO_EN.get(ru, ru)
             row.append(record.get(en, ""))
         rows.append(row)
-
     return rows
 
 
@@ -1249,25 +1236,23 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
     print(f"\n=== Раздел: {section} ===")
     public_url = section_cfg.get("url", "")
     start_path = section_cfg.get("path", "/") or "/"
-
     if not public_url:
         print("  Пустая ссылка, пропускаю.")
         return
     if section not in SHEET_HEADERS:
         print(f"  Раздел '{section}' не настроен, пропускаю.")
         return
-
     print(f"Источник:   {public_url}")
     print(f"Подпапка:   {start_path}")
 
     if yadisk is None:
-        print("  [!] yadisk не установлен, пропускаю.")
+        print("  [!] yadisk не установлен.")
         return
 
     public_key = get_public_key(public_url)
     token = os.environ.get("YADISK_TOKEN")
     if not token:
-        print("  [!] YADISK_TOKEN не задан, пропускаю.")
+        print("  [!] YADISK_TOKEN не задан.")
         return
 
     with yadisk.Client(token=token) as client:
@@ -1278,7 +1263,6 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
         except Exception as e:
             print(f"  [!] Ошибка проверки токена: {e}")
             return
-
         print_folder_diagnostics(client, public_key, start_path)
         files = list_public_files_recursive(client, public_key, path=start_path)
 
@@ -1286,7 +1270,8 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
     print(f"  Найдено файлов: {len(files)}")
 
     if section == "Книги":
-        rows = build_book_rows(files, public_url, start_path, cache, diag)
+        rows = build_book_rows(client, files, public_url, start_path,
+                               cache, diag)
     elif section == "Программы":
         rows = build_program_rows(files, public_url, start_path, diag)
     else:
@@ -1294,7 +1279,6 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
 
     diag.kept = len(rows)
     diag.report()
-
     if not rows:
         print("  Нет строк для записи.")
         return
@@ -1304,7 +1288,6 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
     except Exception as e:
         print(f"  [!] Не удалось открыть таблицу: {e}")
         return
-
     sheet = get_or_create_sheet(sh, section)
     headers = SHEET_HEADERS[section]
     ensure_headers(sheet, headers)
@@ -1330,10 +1313,8 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
 
     print(f"    К обновлению:  {len(updates)}")
     print(f"    К добавлению:  {len(to_add)}")
-
     if updates:
         diag.updated = batch_update_rows(sheet, updates)
-
     if to_add:
         added, failed = append_rows_safe(sheet, to_add)
         diag.added = added
@@ -1351,7 +1332,7 @@ def main():
     print("=" * 60)
 
     if yadisk is None:
-        print("[!] Модуль yadisk не установлен: pip install -r requirements.txt")
+        print("[!] yadisk не установлен: pip install -r requirements.txt")
         return
 
     print("Подключение к Google Sheets...")
@@ -1366,7 +1347,6 @@ def main():
         print("[!] SPREADSHEET_ID не задан.")
 
     cache = {}
-
     grand_found = 0
     for section, cfg in SECTIONS.items():
         diag = Diag()
