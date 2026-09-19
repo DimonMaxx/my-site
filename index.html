@@ -760,9 +760,10 @@
             if (downloadUrl && downloadUrl !== '#') {
                 try {
                     const parsed = new URL(downloadUrl);
+                    const folder = `${parsed.origin}${parsed.pathname}`;
                     const path = parsed.searchParams.get('path');
                     if (path) {
-                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
+                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(folder)}&path=${encodeURIComponent(path)}`;
                         MF.triggerDownload(proxyUrl);
                     } else {
                         MF.triggerDownload(downloadUrl);
