@@ -4,7 +4,7 @@
 yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
-Порядок источников описания:
+Порядок источников описания (для книг):
     1. Сам файл (fb2/txt)
     2. FantLab → Wikipedia → OpenLibrary → Google Books → LLM
 
@@ -43,7 +43,7 @@ except ImportError:
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
-# ВАЖНО: path — путь в аккаунте владельца токена (yadisk).
+# path — путь в аккаунте владельца токена (yadisk).
 # Он же — префикс, который отрезается для публичного API.
 SECTIONS = {
     "Книги": {
@@ -54,7 +54,10 @@ SECTIONS = {
         "url":  "https://disk.yandex.ru/d/EjUHvm6mUcgVMw",
         "path": "/Программы",
     },
-    "Музыка":  {"url": "", "path": "/"},
+    "Музыка": {
+        "url":  "https://disk.yandex.ru/d/b4sqSrbsOFtMcA",
+        "path": "/Музыка",
+    },
     "Игры":    {"url": "", "path": "/"},
     "Статьи":  {"url": "", "path": "/"},
     "Фильмы":  {"url": "", "path": "/"},
@@ -67,11 +70,15 @@ SHEET_HEADERS = {
                   "Ссылка для скачивания", "Обложка", "Папка", "Описание"],
     "Программы": ["Название", "Описание", "Версия", "Размер (МБ)",
                   "Ссылка для скачивания", "Папка"],
+    "Музыка":    ["Название", "Исполнитель", "Год", "Размер (МБ)",
+                  "Ссылка для скачивания", "Папка"],
 }
 
 RU_TO_EN = {
     "Название":              "title",
     "Автор":                 "author",
+    "Исполнитель":           "artist",
+    "Год":                   "year",
     "Описание":              "description",
     "Формат":                "format",
     "Размер (МБ)":           "size",
@@ -87,6 +94,9 @@ ALLOWED_EXTS = {".fb2", ".epub", ".pdf", ".djvu", ".mobi", ".txt",
 PROGRAM_EXTS = {".rar", ".zip", ".7z", ".xlsm", ".xlsx", ".xls",
                 ".ods", ".odt", ".exe", ".msi", ".bat", ".ps1",
                 ".py", ".sh"}
+
+MUSIC_EXTS = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".aac",
+              ".wma", ".opus", ".ape", ".aiff", ".alac"}
 
 PARSEABLE_EXTS = {".fb2", ".txt"}
 
@@ -288,6 +298,53 @@ def parse_program_name(filename):
     return {"title": stem, "version": version}
 
 
+def parse_music_name(filename):
+    """
+    Разбирает имя музыкального файла.
+    Возможные форматы:
+      "Artist - Title.mp3"          → artist=Artist, title=Title
+      "01. Artist - Title.mp3"      → artist=Artist, title=Title (номер трека отбрасывается)
+      "Artist - Album - 01 - Title" → artist=Artist, title=Title, album=Album
+      "Title.mp3"                   → title=Title
+    Год вытаскивается отдельно регуляркой 19xx/20xx.
+    """
+    stem = os.path.splitext(filename)[0].strip()
+    stem = re.sub(r"\s+", " ", stem).strip()
+    result = {"title": stem, "artist": "", "album": "", "year": ""}
+    if not stem:
+        return result
+
+    # Год — ищем (1950–2030)
+    year_m = re.search(r"\b(19[5-9]\d|20[0-3]\d)\b", stem)
+    if year_m:
+        result["year"] = year_m.group(1)
+
+    # Убираем ведущий номер трека "01. ", "1 - ", "01 -"
+    cleaned = re.sub(r"^\d{1,2}[\s\.\-–]+", "", stem).strip()
+
+    # Ищем Artist - ...
+    parts = re.split(r"\s+[-–—]\s+", cleaned, maxsplit=1)
+    if len(parts) == 2 and parts[0].strip() and parts[1].strip():
+        result["artist"] = parts[0].strip()
+        rest = parts[1].strip()
+
+        # "Album - 01 - Title" или "Album - Title"
+        sub = re.split(r"\s+[-–—]\s+", rest, maxsplit=1)
+        if len(sub) == 2:
+            # проверяем, похоже ли первое на альбом (без цифры трека)
+            result["title"] = sub[-1].strip()
+        else:
+            result["title"] = rest
+    else:
+        result["title"] = cleaned
+
+    # Чистим title от года и лишних скобок
+    result["title"] = re.sub(r"\s*\(?\b(19[5-9]\d|20[0-3]\d)\b\)?\s*", " ",
+                             result["title"]).strip(" -–—")
+
+    return result
+
+
 # ============================================================
 # ЯНДЕКС.ДИСК
 # ============================================================
@@ -307,7 +364,6 @@ def _strip_disk_prefix(path):
 
 def _to_public_path(full_path, start_path):
     """
-    Преобразует путь yadisk в путь публичного API.
     yadisk возвращает путь в аккаунте владельца: /Книги/Автор/file.fb2
     Публичный API ожидает путь относительно корня ПУБЛИЧНОЙ папки: /Автор/file.fb2
     """
@@ -392,7 +448,7 @@ def get_download_url(public_url, public_path):
 
 
 def _extract_folder(full_path, start_path):
-    """Первая подпапка внутри start_path."""
+    """Первая подпапка внутри start_path (для книг — автор)."""
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
     if sp and fp.startswith(sp + "/"):
@@ -409,18 +465,36 @@ def _extract_folder(full_path, start_path):
     return ""
 
 
+def _extract_folder_full(full_path, start_path):
+    """
+    Полный относительный путь подпапок (без имени файла),
+    объединённый через ' / '.
+      /Музыка/Rock/Pink Floyd/file.mp3 с start_path='/Музыка'
+      → 'Rock / Pink Floyd'
+    """
+    sp = (start_path or "/").strip("/")
+    fp = (full_path or "").strip("/")
+    if sp and fp.startswith(sp + "/"):
+        rel = fp[len(sp) + 1:]
+    elif sp and fp == sp:
+        rel = ""
+    else:
+        rel = fp
+    if not rel:
+        return ""
+    parts = rel.split("/")
+    if len(parts) < 2:
+        return ""
+    return " / ".join(parts[:-1])
+
+
 # ============================================================
 # СКАЧИВАНИЕ ФАЙЛА
 # ============================================================
 
 def _fetch_file_content(client, f, public_url, public_path,
                         max_bytes=None):
-    """
-    Скачивает содержимое файла.
-    Сначала — публичный API (без токена).
-    Если не сработал — через yadisk-клиент.
-    """
-    # 1) Через публичный API
+    """Скачивает файл: сначала через публичный API, затем через yadisk."""
     dl_url = get_download_url(public_url, public_path)
     if dl_url:
         try:
@@ -446,7 +520,6 @@ def _fetch_file_content(client, f, public_url, public_path,
         except Exception as e:
             print(f"      Публичный API не отдал {f['name']}: {e}")
 
-    # 2) Fallback через yadisk-клиент
     if client is not None and f.get('path'):
         try:
             buf = io.BytesIO()
@@ -952,10 +1025,12 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
         "apikey": SUPABASE_SERVICE_KEY,
     }
     try:
-        resp = requests.put(url, headers=headers, data=cover_data, timeout=30)
+        resp = requests.put(url, headers=headers, data=cover_data,
+                            timeout=HTTP_TIMEOUT)
         if resp.status_code in (200, 201):
             return f"{SUPABASE_URL}/storage/v1/object/public/{COVERS_BUCKET}/{filename}"
-        print(f"    [!] Обложка: {resp.status_code} — {resp.text[:150]}")
+        # Не печатаем HTML-тело ответа, только код
+        print(f"    [!] Обложка: HTTP {resp.status_code} для '{book_title[:40]}'")
     except Exception as e:
         print(f"    [!] Обложка: {e}")
     return None
@@ -1009,7 +1084,7 @@ def ensure_headers(sheet, headers):
     try:
         sheet.update(values=[headers], range_name=range_a1,
                      value_input_option="USER_ENTERED")
-        print(f"    [+] Обновлены заголовки")
+        print(f"    [+] Обновлены заголовки: {headers}")
     except Exception as e:
         print(f"    [!] Заголовки: {e}")
 
@@ -1100,7 +1175,6 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        # Публичный путь (для download_link и публичного API)
         public_path = _to_public_path(f["full_path"], start_path)
         link = make_download_link(public_url, public_path)
         if link in seen_links:
@@ -1108,7 +1182,7 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             continue
         seen_links.add(link)
 
-        # ---- 1. Файл (fb2/txt) ----
+        # 1. Файл
         file_data = {}
         if ext in PARSEABLE_EXTS:
             max_b = MAX_TXT_HEAD if ext == ".txt" else None
@@ -1131,13 +1205,13 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             diag.from_file += 1
             diag.sources["file"] = diag.sources.get("file", 0) + 1
 
-        # ---- 2. Внешние источники ----
+        # 2. Внешние источники
         if not description:
             ext_meta = enrich_book(title, author, cache, diag)
             if ext_meta.get("description"):
                 description = ext_meta["description"]
 
-        # ---- 3. Обложка ----
+        # 3. Обложка
         cover = ""
         if file_data.get("cover_data"):
             cover = upload_cover_to_supabase(
@@ -1228,6 +1302,73 @@ def build_program_rows(files, public_url, start_path, diag):
     return rows
 
 
+def build_music_rows(files, public_url, start_path, diag):
+    """
+    Собирает строки листа «Музыка».
+    Подпапки (полный путь) → колонка «Папка».
+    Из имени файла вытаскиваем исполнителя и год.
+    """
+    headers = SHEET_HEADERS["Музыка"]
+    rows = []
+    seen_links = set()
+
+    for f in files:
+        name = f["name"]
+        ext  = f["ext"]
+
+        if ext not in MUSIC_EXTS:
+            log_skip(diag, "wrong_ext", name)
+            continue
+
+        parsed = parse_music_name(name)
+        title  = parsed["title"]
+        artist = parsed["artist"]
+        year   = parsed["year"]
+
+        if not title:
+            log_skip(diag, "garbage", name)
+            continue
+
+        public_path = _to_public_path(f["full_path"], start_path)
+        link = make_download_link(public_url, public_path)
+        if link in seen_links:
+            log_skip(diag, "dup_link", name)
+            continue
+        seen_links.add(link)
+
+        # Полный путь подпапок для колонки «Папка»
+        folder = _extract_folder_full(f["full_path"], start_path)
+
+        # Если исполнитель не вытащили из имени файла — берём из папки
+        if not artist and folder:
+            artist = folder.split(" / ")[0]
+
+        # Если год не вытащили из имени файла — попробуем из папки
+        if not year and folder:
+            ym = re.search(r"\b(19[5-9]\d|20[0-3]\d)\b", folder)
+            if ym:
+                year = ym.group(1)
+
+        size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
+
+        record = {
+            "title":         title,
+            "artist":        artist,
+            "year":          year,
+            "size":          str(size_mb),
+            "download_link": link,
+            "folder":        folder,
+        }
+
+        row = []
+        for ru in headers:
+            en = RU_TO_EN.get(ru, ru)
+            row.append(record.get(en, ""))
+        rows.append(row)
+
+    return rows
+
+
 # ============================================================
 # СИНХРОНИЗАЦИЯ РАЗДЕЛА
 # ============================================================
@@ -1274,6 +1415,8 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
                                cache, diag)
     elif section == "Программы":
         rows = build_program_rows(files, public_url, start_path, diag)
+    elif section == "Музыка":
+        rows = build_music_rows(files, public_url, start_path, diag)
     else:
         rows = []
 
@@ -1296,7 +1439,7 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
     print(f"  Существующих строк: {len(existing)}")
 
     link_ru = "Ссылка для скачивания"
-    link_idx = headers.index(link_ru) if link_ru in headers else 4
+    link_idx = headers.index(link_ru) if link_ru in headers else 0
     n_cols = len(headers)
     end_col_letter = chr(ord('A') + n_cols - 1) if n_cols <= 26 else "Z"
 
