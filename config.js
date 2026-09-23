@@ -26,103 +26,64 @@
             'application/zip'
         ],
 
-        SECTIONS: {
-            news: {
-                label: 'Новости',
-                icon: 'fa-newspaper',
-                json: '_content/news.json',
-                container: 'news-container',
-                columns: ['title', 'date', 'body'],
-                folderable: false
-            },
+        // Fallback-набор разделов (используется, если Supabase недоступен)
+        DEFAULT_SECTIONS: {
             programs: {
-                label: 'Программы',
-                icon: 'fa-code',
-                json: '_content/programs.json',
-                container: 'programs-container',
-                columns: ['folder', 'title', 'description', 'version', 'size', 'download_link'],
-                folderable: true
+                label: 'Программы', icon: 'fa-code',
+                json: '_content/programs.json', container: 'programs-container',
+                folderable: true,
+                columns: ['folder','title','description','version','size','download_link']
             },
             books: {
-                label: 'Книги',
-                icon: 'fa-book',
-                json: '_content/books.json',
-                container: 'books-container',
-                columns: ['folder', 'title', 'author', 'description', 'format', 'download_link'],
-                folderable: true
-            },
-            articles: {
-                label: 'Статьи',
-                icon: 'fa-pen-fancy',
-                json: '_content/articles.json',
-                container: 'articles-container',
-                columns: ['title', 'date', 'body'],
-                folderable: false
+                label: 'Книги', icon: 'fa-book',
+                json: '_content/books.json', container: 'books-container',
+                folderable: true,
+                columns: ['cover','title','author','description','format','download_link']
             },
             movies: {
-                label: 'Фильмы',
-                icon: 'fa-film',
-                json: '_content/movies.json',
-                container: 'movies-container',
-                columns: ['folder', 'title', 'year', 'description', 'download_link'],
-                folderable: true
+                label: 'Фильмы', icon: 'fa-film',
+                json: '_content/movies.json', container: 'movies-container',
+                folderable: true,
+                columns: ['folder','title','year','description','download_link']
             },
             music: {
-                label: 'Музыка',
-                icon: 'fa-music',
-                json: '_content/music.json',
-                container: 'music-container',
-                columns: ['folder', 'title', 'artist', 'year', 'description', 'download_link'],
-                folderable: true
+                label: 'Музыка', icon: 'fa-music',
+                json: '_content/music.json', container: 'music-container',
+                folderable: true,
+                columns: ['title','artist','year','download_link']
             },
             games: {
-                label: 'Игры',
-                icon: 'fa-gamepad',
-                json: '_content/games.json',
-                container: 'games-container',
-                columns: ['folder', 'title', 'platform', 'year', 'description', 'download_link'],
-                folderable: true
+                label: 'Игры', icon: 'fa-gamepad',
+                json: '_content/games.json', container: 'games-container',
+                folderable: true,
+                columns: ['folder','title','platform','year','description','download_link']
             },
             misc: {
-                label: 'Разное',
-                icon: 'fa-ellipsis-h',
-                json: '_content/misc.json',
-                container: 'misc-container',
-                columns: ['title', 'description', 'download_link'],
-                folderable: false
+                label: 'Разное', icon: 'fa-ellipsis-h',
+                json: '_content/misc.json', container: 'misc-container',
+                folderable: false,
+                columns: ['title','description','download_link']
             }
         },
 
         COLUMN_LABELS: {
-            title: 'Название',
-            description: 'Описание',
-            version: 'Версия',
-            size: 'Размер (МБ)',
-            download_link: 'Ссылка',
-            author: 'Автор',
-            format: 'Формат',
-            date: 'Дата',
-            body: 'Текст',
-            year: 'Год',
-            artist: 'Исполнитель',
-            platform: 'Платформа',
-            folder: 'Папка',
-            file_name: 'Файл',
-            username: 'Пользователь',
+            title: 'Название', description: 'Описание', version: 'Версия',
+            size: 'Размер (МБ)', download_link: 'Ссылка',
+            author: 'Автор', format: 'Формат', date: 'Дата',
+            body: 'Текст', year: 'Год', artist: 'Исполнитель',
+            platform: 'Платформа', folder: 'Папка',
+            file_name: 'Файл', username: 'Пользователь',
             downloaded_at: 'Дата и время'
         },
 
         SECTION_TO_SHEET: {
-            programs: 'Программы',
-            books:    'Книги',
-            news:     'Новости',
-            articles: 'Статьи',
-            movies:   'Фильмы',
-            music:    'Музыка',
-            games:    'Игры',
-            misc:     'Разное'
+            programs: 'Программы', books: 'Книги', movies: 'Фильмы',
+            music: 'Музыка', games: 'Игры', misc: 'Разное'
         }
     });
+
+    // SECTIONS заполняется асинхронно через MF.loadSections()
+    APP_CONFIG.SECTIONS = Object.assign({}, APP_CONFIG.DEFAULT_SECTIONS);
 
     window.APP_CONFIG = APP_CONFIG;
 })();
