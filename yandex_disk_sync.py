@@ -3,8 +3,19 @@
 """
 yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets.
+
 Разделы и их настройки читаются из таблицы site_sections (Supabase),
 поэтому добавлять/менять разделы можно через админ-панель без правки Python.
+
+Особенности этой версии:
+  • PRESERVE_USER_EDITS — сохраняет ручные правки пользователя
+    (название, описание, автор и т.п.) при обновлении существующих строк.
+  • manual_override (per-section) — существующие строки раздела вообще
+    не перезаписываются, добавляются только новые файлы.
+  • BACKUP_BEFORE_SYNC — перед записью изменений создаётся резервная
+    копия листа (_backup_<section>_<timestamp>), хранятся последние N.
+  • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
+    в Sheets) с сохранением в Supabase-таблицу sync_orphans.
 """
 
 import os
@@ -14,6 +25,7 @@ import json
 import time
 import base64
 import hashlib
+import datetime
 import traceback
 import requests
 import xml.etree.ElementTree as ET
@@ -107,6 +119,41 @@ EN_TO_RU = {v: k for k, v in RU_TO_EN.items()}
 
 
 # ============================================================
+# РЕЖИМ ОБНОВЛЕНИЯ СУЩЕСТВУЮЩИХ СТРОК
+# ============================================================
+
+# PRESERVE_USER_EDITS=1 (по умолчанию):
+#   при обновлении существующей строки непустые ячейки сохраняются
+#   (ручные правки), пустые — заполняются из Диска.
+# PRESERVE_USER_EDITS=0:
+#   строка перезаписывается целиком (старое поведение).
+PRESERVE_USER_EDITS = os.environ.get("PRESERVE_USER_EDITS", "1") == "1"
+
+# BACKUP_BEFORE_SYNC=1 (по умолчанию): перед записью изменений
+#   создаётся резервная копия листа.
+BACKUP_BEFORE_SYNC  = os.environ.get("BACKUP_BEFORE_SYNC", "1") == "1"
+
+# Сколько последних резервных копий хранить для каждого раздела.
+BACKUP_KEEP_COUNT   = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
+
+# Таблица Supabase, в которую пишутся «осиротевшие» строки.
+SYNC_ORPHANS_TABLE  = "sync_orphans"
+
+# Колонки, которые ВСЕГДА перезаписываются данными из Яндекс.Диска:
+# их значения вычисляются из файла, ручные правки бессмысленны.
+ALWAYS_UPDATE_HEADERS = {
+    "Ссылка для скачивания", "Ссылка",
+    "Размер (МБ)", "Размер",
+    "Формат",
+    "download_link", "link", "size", "format",
+}
+
+# Кандидаты имён колонки «Название» — для извлечения title
+# при формировании списка осиротевших строк.
+TITLE_HEADER_CANDIDATES = ("Название", "название", "Title", "title")
+
+
+# ============================================================
 # ДИАГНОСТИКА
 # ============================================================
 
@@ -122,6 +169,11 @@ class Diag:
         self.skipped   = {"bad_ext": 0, "garbage": 0, "wrong_ext": 0,
                           "dup_link": 0}
         self.skip_samples = []
+        # Новые счётчики
+        self.preserved_edits = 0
+        self.unchanged_rows  = 0
+        self.orphans_found   = 0
+        self.backup_name     = ""
 
     def report(self):
         print("\n  ── ДИАГНОСТИКА ──")
@@ -130,6 +182,14 @@ class Diag:
         print(f"  Обновлено строк:       {self.updated}")
         print(f"  Добавлено строк:       {self.added}")
         print(f"  (описаний из файлов):  {self.from_file}")
+        if self.preserved_edits:
+            print(f"  Сохранено ручных правок: {self.preserved_edits}")
+        if self.unchanged_rows:
+            print(f"  Без изменений:         {self.unchanged_rows}")
+        if self.orphans_found:
+            print(f"  Осиротевших строк:     {self.orphans_found}")
+        if self.backup_name:
+            print(f"  Резервная копия:       {self.backup_name}")
         if self.sources:
             print("  Источники описаний:")
             for src, cnt in sorted(self.sources.items(), key=lambda x: -x[1]):
@@ -1001,20 +1061,64 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
 # SUPABASE — ЗАГРУЗКА РАЗДЕЛОВ
 # ============================================================
 
-def load_sections_from_supabase():
+def _get_supabase_client():
+    """Возвращает клиент Supabase или None, если не настроен."""
     if not supa_create_client:
-        print("[!] supabase-py не установлен — не могу загрузить разделы.")
-        return []
+        return None
     if not SUPABASE_SERVICE_KEY:
-        print("[!] SUPABASE_SERVICE_ROLE_KEY не задан — не могу загрузить разделы.")
+        return None
+    try:
+        return supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    except Exception as e:
+        print(f"[!] Ошибка создания Supabase-клиента: {e}")
+        return None
+
+
+def load_sections_from_supabase():
+    """
+    Возвращает список активных разделов site_sections,
+    включая поле manual_override.
+    """
+    client = _get_supabase_client()
+    if client is None:
+        print("[!] Supabase-клиент недоступен — не могу загрузить разделы.")
         return []
     try:
-        client = supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-        resp = client.table("site_sections").select("*").eq("is_active", True).order("sort_order").execute()
+        resp = (
+            client.table("site_sections")
+            .select("key,label,icon,handler_type,yandex_url,yandex_path,"
+                    "sheet_name,json_path,container,columns,folderable,"
+                    "is_active,manual_override,sort_order")
+            .eq("is_active", True)
+            .order("sort_order")
+            .execute()
+        )
         return resp.data or []
     except Exception as e:
         print(f"[!] Ошибка загрузки разделов из Supabase: {e}")
         return []
+
+
+def save_orphans_to_supabase(section_key, section_label,
+                             sheet_name, orphans):
+    """
+    Upsert в sync_orphans: одна строка на раздел,
+    orphans — список dict {row, title, link}.
+    """
+    client = _get_supabase_client()
+    if client is None:
+        return
+    try:
+        payload = {
+            "section_key": section_key,
+            "section_label": section_label,
+            "sheet_name": sheet_name,
+            "orphans": orphans or [],
+            "updated_at": datetime.datetime.utcnow().isoformat() + "Z",
+        }
+        client.table(SYNC_ORPHANS_TABLE).upsert(payload).execute()
+    except Exception as e:
+        print(f"    [!] Не удалось сохранить orphans в Supabase: {e}")
 
 
 # ============================================================
@@ -1070,26 +1174,128 @@ def ensure_headers(sheet, headers):
         print(f"    [!] Заголовки: {e}")
 
 
-def load_existing_rows(sheet):
+def load_sheet_snapshot(sheet):
+    """
+    Возвращает (all_values, existing_index).
+
+      all_values     — list[list[str]] — все значения листа (вкл. заголовок).
+      existing_index — {download_link: {"row": int, "values": list[str]}}.
+
+    download_link ищется по первой подходящей колонке.
+    """
     try:
         rows = sheet.get_all_values()
-    except Exception:
-        return {}
-    if not rows or len(rows) < 2:
-        return {}
+    except Exception as e:
+        print(f"    [!] Не удалось прочитать лист: {e}")
+        return [], {}
+
+    if not rows:
+        return [], {}
+
     header = [h.strip().lower() for h in rows[0]]
     idx = None
-    for cand in ("ссылка для скачивания", "ссылка", "download_link", "link"):
+    for cand in ("ссылка для скачивания", "ссылка",
+                 "download_link", "link"):
         if cand in header:
             idx = header.index(cand)
             break
-    if idx is None:
-        return {}
-    result = {}
-    for i, r in enumerate(rows[1:], start=2):
-        if len(r) > idx and r[idx].strip():
-            result[r[idx].strip()] = i
+
+    existing = {}
+    if idx is not None and len(rows) >= 2:
+        for i, r in enumerate(rows[1:], start=2):
+            if len(r) > idx and r[idx].strip():
+                existing[r[idx].strip()] = {
+                    "row":    i,
+                    "values": list(r),
+                }
+    return rows, existing
+
+
+def merge_row(old_values, new_values, headers, always_update=None):
+    """
+    Объединяет старую (уже сохранённую в Sheets) и новую
+    (сгенерированную из Яндекс.Диска) строки.
+
+    Правила:
+      • Колонки из always_update → всегда значение из new_values.
+      • Остальные: если в old_values непустое значение — сохраняем его
+        (ручная правка), иначе берём значение из new_values.
+
+    Возвращает список значений длиной len(headers).
+    """
+    if always_update is None:
+        always_update = ALWAYS_UPDATE_HEADERS
+
+    if not PRESERVE_USER_EDITS:
+        return list(new_values)
+
+    result = []
+    n = len(headers)
+    for i in range(n):
+        header = headers[i]
+        old_val = old_values[i] if i < len(old_values) else ""
+        new_val = new_values[i] if i < len(new_values) else ""
+
+        old_s = str(old_val).strip() if old_val is not None else ""
+        new_s = str(new_val).strip() if new_val is not None else ""
+
+        if header in always_update:
+            result.append(new_s if new_s else old_s)
+        else:
+            result.append(old_val if old_s else new_val)
     return result
+
+
+def backup_sheet(sh, worksheet, section_key, all_values,
+                 max_backups=None):
+    """
+    Создаёт резервную копию листа с именем _backup_<section>_<ts>.
+    Удаляет самые старые копии, оставляя max_backups.
+
+    Возвращает имя созданного листа или None.
+    """
+    if not all_values:
+        print("    [b] Backup: лист пуст, копия не нужна.")
+        return None
+    if max_backups is None:
+        max_backups = BACKUP_KEEP_COUNT
+
+    ts = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    backup_name = f"_backup_{section_key}_{ts}"
+
+    max_cols = max((len(r) for r in all_values), default=1)
+    max_rows = len(all_values)
+
+    try:
+        backup = sh.add_worksheet(
+            title=backup_name,
+            rows=max(max_rows + 10, 100),
+            cols=max(max_cols + 2, 10),
+        )
+        backup.update(values=all_values, range_name="A1",
+                      value_input_option="USER_ENTERED")
+        print(f"    [b] Backup создан: {backup_name} "
+              f"({max_rows} строк × {max_cols} колонок)")
+    except Exception as e:
+        print(f"    [!] Backup: ошибка создания: {e}")
+        return None
+
+    # Чистим старые резервные копии этого раздела
+    try:
+        prefix = f"_backup_{section_key}_"
+        backups = [ws for ws in sh.worksheets()
+                   if ws.title.startswith(prefix)]
+        backups.sort(key=lambda w: w.title, reverse=True)
+        for old in backups[max_backups:]:
+            try:
+                sh.del_worksheet(old)
+                print(f"    [b] Удалён старый backup: {old.title}")
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"    [!] Backup cleanup: {e}")
+
+    return backup_name
 
 
 def batch_update_rows(sheet, updates):
@@ -1365,7 +1571,7 @@ def build_rows_universal(files, public_url, start_path, strip_prefix,
 
 
 # ============================================================
-# СИНХРОНИЗАЦИЯ РАЗДЕЛА
+# ЗАГОЛОВКИ ИЗ columns
 # ============================================================
 
 def headers_from_columns(columns):
@@ -1384,6 +1590,49 @@ def headers_from_columns(columns):
     return headers
 
 
+# ============================================================
+# ДЕТЕКТ ОСИРОТЕВШИХ СТРОК
+# ============================================================
+
+def find_orphan_rows(existing_index, rows, headers, link_idx):
+    """
+    Возвращает список осиротевших строк:
+    строки Sheets, download_link которых отсутствует в свежесобранных rows.
+    """
+    new_links = set()
+    for row in rows:
+        if link_idx < len(row):
+            v = str(row[link_idx]).strip()
+            if v:
+                new_links.add(v)
+
+    # Ищем колонку с названием
+    title_idx = None
+    for cand in TITLE_HEADER_CANDIDATES:
+        if cand in headers:
+            title_idx = headers.index(cand)
+            break
+
+    orphans = []
+    for link, info in existing_index.items():
+        if link in new_links:
+            continue
+        values = info["values"]
+        title = ""
+        if title_idx is not None and title_idx < len(values):
+            title = str(values[title_idx]).strip()
+        orphans.append({
+            "row":   info["row"],
+            "title": title,
+            "link":  link,
+        })
+    return orphans
+
+
+# ============================================================
+# СИНХРОНИЗАЦИЯ РАЗДЕЛА
+# ============================================================
+
 def sync_section(section, gs_client, cache):
     """section — строка из таблицы site_sections."""
     label = section.get("label") or section.get("key")
@@ -1393,12 +1642,14 @@ def sync_section(section, gs_client, cache):
     sheet_name  = section.get("sheet_name") or label
     handler_type = section.get("handler_type") or "universal"
     columns     = section.get("columns") or ["title", "description", "download_link"]
+    manual_override = bool(section.get("manual_override"))
 
     print(f"\n=== Раздел: {label} ({section_key}) ===")
-    print(f"Handler:    {handler_type}")
-    print(f"Источник:   {yandex_url or '(не задан)'}")
-    print(f"Подпапка:   {start_path}")
-    print(f"Лист Sheets: {sheet_name}")
+    print(f"Handler:        {handler_type}")
+    print(f"Источник:       {yandex_url or '(не задан)'}")
+    print(f"Подпапка:       {start_path}")
+    print(f"Лист Sheets:    {sheet_name}")
+    print(f"manual_override:{manual_override}")
 
     if not yandex_url:
         print("  [!] yandex_url не задан — раздел пропускается.")
@@ -1452,12 +1703,13 @@ def sync_section(section, gs_client, cache):
                                         strip_prefix, headers, diag)
 
     diag.kept = len(rows)
-    diag.report()
+    print(f"\n  Сгенерировано строк: {len(rows)}")
 
-    if not rows:
-        print("  Нет строк для записи.")
-        return
+    if not rows and handler_type not in ("universal",):
+        # даже если пусто — надо найти сирот и сохранить
+        pass
 
+    # --- Открываем таблицу ---
     try:
         sh = open_spreadsheet(gs_client)
     except Exception as e:
@@ -1467,7 +1719,8 @@ def sync_section(section, gs_client, cache):
     sheet = get_or_create_sheet(sh, sheet_name)
     ensure_headers(sheet, headers)
 
-    existing = load_existing_rows(sheet)
+    # --- Снимок текущего состояния ---
+    all_values, existing = load_sheet_snapshot(sheet)
     print(f"  Существующих строк: {len(existing)}")
 
     link_ru = "Ссылка для скачивания"
@@ -1475,19 +1728,84 @@ def sync_section(section, gs_client, cache):
     n_cols = len(headers)
     end_col_letter = chr(ord('A') + n_cols - 1) if n_cols <= 26 else "Z"
 
+    # --- Детект сирот ---
+    orphans = find_orphan_rows(existing, rows, headers, link_idx)
+    diag.orphans_found = len(orphans)
+    if orphans:
+        print(f"  Осиротевших строк: {len(orphans)} "
+              f"(файлы исчезли с Диска)")
+        save_orphans_to_supabase(section_key, label, sheet_name, orphans)
+    else:
+        # очищаем запись — сирот нет
+        save_orphans_to_supabase(section_key, label, sheet_name, [])
+
+    # --- Формируем изменения ---
     updates = []
     to_add = []
-    for row in rows:
-        link = row[link_idx]
-        if link in existing:
-            row_num = existing[link]
-            rng = f"A{row_num}:{end_col_letter}{row_num}"
-            updates.append({"range": rng, "values": [row]})
-        else:
-            to_add.append(row)
+    preserved_rows = 0
+    unchanged_rows = 0
 
-    print(f"    К обновлению:  {len(updates)}")
-    print(f"    К добавлению:  {len(to_add)}")
+    for row in rows:
+        link = str(row[link_idx]).strip() if link_idx < len(row) else ""
+
+        if not link or link not in existing:
+            to_add.append(row)
+            continue
+
+        info = existing[link]
+        row_num = info["row"]
+        old_values = info["values"]
+
+        # manual_override → существующие строки вообще не трогаем
+        if manual_override:
+            unchanged_rows += 1
+            continue
+
+        merged = merge_row(old_values, row, headers)
+
+        # Сравниваем только первые n_cols столбцов
+        old_cmp = [str(v) for v in old_values[:n_cols]]
+        new_cmp = [str(v) for v in merged]
+
+        if old_cmp == new_cmp:
+            unchanged_rows += 1
+            continue
+
+        # Считаем, что была сохранена ручная правка:
+        # контентная колонка непустая в old и отличается от new
+        if PRESERVE_USER_EDITS:
+            for j, h in enumerate(headers):
+                if h in ALWAYS_UPDATE_HEADERS:
+                    continue
+                ov = (old_values[j] if j < len(old_values) else "").strip()
+                nv = (row[j] if j < len(row) else "").strip()
+                if ov and ov != nv:
+                    preserved_rows += 1
+                    break
+
+        rng = f"A{row_num}:{end_col_letter}{row_num}"
+        updates.append({"range": rng, "values": [merged]})
+
+    print(f"\n    К обновлению:      {len(updates)}")
+    print(f"    К добавлению:      {len(to_add)}")
+    if preserved_rows:
+        print(f"    Сохранено правок:  {preserved_rows}")
+    if unchanged_rows:
+        print(f"    Без изменений:     {unchanged_rows}")
+    if manual_override and unchanged_rows:
+        print(f"    [i] manual_override=True — существующие строки не перезаписаны")
+    if not PRESERVE_USER_EDITS:
+        print("    [i] PRESERVE_USER_EDITS=0 — ручные правки перезаписываются")
+
+    diag.preserved_edits = preserved_rows
+    diag.unchanged_rows  = unchanged_rows
+
+    # --- Backup перед записью ---
+    if (updates or to_add) and BACKUP_BEFORE_SYNC:
+        diag.backup_name = backup_sheet(sh, sheet, section_key,
+                                        all_values) or ""
+
+    # --- Применяем ---
     if updates:
         diag.updated = batch_update_rows(sheet, updates)
     if to_add:
@@ -1495,6 +1813,8 @@ def sync_section(section, gs_client, cache):
         diag.added = added
         if failed:
             print(f"    [!] Не удалось записать: {failed}")
+
+    diag.report()
 
 
 # ============================================================
@@ -1505,20 +1825,27 @@ def main():
     print("=" * 60)
     print("yandex_disk_sync.py — старт")
     print("=" * 60)
+    print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
+    print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC} "
+          f"(keep last {BACKUP_KEEP_COUNT})")
 
     if yadisk is None:
         print("[!] yadisk не установлен: pip install -r requirements.txt")
         return
 
-    print("Загрузка разделов из Supabase...")
+    print("\nЗагрузка разделов из Supabase...")
     sections = load_sections_from_supabase()
     if not sections:
         print("[!] Не удалось получить ни одного раздела — завершаю.")
         return
     print(f"  Получено разделов: {len(sections)}")
     for s in sections:
+        flags = []
+        if s.get("manual_override"):
+            flags.append("manual_override")
+        suffix = f" [{', '.join(flags)}]" if flags else ""
         print(f"    • {s.get('key')}: {s.get('label')} "
-              f"({s.get('handler_type') or 'universal'})")
+              f"({s.get('handler_type') or 'universal'}){suffix}")
 
     print("\nПодключение к Google Sheets...")
     try:
@@ -1532,7 +1859,6 @@ def main():
         print("[!] SPREADSHEET_ID не задан.")
 
     cache = {}
-    grand_found = 0
     for section in sections:
         try:
             sync_section(section, gs_client, cache)
