@@ -2,46 +2,28 @@
 (function () {
     'use strict';
 
-    /* ============================================================
-     * Экранирование
-     * ============================================================ */
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-
     function escapeAttr(str) {
         if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+        return String(str).replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-
-    /* ============================================================
-     * Slug
-     * ============================================================ */
     function slugify(text) {
         if (!text) return '';
         let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
         return slug.replace(/[\s\-]+/g, '-');
     }
-
-    /* ============================================================
-     * Пагинация
-     * ============================================================ */
     function getMaxPageButtons() {
         const w = window.innerWidth;
         if (w < 480) return 5;
         if (w < 768) return 7;
         return 11;
     }
-
     function getVisiblePages(currentPage, totalPages) {
         const MAX = getMaxPageButtons();
         const pages = [];
@@ -57,7 +39,6 @@
         for (let i = start; i <= end; i++) pages.push(i);
         return pages;
     }
-
     function renderPagination(containerId, totalItems, totalPages, state) {
         const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES;
         const sizes = PAGE_SIZES.map(sz =>
@@ -72,19 +53,11 @@
                 <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${state.currentPage}</strong> из <strong>${totalPages}</strong></div>
                 <div class="pagination-controls">
                     <label>Показывать по:
-                        <select class="page-size-select" data-container="${escapeAttr(containerId)}">
-                            ${sizes}
-                        </select>
+                        <select class="page-size-select" data-container="${escapeAttr(containerId)}">${sizes}</select>
                     </label>
-                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''} title="Назад">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="page-numbers" data-container="${escapeAttr(containerId)}">
-                        ${pageNums}
-                    </div>
-                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''} title="Вперёд">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+                    <button class="page-btn prev-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <div class="page-numbers" data-container="${escapeAttr(containerId)}">${pageNums}</div>
+                    <button class="page-btn next-btn" data-container="${escapeAttr(containerId)}" ${state.currentPage >= totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
                     <div class="page-jump">
                         <label>Стр.:</label>
                         <input type="number" class="page-jump-input" data-container="${escapeAttr(containerId)}" min="1" max="${totalPages}" placeholder="#">
@@ -94,38 +67,30 @@
             </div>
         `;
     }
-
     function attachPaginationHandlers(container, containerId, state, onRender) {
         if (!state || !container) return;
-
         const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
         if (sizeSelect) sizeSelect.addEventListener('change', function () {
             state.pageSize = parseInt(this.value, 10);
-            state.currentPage = 1;
-            onRender();
+            state.currentPage = 1; onRender();
         });
-
         const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
         if (prevBtn) prevBtn.addEventListener('click', function () {
             if (state.currentPage > 1) { state.currentPage--; onRender(); }
         });
-
         const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
         if (nextBtn) nextBtn.addEventListener('click', function () {
             const totalPages = Math.max(1, Math.ceil(state.totalItems / state.pageSize));
             if (state.currentPage < totalPages) { state.currentPage++; onRender(); }
         });
-
         container.querySelectorAll(`.page-num[data-page]`).forEach(btn => {
             btn.addEventListener('click', function () {
                 const p = parseInt(this.dataset.page, 10);
                 if (!isNaN(p) && p !== state.currentPage) {
-                    state.currentPage = p;
-                    onRender();
+                    state.currentPage = p; onRender();
                 }
             });
         });
-
         const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
         const jumpInput = container.querySelector(`.page-jump-input[data-container="${containerId}"]`);
         if (jumpBtn && jumpInput) {
@@ -135,8 +100,7 @@
                 if (isNaN(p)) p = 1;
                 if (p < 1) p = 1;
                 if (p > totalPages) p = totalPages;
-                state.currentPage = p;
-                onRender();
+                state.currentPage = p; onRender();
             };
             jumpBtn.addEventListener('click', doJump);
             jumpInput.addEventListener('keydown', function (e) {
@@ -144,10 +108,6 @@
             });
         }
     }
-
-    /* ============================================================
-     * UI-хелперы
-     * ============================================================ */
     function toggleDesc(btn) {
         const cell = btn.closest('td');
         if (!cell) return;
@@ -164,35 +124,19 @@
             btn.textContent = 'Свернуть';
         }
     }
-
     function triggerDownload(url) {
         const a = document.createElement('a');
-        a.href = url;
-        a.rel = 'noopener';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = url; a.rel = 'noopener'; a.style.display = 'none';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
-
     function formatDateRu(date) {
         if (!date) return '—';
         const d = date instanceof Date ? date : new Date(date);
         if (isNaN(d.getTime())) return '—';
-        return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString('ru-RU') + ' ' +
+               d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
-    function debounce(fn, ms) {
-        let t;
-        return function (...args) {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), ms);
-        };
-    }
-
-    /* ============================================================
-     * Supabase singleton
-     * ============================================================ */
     let _supabaseClient = null;
     function getSupabaseClient() {
         if (_supabaseClient) return _supabaseClient;
@@ -204,23 +148,53 @@
     }
 
     /* ============================================================
-     * Публикация
+     * Загрузка разделов из Supabase (с fallback на DEFAULT_SECTIONS)
      * ============================================================ */
+    let _sectionsLoaded = null;
+    function loadSections(force) {
+        if (_sectionsLoaded && !force) return _sectionsLoaded;
+        _sectionsLoaded = (async function () {
+            const cfg = window.APP_CONFIG;
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client
+                    .from('site_sections')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    const sections = {};
+                    data.forEach(row => {
+                        sections[row.key] = {
+                            label: row.label,
+                            icon: row.icon || 'fa-folder',
+                            json: row.json_path,
+                            container: row.container,
+                            folderable: !!row.folderable,
+                            columns: Array.isArray(row.columns) ? row.columns : []
+                        };
+                    });
+                    cfg.SECTIONS = sections;
+                } else {
+                    cfg.SECTIONS = Object.assign({}, cfg.DEFAULT_SECTIONS);
+                }
+            } catch (e) {
+                console.warn('loadSections: используется DEFAULT_SECTIONS', e);
+                cfg.SECTIONS = Object.assign({}, cfg.DEFAULT_SECTIONS);
+            }
+            return cfg.SECTIONS;
+        })();
+        return _sectionsLoaded;
+    }
+
     window.MF = Object.freeze({
-        escapeHtml,
-        escapeAttr,
-        slugify,
-        getMaxPageButtons,
-        getVisiblePages,
-        renderPagination,
-        attachPaginationHandlers,
-        toggleDesc,
-        triggerDownload,
-        formatDateRu,
-        debounce,
-        getSupabaseClient
+        escapeHtml, escapeAttr, slugify,
+        getMaxPageButtons, getVisiblePages,
+        renderPagination, attachPaginationHandlers,
+        toggleDesc, triggerDownload, formatDateRu,
+        getSupabaseClient, loadSections
     });
 
-    // Обратная совместимость для inline-onclick="toggleDesc(this)"
     window.toggleDesc = toggleDesc;
 })();
