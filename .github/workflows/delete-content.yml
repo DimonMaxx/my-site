@@ -1,48 +1,273 @@
-name: Delete content
+# delete_content.py
+# Удаление строк из Google Sheets.
+#
+# Поддерживает два режима:
+#   {section, title} — удаление по колонке «Название» (старое поведение);
+#   {section, link}  — удаление по колонке «Ссылка для скачивания»
+#                      (используется для массового удаления осиротевших строк).
+#
+# Список разделов и их листов читается из Supabase (site_sections),
+# поэтому новые разделы поддерживаются автоматически.
 
-on:
-  workflow_dispatch:
-    inputs:
-      delete_list:
-        description: 'JSON-список удаляемых записей'
-        required: true
+import os
+import json
+import traceback
 
-jobs:
-  delete-content:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+import gspread
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+from common import (
+    SPREADSHEET_ID,
+    SECTION_TO_SHEET,
+    get_gspread_client,
+    normalize,
+)
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+try:
+    from supabase import create_client as supa_create_client
+except ImportError:
+    supa_create_client = None
 
-      - name: Install dependencies
-        run: |
-          pip install gspread pandas requests
 
-      - name: Delete from Google Sheets
-        env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          SPREADSHEET_ID:          ${{ secrets.SPREADSHEET_ID }}
-          DELETE_LIST:             ${{ github.event.inputs.delete_list }}
-        run: python delete_content.py
+# ============================================================
+# КОНФИГУРАЦИЯ
+# ============================================================
 
-      - name: Regenerate JSON
-        env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          SPREADSHEET_ID:          ${{ secrets.SPREADSHEET_ID }}
-        run: python generate_from_sheets.py
+SUPABASE_URL = os.environ.get(
+    "SUPABASE_URL",
+    "https://rmoonebbvpmvthvpcmpt.supabase.co",
+)
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-      - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Удаление контента через админ-панель [skip ci]"
-          file_pattern: "_content/*.json _content/**/*.md"
-          commit_user_name: "GitHub Actions Bot"
-          commit_user_email: "actions@github.com"
+# Возможные названия колонок в Sheets
+TITLE_HEADER_CANDIDATES = ("Название", "название", "Title", "title")
+LINK_HEADER_CANDIDATES  = ("Ссылка для скачивания", "Ссылка",
+                           "download_link", "link")
+
+
+# ============================================================
+# SUPABASE
+# ============================================================
+
+def _get_supabase_client():
+    if supa_create_client is None or not SUPABASE_SERVICE_KEY:
+        return None
+    try:
+        return supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    except Exception as e:
+        print(f"[!] Supabase: {e}")
+        return None
+
+
+def load_section_to_sheet_map():
+    """
+    Возвращает {section_key: sheet_name} из Supabase.
+    Fallback — хардкод SECTION_TO_SHEET из common.py.
+    """
+    result = dict(SECTION_TO_SHEET)
+    client = _get_supabase_client()
+    if client is None:
+        return result
+    try:
+        resp = (
+            client.table("site_sections")
+            .select("key,sheet_name,label")
+            .execute()
+        )
+        for s in resp.data or []:
+            key = s.get("key")
+            sheet = s.get("sheet_name") or s.get("label") or key
+            if key:
+                result[key] = sheet
+    except Exception as e:
+        print(f"[!] Не удалось загрузить разделы из Supabase: {e}")
+    return result
+
+
+# ============================================================
+# ПОИСК ИНДЕКСОВ КОЛОНОК
+# ============================================================
+
+def _find_header_index(headers, candidates):
+    if not headers:
+        return None
+    headers_lower = [h.strip().lower() for h in headers]
+    for cand in candidates:
+        cand_lower = cand.strip().lower()
+        if cand_lower in headers_lower:
+            return headers_lower.index(cand_lower)
+    return None
+
+
+# ============================================================
+# УДАЛЕНИЕ С ОДНОГО ЛИСТА
+# ============================================================
+
+def _delete_from_sheet(sh, sheet_name, items):
+    """
+    items — список dict: {'title': str|None, 'link': str|None}.
+
+    Возвращает (deleted_count, not_found_count).
+    """
+    print(f"\nЛист '{sheet_name}': записей на удаление — {len(items)}")
+    try:
+        worksheet = sh.worksheet(sheet_name)
+    except gspread.exceptions.WorksheetNotFound:
+        print(f"  Лист '{sheet_name}' не найден → пропускаем.")
+        return 0, len(items)
+
+    try:
+        all_values = worksheet.get_all_values()
+    except Exception as e:
+        print(f"  Ошибка чтения: {e}")
+        return 0, len(items)
+
+    if not all_values:
+        print("  Лист пустой.")
+        return 0, len(items)
+
+    headers = all_values[0]
+    title_idx = _find_header_index(headers, TITLE_HEADER_CANDIDATES)
+    link_idx  = _find_header_index(headers, LINK_HEADER_CANDIDATES)
+
+    if title_idx is None and link_idx is None:
+        print(f"  В листе нет ни 'Название', ни 'Ссылка для скачивания' → пропуск.")
+        return 0, len(items)
+
+    # Готовим нормализованные множества для быстрого поиска
+    titles_norm = set()
+    links_raw = set()
+    for it in items:
+        t = it.get("title")
+        l = it.get("link")
+        if t:
+            titles_norm.add(normalize(t))
+        if l:
+            links_raw.add(l.strip())
+
+    # Ищем строки к удалению
+    rows_to_delete = []
+    matched_titles = set()
+    matched_links = set()
+
+    for i, row in enumerate(all_values[1:], start=2):
+        # Приоритет — link (более надёжен)
+        if link_idx is not None and link_idx < len(row):
+            cell_link = (row[link_idx] or "").strip()
+            if cell_link and cell_link in links_raw:
+                rows_to_delete.append(i)
+                matched_links.add(cell_link)
+                continue
+
+        # Fallback — title
+        if title_idx is not None and title_idx < len(row):
+            cell_title = (row[title_idx] or "").strip()
+            if cell_title:
+                cell_norm = normalize(cell_title)
+                if cell_norm in titles_norm and cell_norm not in matched_titles:
+                    rows_to_delete.append(i)
+                    matched_titles.add(cell_norm)
+
+    if not rows_to_delete:
+        print("  Ничего не найдено для удаления.")
+        return 0, len(items)
+
+    # Удаляем с конца (чтобы не сбить индексы)
+    print(f"  Удаляем {len(rows_to_delete)} строк: "
+          f"{sorted(rows_to_delete, reverse=True)[:5]}...")
+    deleted_ok = 0
+    for row_num in sorted(rows_to_delete, reverse=True):
+        try:
+            worksheet.delete_rows(row_num)
+            deleted_ok += 1
+        except Exception as e:
+            print(f"    [!] Не удалось удалить строку {row_num}: {e}")
+
+    print(f"  ✓ Удалено {deleted_ok} из {len(rows_to_delete)}.")
+    not_found = len(items) - (len(matched_titles) + len(matched_links))
+    return deleted_ok, max(0, not_found)
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+    print("=" * 60)
+    print("delete_content.py — старт")
+    print("=" * 60)
+
+    delete_list_json = os.environ.get("DELETE_LIST", "[]")
+    try:
+        delete_list = json.loads(delete_list_json)
+    except Exception as e:
+        print(f"[!] Ошибка парсинга DELETE_LIST: {e}")
+        return
+
+    if not delete_list:
+        print("Список удаляемых записей пуст.")
+        return
+
+    print(f"Получено на удаление: {len(delete_list)} записей")
+
+    # Собираем карту раздел → лист
+    section_to_sheet = load_section_to_sheet_map()
+    print(f"Известных разделов: {len(section_to_sheet)}")
+
+    # Группируем по листам
+    by_sheet = {}
+    skipped = 0
+    for item in delete_list:
+        section = item.get("section")
+        title = item.get("title")
+        link = item.get("link")
+
+        if not section or (not title and not link):
+            skipped += 1
+            continue
+
+        sheet_name = section_to_sheet.get(section)
+        if not sheet_name:
+            # Если раздел неизвестен — пробуем использовать сам ключ как имя листа
+            sheet_name = section
+
+        by_sheet.setdefault(sheet_name, []).append({
+            "title": title,
+            "link":  link,
+        })
+
+    if skipped:
+        print(f"[i] Пропущено записей без section/title/link: {skipped}")
+
+    if not by_sheet:
+        print("Нет валидных записей для удаления.")
+        return
+
+    # Подключение к Google Sheets
+    try:
+        gc = get_gspread_client()
+        sh = gc.open_by_key(SPREADSHEET_ID)
+    except Exception as e:
+        print(f"[!] Google Sheets: {e}")
+        traceback.print_exc()
+        return
+
+    # Удаляем по листам
+    total_deleted = 0
+    total_not_found = 0
+    for sheet_name, items in by_sheet.items():
+        try:
+            deleted, not_found = _delete_from_sheet(sh, sheet_name, items)
+            total_deleted += deleted
+            total_not_found += not_found
+        except Exception as e:
+            print(f"[!] Ошибка обработки листа '{sheet_name}': {e}")
+            traceback.print_exc()
+
+    print("\n" + "=" * 60)
+    print(f"Итого удалено:      {total_deleted}")
+    print(f"Не найдено:         {total_not_found}")
+    print("Готово!")
+
+
+if __name__ == "__main__":
+    main()
