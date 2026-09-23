@@ -204,11 +204,6 @@ def _author_surname(author):
     return surname if len(surname) > 3 else ""
 
 
-def _author_match(author, text):
-    surname = _author_surname(author)
-    return bool(surname) and surname in _normalize_for_match(text)
-
-
 def _title_phrase_matches(title, text):
     title_norm = _normalize_for_match(title).rstrip(" .")
     text_norm  = _normalize_for_match(text)
@@ -299,49 +294,29 @@ def parse_program_name(filename):
 
 
 def parse_music_name(filename):
-    """
-    Разбирает имя музыкального файла.
-    Возможные форматы:
-      "Artist - Title.mp3"          → artist=Artist, title=Title
-      "01. Artist - Title.mp3"      → artist=Artist, title=Title (номер трека отбрасывается)
-      "Artist - Album - 01 - Title" → artist=Artist, title=Title, album=Album
-      "Title.mp3"                   → title=Title
-    Год вытаскивается отдельно регуляркой 19xx/20xx.
-    """
+    """Разбирает имя музыкального файла."""
     stem = os.path.splitext(filename)[0].strip()
     stem = re.sub(r"\s+", " ", stem).strip()
     result = {"title": stem, "artist": "", "album": "", "year": ""}
     if not stem:
         return result
 
-    # Год — ищем (1950–2030)
     year_m = re.search(r"\b(19[5-9]\d|20[0-3]\d)\b", stem)
     if year_m:
         result["year"] = year_m.group(1)
 
-    # Убираем ведущий номер трека "01. ", "1 - ", "01 -"
     cleaned = re.sub(r"^\d{1,2}[\s\.\-–]+", "", stem).strip()
-
-    # Ищем Artist - ...
     parts = re.split(r"\s+[-–—]\s+", cleaned, maxsplit=1)
     if len(parts) == 2 and parts[0].strip() and parts[1].strip():
         result["artist"] = parts[0].strip()
-        rest = parts[1].strip()
-
-        # "Album - 01 - Title" или "Album - Title"
-        sub = re.split(r"\s+[-–—]\s+", rest, maxsplit=1)
-        if len(sub) == 2:
-            # проверяем, похоже ли первое на альбом (без цифры трека)
-            result["title"] = sub[-1].strip()
-        else:
-            result["title"] = rest
+        result["title"]  = parts[1].strip()
     else:
         result["title"] = cleaned
 
-    # Чистим title от года и лишних скобок
-    result["title"] = re.sub(r"\s*\(?\b(19[5-9]\d|20[0-3]\d)\b\)?\s*", " ",
-                             result["title"]).strip(" -–—")
-
+    result["title"] = re.sub(
+        r"\s*\(?\b(19[5-9]\d|20[0-3]\d)\b\)?\s*", " ",
+        result["title"]
+    ).strip(" -–—")
     return result
 
 
@@ -466,12 +441,7 @@ def _extract_folder(full_path, start_path):
 
 
 def _extract_folder_full(full_path, start_path):
-    """
-    Полный относительный путь подпапок (без имени файла),
-    объединённый через ' / '.
-      /Музыка/Rock/Pink Floyd/file.mp3 с start_path='/Музыка'
-      → 'Rock / Pink Floyd'
-    """
+    """Полный путь подпапок (без имени файла) через ' / '."""
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
     if sp and fp.startswith(sp + "/"):
@@ -656,8 +626,8 @@ def parse_fb2(content_bytes):
                                 data = base64.b64decode(b_el.text.strip())
                                 result['cover_data'] = data
                                 result['cover_ext'] = ext_img
-                            except Exception as e:
-                                print(f"      Ошибка декодирования обложки: {e}")
+                            except Exception:
+                                pass
                             break
                     if result['cover_data']:
                         break
@@ -1029,7 +999,6 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
                             timeout=HTTP_TIMEOUT)
         if resp.status_code in (200, 201):
             return f"{SUPABASE_URL}/storage/v1/object/public/{COVERS_BUCKET}/{filename}"
-        # Не печатаем HTML-тело ответа, только код
         print(f"    [!] Обложка: HTTP {resp.status_code} для '{book_title[:40]}'")
     except Exception as e:
         print(f"    [!] Обложка: {e}")
@@ -1182,7 +1151,6 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             continue
         seen_links.add(link)
 
-        # 1. Файл
         file_data = {}
         if ext in PARSEABLE_EXTS:
             max_b = MAX_TXT_HEAD if ext == ".txt" else None
@@ -1205,13 +1173,11 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             diag.from_file += 1
             diag.sources["file"] = diag.sources.get("file", 0) + 1
 
-        # 2. Внешние источники
         if not description:
             ext_meta = enrich_book(title, author, cache, diag)
             if ext_meta.get("description"):
                 description = ext_meta["description"]
 
-        # 3. Обложка
         cover = ""
         if file_data.get("cover_data"):
             cover = upload_cover_to_supabase(
@@ -1239,271 +1205,4 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             "download_link": link,
             "cover":         cover,
             "folder":        folder,
-            "description":   description,
-            "version":       "",
-        }
-
-        row = []
-        for ru in headers:
-            en = RU_TO_EN.get(ru, ru)
-            row.append(record.get(en, ""))
-        rows.append(row)
-
-        if idx % 50 == 0:
-            print(f"    ... обработано {idx}/{total}, записей: {len(rows)}, "
-                  f"из файлов: {diag.from_file}")
-
-    return rows
-
-
-def build_program_rows(files, public_url, start_path, diag):
-    headers = SHEET_HEADERS["Программы"]
-    rows = []
-    seen_links = set()
-
-    for f in files:
-        name = f["name"]
-        ext  = f["ext"]
-
-        if ext not in PROGRAM_EXTS:
-            log_skip(diag, "wrong_ext", name)
-            continue
-
-        meta = parse_program_name(name)
-        title   = meta["title"]
-        version = meta["version"]
-        if not title:
-            log_skip(diag, "garbage", name)
-            continue
-
-        public_path = _to_public_path(f["full_path"], start_path)
-        link = make_download_link(public_url, public_path)
-        if link in seen_links:
-            log_skip(diag, "dup_link", name)
-            continue
-        seen_links.add(link)
-
-        size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
-        folder = _extract_folder(f["full_path"], start_path)
-
-        record = {
-            "title":         title,
-            "description":   "",
-            "version":       version,
-            "size":          str(size_mb),
-            "download_link": link,
-            "folder":        folder,
-        }
-        row = []
-        for ru in headers:
-            en = RU_TO_EN.get(ru, ru)
-            row.append(record.get(en, ""))
-        rows.append(row)
-    return rows
-
-
-def build_music_rows(files, public_url, start_path, diag):
-    """
-    Собирает строки листа «Музыка».
-    Подпапки (полный путь) → колонка «Папка».
-    Из имени файла вытаскиваем исполнителя и год.
-    """
-    headers = SHEET_HEADERS["Музыка"]
-    rows = []
-    seen_links = set()
-
-    for f in files:
-        name = f["name"]
-        ext  = f["ext"]
-
-        if ext not in MUSIC_EXTS:
-            log_skip(diag, "wrong_ext", name)
-            continue
-
-        parsed = parse_music_name(name)
-        title  = parsed["title"]
-        artist = parsed["artist"]
-        year   = parsed["year"]
-
-        if not title:
-            log_skip(diag, "garbage", name)
-            continue
-
-        public_path = _to_public_path(f["full_path"], start_path)
-        link = make_download_link(public_url, public_path)
-        if link in seen_links:
-            log_skip(diag, "dup_link", name)
-            continue
-        seen_links.add(link)
-
-        # Полный путь подпапок для колонки «Папка»
-        folder = _extract_folder_full(f["full_path"], start_path)
-
-        # Если исполнитель не вытащили из имени файла — берём из папки
-        if not artist and folder:
-            artist = folder.split(" / ")[0]
-
-        # Если год не вытащили из имени файла — попробуем из папки
-        if not year and folder:
-            ym = re.search(r"\b(19[5-9]\d|20[0-3]\d)\b", folder)
-            if ym:
-                year = ym.group(1)
-
-        size_mb = round(f["size"] / (1024 * 1024), 1) if f["size"] else 0
-
-        record = {
-            "title":         title,
-            "artist":        artist,
-            "year":          year,
-            "size":          str(size_mb),
-            "download_link": link,
-            "folder":        folder,
-        }
-
-        row = []
-        for ru in headers:
-            en = RU_TO_EN.get(ru, ru)
-            row.append(record.get(en, ""))
-        rows.append(row)
-
-    return rows
-
-
-# ============================================================
-# СИНХРОНИЗАЦИЯ РАЗДЕЛА
-# ============================================================
-
-def sync_section(section, section_cfg, gs_client, cache, diag):
-    print(f"\n=== Раздел: {section} ===")
-    public_url = section_cfg.get("url", "")
-    start_path = section_cfg.get("path", "/") or "/"
-    if not public_url:
-        print("  Пустая ссылка, пропускаю.")
-        return
-    if section not in SHEET_HEADERS:
-        print(f"  Раздел '{section}' не настроен, пропускаю.")
-        return
-    print(f"Источник:   {public_url}")
-    print(f"Подпапка:   {start_path}")
-
-    if yadisk is None:
-        print("  [!] yadisk не установлен.")
-        return
-
-    public_key = get_public_key(public_url)
-    token = os.environ.get("YADISK_TOKEN")
-    if not token:
-        print("  [!] YADISK_TOKEN не задан.")
-        return
-
-    with yadisk.Client(token=token) as client:
-        try:
-            if not client.check_token():
-                print("  [!] Неверный YADISK_TOKEN")
-                return
-        except Exception as e:
-            print(f"  [!] Ошибка проверки токена: {e}")
-            return
-        print_folder_diagnostics(client, public_key, start_path)
-        files = list_public_files_recursive(client, public_key, path=start_path)
-
-    diag.found = len(files)
-    print(f"  Найдено файлов: {len(files)}")
-
-    if section == "Книги":
-        rows = build_book_rows(client, files, public_url, start_path,
-                               cache, diag)
-    elif section == "Программы":
-        rows = build_program_rows(files, public_url, start_path, diag)
-    elif section == "Музыка":
-        rows = build_music_rows(files, public_url, start_path, diag)
-    else:
-        rows = []
-
-    diag.kept = len(rows)
-    diag.report()
-    if not rows:
-        print("  Нет строк для записи.")
-        return
-
-    try:
-        sh = open_spreadsheet(gs_client)
-    except Exception as e:
-        print(f"  [!] Не удалось открыть таблицу: {e}")
-        return
-    sheet = get_or_create_sheet(sh, section)
-    headers = SHEET_HEADERS[section]
-    ensure_headers(sheet, headers)
-
-    existing = load_existing_rows(sheet)
-    print(f"  Существующих строк: {len(existing)}")
-
-    link_ru = "Ссылка для скачивания"
-    link_idx = headers.index(link_ru) if link_ru in headers else 0
-    n_cols = len(headers)
-    end_col_letter = chr(ord('A') + n_cols - 1) if n_cols <= 26 else "Z"
-
-    updates = []
-    to_add = []
-    for row in rows:
-        link = row[link_idx]
-        if link in existing:
-            row_num = existing[link]
-            rng = f"A{row_num}:{end_col_letter}{row_num}"
-            updates.append({"range": rng, "values": [row]})
-        else:
-            to_add.append(row)
-
-    print(f"    К обновлению:  {len(updates)}")
-    print(f"    К добавлению:  {len(to_add)}")
-    if updates:
-        diag.updated = batch_update_rows(sheet, updates)
-    if to_add:
-        added, failed = append_rows_safe(sheet, to_add)
-        diag.added = added
-        if failed:
-            print(f"    [!] Не удалось записать: {failed}")
-
-
-# ============================================================
-# MAIN
-# ============================================================
-
-def main():
-    print("=" * 60)
-    print("yandex_disk_sync.py — старт")
-    print("=" * 60)
-
-    if yadisk is None:
-        print("[!] yadisk не установлен: pip install -r requirements.txt")
-        return
-
-    print("Подключение к Google Sheets...")
-    try:
-        gs_client = get_gspread_client()
-    except Exception as e:
-        print(f"[!] Google Sheets: {e}")
-        return
-    print("Клиент создан.")
-
-    if not SPREADSHEET_ID:
-        print("[!] SPREADSHEET_ID не задан.")
-
-    cache = {}
-    grand_found = 0
-    for section, cfg in SECTIONS.items():
-        diag = Diag()
-        try:
-            sync_section(section, cfg, gs_client, cache, diag)
-        except Exception as e:
-            print(f"\n[!!!] Ошибка в разделе {section}: {e}")
-            traceback.print_exc()
-        grand_found += diag.found
-
-    print("\n" + "=" * 60)
-    print(f"Всего найдено файлов: {grand_found}")
-    print("Готово!")
-
-
-if __name__ == "__main__":
-    main()
+            "description":  
