@@ -4,11 +4,9 @@
 yandex_disk_sync.py
 Синхронизация Яндекс.Диска → Google Sheets с обогащением описаний книг.
 
-Порядок источников описания (для книг):
-    1. Сам файл (fb2/txt)
-    2. FantLab → Wikipedia → OpenLibrary → Google Books → LLM
-
-Существующие строки обновляются по download_link (уникален).
+Особенность: публичная ссылка может вести как в корень диска,
+так и в саму папку раздела. Скрипт сам определяет это и строит
+пути для скачивания правильно.
 """
 
 import os
@@ -43,8 +41,6 @@ except ImportError:
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
-# path — путь в аккаунте владельца токена (yadisk).
-# Он же — префикс, который отрезается для публичного API.
 SECTIONS = {
     "Книги": {
         "url":  "https://disk.yandex.ru/d/zMxF4nXHPkIVCQ",
@@ -294,7 +290,6 @@ def parse_program_name(filename):
 
 
 def parse_music_name(filename):
-    """Разбирает имя музыкального файла."""
     stem = os.path.splitext(filename)[0].strip()
     stem = re.sub(r"\s+", " ", stem).strip()
     result = {"title": stem, "artist": "", "album": "", "year": ""}
@@ -337,13 +332,46 @@ def _strip_disk_prefix(path):
     return path or "/"
 
 
-def _to_public_path(full_path, start_path):
+def is_public_root_link(public_url, start_path):
     """
-    yadisk возвращает путь в аккаунте владельца: /Книги/Автор/file.fb2
-    Публичный API ожидает путь относительно корня ПУБЛИЧНОЙ папки: /Автор/file.fb2
+    Проверяет, куда ведёт публичная ссылка.
+    Возвращает True, если ссылка указывает в КОРЕНЬ диска
+    (тогда префикс /Книги или /Программы отрезать НЕ надо).
+    Возвращает False, если ссылка ведёт в саму папку раздела
+    (тогда префикс отрезать НУЖНО).
+    """
+    api = "https://cloud-api.yandex.net/v1/disk/public/resources"
+    start_name = (start_path or "").strip("/")
+    if not start_name:
+        return False
+    try:
+        r = requests.get(
+            api,
+            params={"public_key": public_url, "path": "/", "limit": 100},
+            headers=HEADERS, timeout=HTTP_TIMEOUT,
+        )
+        if r.status_code != 200:
+            return True
+        items = r.json().get('_embedded', {}).get('items', [])
+        for it in items:
+            if it.get('name') == start_name and it.get('type') == 'dir':
+                return True
+        return False
+    except Exception as e:
+        print(f"  [!] Не удалось определить корень ссылки: {e}")
+        return True
+
+
+def _to_public_path(full_path, start_path, strip_prefix):
+    """
+    Преобразует путь yadisk в путь публичного API.
+    Если strip_prefix=True → убирает префикс /Книги или /Программы.
+    Если strip_prefix=False → оставляет путь как есть.
     """
     if not full_path:
         return ""
+    if not strip_prefix:
+        return full_path
     sp = (start_path or "/").strip("/")
     if not sp:
         return full_path
@@ -409,7 +437,6 @@ def make_download_link(public_url, public_path):
 
 
 def get_download_url(public_url, public_path):
-    """Прямая временная ссылка на скачивание через публичный API."""
     dl_api = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
     params = {"public_key": public_url, "path": public_path}
     try:
@@ -423,7 +450,6 @@ def get_download_url(public_url, public_path):
 
 
 def _extract_folder(full_path, start_path):
-    """Первая подпапка внутри start_path (для книг — автор)."""
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
     if sp and fp.startswith(sp + "/"):
@@ -441,7 +467,6 @@ def _extract_folder(full_path, start_path):
 
 
 def _extract_folder_full(full_path, start_path):
-    """Полный путь подпапок (без имени файла) через ' / '."""
     sp = (start_path or "/").strip("/")
     fp = (full_path or "").strip("/")
     if sp and fp.startswith(sp + "/"):
@@ -459,12 +484,11 @@ def _extract_folder_full(full_path, start_path):
 
 
 # ============================================================
-# СКАЧИВАНИЕ ФАЙЛА
+# СКАЧИВАНИЕ ФАЙЛА (для парсинга fb2/txt)
 # ============================================================
 
 def _fetch_file_content(client, f, public_url, public_path,
                         max_bytes=None):
-    """Скачивает файл: сначала через публичный API, затем через yadisk."""
     dl_url = get_download_url(public_url, public_path)
     if dl_url:
         try:
@@ -1123,7 +1147,8 @@ def append_rows_safe(sheet, rows, batch_size=200):
 # СБОРКА СТРОК
 # ============================================================
 
-def build_book_rows(client, files, public_url, start_path, cache, diag):
+def build_book_rows(client, files, public_url, start_path, strip_prefix,
+                    cache, diag):
     headers = SHEET_HEADERS["Книги"]
     rows = []
     seen_links = set()
@@ -1144,7 +1169,7 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        public_path = _to_public_path(f["full_path"], start_path)
+        public_path = _to_public_path(f["full_path"], start_path, strip_prefix)
         link = make_download_link(public_url, public_path)
         if link in seen_links:
             log_skip(diag, "dup_link", name)
@@ -1222,7 +1247,7 @@ def build_book_rows(client, files, public_url, start_path, cache, diag):
     return rows
 
 
-def build_program_rows(files, public_url, start_path, diag):
+def build_program_rows(files, public_url, start_path, strip_prefix, diag):
     headers = SHEET_HEADERS["Программы"]
     rows = []
     seen_links = set()
@@ -1242,7 +1267,7 @@ def build_program_rows(files, public_url, start_path, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        public_path = _to_public_path(f["full_path"], start_path)
+        public_path = _to_public_path(f["full_path"], start_path, strip_prefix)
         link = make_download_link(public_url, public_path)
         if link in seen_links:
             log_skip(diag, "dup_link", name)
@@ -1268,11 +1293,7 @@ def build_program_rows(files, public_url, start_path, diag):
     return rows
 
 
-def build_music_rows(files, public_url, start_path, diag):
-    """
-    Собирает строки листа «Музыка».
-    Подпапки (полный путь) → колонка «Папка».
-    """
+def build_music_rows(files, public_url, start_path, strip_prefix, diag):
     headers = SHEET_HEADERS["Музыка"]
     rows = []
     seen_links = set()
@@ -1294,7 +1315,7 @@ def build_music_rows(files, public_url, start_path, diag):
             log_skip(diag, "garbage", name)
             continue
 
-        public_path = _to_public_path(f["full_path"], start_path)
+        public_path = _to_public_path(f["full_path"], start_path, strip_prefix)
         link = make_download_link(public_url, public_path)
         if link in seen_links:
             log_skip(diag, "dup_link", name)
@@ -1358,6 +1379,14 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
         print("  [!] YADISK_TOKEN не задан.")
         return
 
+    # Проверяем, куда ведёт публичная ссылка
+    is_root = is_public_root_link(public_url, start_path)
+    strip_prefix = not is_root
+    if is_root:
+        print(f"  [i] Ссылка ведёт в корень диска → префикс '{start_path}' НЕ отрезаем")
+    else:
+        print(f"  [i] Ссылка ведёт в папку '{start_path}' → префикс ОТРЕЗАЕМ")
+
     with yadisk.Client(token=token) as client:
         try:
             if not client.check_token():
@@ -1374,11 +1403,13 @@ def sync_section(section, section_cfg, gs_client, cache, diag):
 
     if section == "Книги":
         rows = build_book_rows(client, files, public_url, start_path,
-                               cache, diag)
+                               strip_prefix, cache, diag)
     elif section == "Программы":
-        rows = build_program_rows(files, public_url, start_path, diag)
+        rows = build_program_rows(files, public_url, start_path,
+                                  strip_prefix, diag)
     elif section == "Музыка":
-        rows = build_music_rows(files, public_url, start_path, diag)
+        rows = build_music_rows(files, public_url, start_path,
+                                strip_prefix, diag)
     else:
         rows = []
 
