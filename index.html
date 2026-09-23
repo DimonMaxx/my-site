@@ -196,7 +196,6 @@
             font-weight: 600;
         }
 
-        /* Кнопка возврата к папкам */
         .folder-back-btn {
             display: inline-flex;
             align-items: center;
@@ -213,13 +212,9 @@
             margin-bottom: 15px;
             transition: 0.2s;
         }
-        .folder-back-btn:hover {
-            background: #e2e8f0;
-            color: #1e293b;
-        }
+        .folder-back-btn:hover { background: #e2e8f0; color: #1e293b; }
         .folder-back-btn i { font-size: 12px; }
 
-        /* Индикатор текущей папки */
         .folder-current {
             display: inline-flex;
             align-items: center;
@@ -324,6 +319,31 @@
             padding: 40px 20px; font-style: italic;
             background: #f8fafc; border-radius: 12px;
         }
+
+        /* Плеер для музыки */
+        .audio-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-width: 220px;
+        }
+        .audio-cell audio {
+            width: 240px;
+            height: 36px;
+            outline: none;
+            border-radius: 20px;
+        }
+        .audio-download {
+            font-size: 12px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .audio-download:hover { text-decoration: underline; }
 
         .pagination-bar {
             display: flex; justify-content: space-between; align-items: center;
@@ -476,6 +496,8 @@
             .content-table .no-cover { width: 42px; height: 60px; }
             .content-table .col-cover img:hover { transform: none; }
 
+            .audio-cell audio { width: 180px; }
+
             .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; font-size: 12px; }
             .pagination-total { font-size: 12px; text-align: center; }
             .pagination-total strong { font-size: 13px; }
@@ -533,6 +555,8 @@
             .content-table .col-cover { width: 46px; padding: 3px; }
             .content-table .col-cover img,
             .content-table .no-cover { width: 36px; height: 52px; font-size: 18px; }
+
+            .audio-cell audio { width: 140px; height: 32px; }
 
             .pagination-bar { padding: 8px 10px; gap: 8px; }
             .pagination-controls { gap: 4px; }
@@ -627,7 +651,6 @@
     const supabaseClient = MF.getSupabaseClient();
 
     const SUPABASE_URL = CFG.SUPABASE_URL;
-    const YANDEX_FOLDER_URL = CFG.YANDEX_FOLDER_URL;
 
     let currentUser = null;
     let currentProfile = null;
@@ -649,6 +672,47 @@
     document.getElementById('adminUpdateBtn').href =
         `https://github.com/${CFG.GITHUB_OWNER}/${CFG.GITHUB_REPO}` +
         `/actions/workflows/${CFG.WORKFLOW_UPDATE}`;
+
+    /* ============================================================
+     * ПРОКСИ-URL ДЛЯ СКАЧИВАНИЯ / ВОСПРОИЗВЕДЕНИЯ
+     * Извлекает folder (origin + pathname) и path (query) из ссылки.
+     * ============================================================ */
+    function buildProxyUrl(downloadUrl) {
+        if (!downloadUrl) return '';
+        try {
+            const parsed = new URL(downloadUrl);
+            const folder = `${parsed.origin}${parsed.pathname}`;
+            const path = parsed.searchParams.get('path');
+            if (!folder || !path) return downloadUrl;
+            return `${SUPABASE_URL}/functions/v1/yandex-download` +
+                   `?folder=${encodeURIComponent(folder)}` +
+                   `&path=${encodeURIComponent(path)}`;
+        } catch (e) {
+            console.error('buildProxyUrl error:', e);
+            return downloadUrl;
+        }
+    }
+
+    /* Определяем MIME-тип по расширению файла из ссылки */
+    function getAudioMimeType(url) {
+        if (!url) return '';
+        const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+        const ext = m ? m[1].toLowerCase() : '';
+        const map = {
+            'mp3':  'audio/mpeg',
+            'flac': 'audio/flac',
+            'wav':  'audio/wav',
+            'ogg':  'audio/ogg',
+            'm4a':  'audio/mp4',
+            'aac':  'audio/aac',
+            'wma':  'audio/x-ms-wma',
+            'opus': 'audio/opus',
+            'ape':  'audio/x-ape',
+            'aiff': 'audio/aiff',
+            'alac': 'audio/mp4'
+        };
+        return map[ext] || '';
+    }
 
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
@@ -740,37 +804,13 @@
             if (logError) console.error('Ошибка записи лога скачивания:', logError);
 
             if (downloadUrl && downloadUrl !== '#') {
-                try {
-                    const parsed = new URL(downloadUrl);
-                    const path = parsed.searchParams.get('path');
-                    if (path) {
-                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(YANDEX_FOLDER_URL)}&path=${encodeURIComponent(path)}`;
-                        MF.triggerDownload(proxyUrl);
-                    } else {
-                        MF.triggerDownload(downloadUrl);
-                    }
-                } catch (e) {
-                    console.error('Ошибка парсинга URL:', e);
-                    MF.triggerDownload(downloadUrl);
-                }
+                MF.triggerDownload(buildProxyUrl(downloadUrl));
             }
         } catch (e) {
             console.error('Ошибка увеличения счётчика:', e);
             alert('Не удалось обновить счётчик, но вы можете попробовать скачать позже.');
             if (downloadUrl && downloadUrl !== '#') {
-                try {
-                    const parsed = new URL(downloadUrl);
-                    const folder = `${parsed.origin}${parsed.pathname}`;
-                    const path = parsed.searchParams.get('path');
-                    if (path) {
-                        const proxyUrl = `${SUPABASE_URL}/functions/v1/yandex-download?folder=${encodeURIComponent(folder)}&path=${encodeURIComponent(path)}`;
-                        MF.triggerDownload(proxyUrl);
-                    } else {
-                        MF.triggerDownload(downloadUrl);
-                    }
-                } catch (err) {
-                    MF.triggerDownload(downloadUrl);
-                }
+                MF.triggerDownload(buildProxyUrl(downloadUrl));
             }
         }
     }
@@ -918,7 +958,6 @@
     function getFilteredSorted(state) {
         let result = state.data.slice();
 
-        // Фильтр по папке
         if (state.folderFilter) {
             if (state.folderFilter === '__NOFOLDER__') {
                 result = result.filter(item => !item.folder || !String(item.folder).trim());
@@ -965,7 +1004,7 @@
         let thead = '<tr>';
         cols.forEach(col => {
             let cls = '';
-            if (col.type === 'download') cls = 'col-center';
+            if (col.type === 'download' || col.type === 'audio') cls = 'col-center';
             if (col.type === 'count') cls = 'col-num';
             if (col.type === 'cover') cls = 'col-cover';
             const isSorted = state.sortKey === col.key && col.type !== 'cover';
@@ -1002,6 +1041,28 @@
                                 <button class="desc-toggle" onclick="toggleDesc(this)">Развернуть</button>
                             </td>`;
                         }
+                    } else if (col.type === 'audio') {
+                        if (!item.download_link) tbody += `<td class="col-center">—</td>`;
+                        else {
+                            const audioUrl = buildProxyUrl(item.download_link);
+                            const mime = getAudioMimeType(item.download_link);
+                            const mimeAttr = mime ? ` type="${mime}"` : '';
+                            const ftitle = item.title || 'Трек';
+                            const fid = MF.slugify(ftitle);
+                            const isLogged = currentUser !== null;
+                            const dlOnclick = isLogged
+                                ? ''
+                                : `onclick="event.preventDefault(); alert('Для скачивания необходимо зарегистрироваться.'); return false;"`;
+                            const dlClass = isLogged ? 'audio-download' : 'audio-download disabled';
+                            tbody += `<td class="col-center">
+                                <div class="audio-cell">
+                                    <audio controls preload="none" src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
+                                    <a href="#" class="${dlClass}" data-file-id="${MF.escapeAttr(fid)}" data-download-url="${MF.escapeAttr(item.download_link)}" data-file-name="${MF.escapeAttr(ftitle)}" ${dlOnclick}>
+                                        <i class="fas fa-download"></i> Скачать
+                                    </a>
+                                </div>
+                            </td>`;
+                        }
                     } else if (col.type === 'download') {
                         if (!item.download_link) tbody += `<td class="col-center">—</td>`;
                         else {
@@ -1035,7 +1096,6 @@
 
         const paginationHtml = MF.renderPagination(containerId, totalItems, totalPages, state);
 
-        // Кнопка возврата к папкам + индикатор текущей папки
         let backBtnHtml = '';
         if (state.sectionMeta?.folderable) {
             let currentLabel = 'Все материалы';
@@ -1062,7 +1122,6 @@
             ${paginationHtml}
         `;
 
-        // Обработчик кнопки "К папкам"
         const backBtn = container.querySelector('[data-back-to-folders]');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -1101,9 +1160,14 @@
             });
         });
 
-        container.querySelectorAll('.btn-download-sm[data-file-id]').forEach(btn => {
+        // Обработчики кнопок скачивания
+        container.querySelectorAll('.btn-download-sm[data-file-id], .audio-download[data-file-id]').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
+                if (this.classList.contains('disabled')) {
+                    alert('Для скачивания необходимо зарегистрироваться.');
+                    return;
+                }
                 incrementDownload(this.dataset.fileId, this.dataset.downloadUrl, this.dataset.fileName);
             });
         });
@@ -1116,11 +1180,12 @@
     }
 
     function getSearchPlaceholder(col) {
-        if (col.type === 'download') return 'Есть/нет';
+        if (col.type === 'download' || col.type === 'audio') return 'Есть/нет';
         if (col.type === 'count') return 'Число';
         if (col.type === 'description') return 'Поиск...';
         if (col.key === 'title') return 'Название...';
         if (col.key === 'author') return 'Автор...';
+        if (col.key === 'artist') return 'Исполнитель...';
         if (col.key === 'year') return 'Год...';
         if (col.key === 'date') return 'Дата...';
         return 'Поиск...';
@@ -1165,8 +1230,7 @@
             { key: 'title', label: 'Название', type: 'text' },
             { key: 'artist', label: 'Исполнитель', type: 'text' },
             { key: 'year', label: 'Год', type: 'text' },
-            { key: 'description', label: 'Описание', type: 'description' },
-            { key: 'download_link', label: 'Скачать', type: 'download' },
+            { key: 'download_link', label: 'Слушать', type: 'audio' },
             { key: 'download_link', label: 'Скачиваний', type: 'count' }
         ]},
         'games-container': { columns: [
