@@ -296,7 +296,7 @@
         .modal-overlay.active { display: flex; }
         .modal-box {
             background: white; border-radius: 20px;
-            padding: 30px; max-width: 500px; width: 100%;
+            padding: 30px; max-width: 560px; width: 100%;
             box-shadow: 0 20px 60px rgba(0,20,80,0.15);
             max-height: 90vh; overflow-y: auto;
         }
@@ -446,7 +446,7 @@
     </div>
 </div>
 
-<!-- Универсальная модалка (используется для пользователей и разделов) -->
+<!-- Универсальная модалка (используется для пользователей, разделов, папок) -->
 <div class="modal-overlay" id="userEditModal">
     <div class="modal-box">
         <!-- содержимое задаётся динамически -->
@@ -478,9 +478,7 @@
     let visitorsPageSize = CFG.DEFAULT_PAGE_SIZE;
     let downloadCounts = {};
 
-    // Список разделов из Supabase (для админки разделов и папок)
     let sectionsList = [];
-    // Текущий раздел во вкладке «Папки»
     let currentFolderSection = null;
     let foldersList = [];
 
@@ -564,8 +562,9 @@
         html += `<div class="content-table-wrapper"><table class="content-table"><thead><tr>
             <th>Ключ</th>
             <th>Название</th>
-            <th>Иконка</th>
-            <th>JSON-путь</th>
+            <th>Handler</th>
+            <th>Яндекс URL</th>
+            <th>Лист</th>
             <th>Папки</th>
             <th>Сортировка</th>
             <th>Активен</th>
@@ -573,14 +572,17 @@
         </tr></thead><tbody>`;
 
         if (sectionsList.length === 0) {
-            html += `<tr><td colspan="8" class="empty-block">Разделов пока нет</td></tr>`;
+            html += `<tr><td colspan="9" class="empty-block">Разделов пока нет</td></tr>`;
         } else {
             sectionsList.forEach(s => {
+                const url = s.yandex_url || '—';
+                const shortUrl = url.length > 40 ? url.slice(0, 40) + '…' : url;
                 html += `<tr>
                     <td><code>${MF.escapeHtml(s.key)}</code></td>
                     <td>${MF.escapeHtml(s.label)}</td>
-                    <td><i class="fas ${MF.escapeAttr(s.icon || 'fa-folder')}"></i> ${MF.escapeHtml(s.icon || '')}</td>
-                    <td><code>${MF.escapeHtml(s.json_path)}</code></td>
+                    <td><span class="role-badge role-user">${MF.escapeHtml(s.handler_type || 'universal')}</span></td>
+                    <td title="${MF.escapeAttr(url)}"><code>${MF.escapeHtml(shortUrl)}</code></td>
+                    <td>${MF.escapeHtml(s.sheet_name || '—')}</td>
                     <td>${s.folderable ? 'да' : 'нет'}</td>
                     <td>${s.sort_order}</td>
                     <td>${s.is_active ? 'да' : 'нет'}</td>
@@ -629,7 +631,7 @@
                        value="${isEdit ? MF.escapeAttr(section.key) : ''}"
                        ${isEdit ? 'disabled' : ''}
                        placeholder="new_section">
-                <div class="hint">Используется в URL и как имя секции. После создания изменить нельзя.</div>
+                <div class="hint">Используется в URL. После создания изменить нельзя.</div>
             </div>
 
             <div class="form-group">
@@ -644,7 +646,40 @@
                 <input type="text" id="sIcon"
                        value="${isEdit ? MF.escapeAttr(section.icon) : 'fa-folder'}"
                        placeholder="fa-book">
-                <div class="hint">Примеры: fa-book, fa-code, fa-film, fa-music, fa-gamepad, fa-folder</div>
+                <div class="hint">fa-book, fa-code, fa-film, fa-music, fa-gamepad, fa-folder</div>
+            </div>
+
+            <div class="form-group">
+                <label>Тип обработки (handler_type)</label>
+                <select id="sHandlerType">
+                    <option value="universal"  ${isEdit && section.handler_type === 'universal'  ? 'selected' : ''}>universal — базовый</option>
+                    <option value="books"      ${isEdit && section.handler_type === 'books'      ? 'selected' : ''}>books — книги (fb2/txt + обогащение)</option>
+                    <option value="music"      ${isEdit && section.handler_type === 'music'      ? 'selected' : ''}>music — музыка (плеер)</option>
+                    <option value="programs"   ${isEdit && section.handler_type === 'programs'   ? 'selected' : ''}>programs — программы</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Ссылка Яндекс.Диска (публичная)</label>
+                <input type="text" id="sYandexUrl"
+                       value="${isEdit ? MF.escapeAttr(section.yandex_url || '') : ''}"
+                       placeholder="https://disk.yandex.ru/d/XXXXX">
+                <div class="hint">Оставьте пустой, если синхронизация из Диска не нужна.</div>
+            </div>
+
+            <div class="form-group">
+                <label>Путь в аккаунте (yandex_path)</label>
+                <input type="text" id="sYandexPath"
+                       value="${isEdit ? MF.escapeAttr(section.yandex_path || '') : ''}"
+                       placeholder="/Книги">
+                <div class="hint">Путь в вашем аккаунте Яндекс.Диска, где лежит папка раздела.</div>
+            </div>
+
+            <div class="form-group">
+                <label>Имя листа в Google Sheets</label>
+                <input type="text" id="sSheetName"
+                       value="${isEdit ? MF.escapeAttr(section.sheet_name || '') : ''}"
+                       placeholder="Книги">
             </div>
 
             <div class="form-group">
@@ -700,6 +735,10 @@
         const key = keyEl.value.trim();
         const label = document.getElementById('sLabel').value.trim();
         const icon = document.getElementById('sIcon').value.trim() || 'fa-folder';
+        const handlerType = document.getElementById('sHandlerType').value;
+        const yandexUrl = document.getElementById('sYandexUrl').value.trim() || null;
+        const yandexPath = document.getElementById('sYandexPath').value.trim() || null;
+        const sheetName = document.getElementById('sSheetName').value.trim() || null;
         const jsonPath = document.getElementById('sJson').value.trim();
         const container = document.getElementById('sContainer').value.trim();
         const folderable = document.getElementById('sFolderable').checked;
@@ -721,6 +760,10 @@
 
         const payload = {
             key, label, icon,
+            handler_type: handlerType,
+            yandex_url: yandexUrl,
+            yandex_path: yandexPath,
+            sheet_name: sheetName,
             json_path: jsonPath,
             container,
             folderable,
@@ -807,7 +850,6 @@
 
         foldersList = data || [];
 
-        // Считаем количество файлов в каждой папке из JSON
         const meta = CFG.SECTIONS[currentFolderSection];
         let fileCounts = {};
         if (meta) {
@@ -859,7 +901,6 @@
     window.deleteFolder = async function (id, name) {
         if (!confirm(`Удалить папку "${name}"?\n\nЗаписи файлов этой папки будут отправлены на удаление.`)) return;
 
-        // 1. Собираем файлы этой папки из JSON
         const meta = CFG.SECTIONS[currentFolderSection];
         let itemsToDelete = [];
         if (meta) {
@@ -879,12 +920,10 @@
             } catch (e) {}
         }
 
-        // 2. Удаляем папку из Supabase
         const { error } = await supabaseClient
             .from('section_folders').delete().eq('id', id);
         if (error) { alert('Ошибка: ' + error.message); return; }
 
-        // 3. Отправляем файлы на удаление через workflow
         if (itemsToDelete.length > 0) {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1124,7 +1163,7 @@
     }
 
     // ============================================================
-    // СКАЧИВАНИЯ (админский просмотр)
+    // СКАЧИВАНИЯ
     // ============================================================
     async function loadDownloadCounts() {
         try {
