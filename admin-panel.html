@@ -60,6 +60,8 @@
         .btn-danger { background: #dc2626; color: white; }
         .btn-danger:hover { background: #b91c1c; transform: translateY(-2px); }
         .btn-danger:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; transform: translateY(-2px); }
 
         .main-layout { display: flex; flex: 1; }
         .sidebar {
@@ -81,6 +83,12 @@
         .sidebar .nav-link.active {
             background: #8b5cf6; color: white;
             box-shadow: 0 4px 12px rgba(139,92,246,0.25);
+        }
+        .sidebar .nav-link .badge-count {
+            margin-left: auto;
+            background: #dc2626; color: white;
+            font-size: 11px; padding: 2px 8px;
+            border-radius: 20px; font-weight: 700;
         }
         .sidebar .nav-divider {
             margin: 12px 16px 8px;
@@ -296,7 +304,7 @@
         .modal-overlay.active { display: flex; }
         .modal-box {
             background: white; border-radius: 20px;
-            padding: 30px; max-width: 560px; width: 100%;
+            padding: 30px; max-width: 720px; width: 100%;
             box-shadow: 0 20px 60px rgba(0,20,80,0.15);
             max-height: 90vh; overflow-y: auto;
         }
@@ -341,6 +349,90 @@
         }
         .filters select:focus, .filters input:focus { outline: none; border-color: #8b5cf6; }
 
+        /* ─── Orphans ─── */
+        .orphans-banner {
+            margin-bottom: 18px; padding: 16px 20px;
+            background: #fef3c7; border: 1px solid #fcd34d;
+            border-radius: 14px; font-size: 14px; color: #78350f;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .orphans-banner i { font-size: 20px; color: #d97706; flex-shrink: 0; margin-top: 2px; }
+        .orphans-banner strong { color: #92400e; }
+
+        .orphan-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            background: white;
+        }
+        .orphan-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: #f8fafc; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .orphan-header:hover { background: #f1f5f9; }
+        .orphan-header .caret {
+            color: #8b5cf6; font-size: 12px;
+            transition: transform 0.2s; flex-shrink: 0;
+        }
+        .orphan-header.expanded .caret { transform: rotate(90deg); }
+        .orphan-header .row-num {
+            background: #e0e7ff; color: #4338ca;
+            font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+        }
+        .orphan-header .orphan-title {
+            font-weight: 600; color: #0f172a;
+            flex: 1; min-width: 0;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .orphan-body {
+            display: none;
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+        .orphan-body.expanded { display: block; }
+        .orphan-body table {
+            width: 100%; border-collapse: collapse;
+            font-size: 13px;
+        }
+        .orphan-body td {
+            padding: 8px 10px;
+            border-bottom: 1px dashed #e5e7eb;
+            vertical-align: top;
+        }
+        .orphan-body td:first-child {
+            font-weight: 600; color: #475569;
+            width: 200px;
+            background: #f8fafc;
+            white-space: nowrap;
+        }
+        .orphan-body td.orphan-empty {
+            color: #cbd5e1; font-style: italic;
+        }
+        .orphan-body td.orphan-highlight {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .orphan-body td.orphan-cover img {
+            max-width: 80px; max-height: 120px;
+            border-radius: 4px;
+        }
+        .orphan-body .diff-note {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #78350f;
+        }
+
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
@@ -382,6 +474,7 @@
                 display: inline-flex;
             }
             .sidebar .nav-link i { font-size: 14px; width: auto; }
+            .sidebar .nav-link .badge-count { font-size: 10px; padding: 1px 6px; }
             .sidebar .nav-divider {
                 flex-shrink: 0;
                 margin: 0;
@@ -398,6 +491,7 @@
             .pagination-controls { justify-content: center; gap: 6px; flex-wrap: wrap; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .modal-box { padding: 20px; }
+            .orphan-body td:first-child { width: 120px; font-size: 11px; }
         }
     </style>
 </head>
@@ -425,6 +519,10 @@
             <button class="nav-link" data-tab="folders"><i class="fas fa-folder"></i> Папки</button>
             <button class="nav-link" data-tab="users"><i class="fas fa-users"></i> Пользователи</button>
             <button class="nav-link" data-tab="visitors"><i class="fas fa-user-check"></i> Посетители</button>
+            <button class="nav-link" data-tab="orphans">
+                <i class="fas fa-link-slash"></i> Осиротевшие
+                <span class="badge-count" id="orphansBadge" style="display:none;">0</span>
+            </button>
             <button class="nav-link" data-tab="downloads"><i class="fas fa-download"></i> Скачивания</button>
             <button class="nav-link" data-tab="stats"><i class="fas fa-chart-simple"></i> Статистика</button>
         </aside>
@@ -446,7 +544,7 @@
     </div>
 </div>
 
-<!-- Универсальная модалка (используется для пользователей, разделов, папок) -->
+<!-- Универсальная модалка (используется для пользователей, разделов, папок, orphans) -->
 <div class="modal-overlay" id="userEditModal">
     <div class="modal-box">
         <!-- содержимое задаётся динамически -->
@@ -482,6 +580,10 @@
     let currentFolderSection = null;
     let foldersList = [];
 
+    // Orphans
+    let orphansData = [];
+    let orphansTotalCount = 0;
+
     try { localStorage.removeItem('github_token'); } catch (e) {}
 
     // ============================================================
@@ -504,6 +606,7 @@
             profile.username || currentUser.email;
 
         await loadDownloadCounts();
+        await refreshOrphansBadge();
         await loadSection('programs');
     }
 
@@ -566,13 +669,14 @@
             <th>Яндекс URL</th>
             <th>Лист</th>
             <th>Папки</th>
+            <th>Ручн.</th>
             <th>Сортировка</th>
             <th>Активен</th>
             <th>Действия</th>
         </tr></thead><tbody>`;
 
         if (sectionsList.length === 0) {
-            html += `<tr><td colspan="9" class="empty-block">Разделов пока нет</td></tr>`;
+            html += `<tr><td colspan="10" class="empty-block">Разделов пока нет</td></tr>`;
         } else {
             sectionsList.forEach(s => {
                 const url = s.yandex_url || '—';
@@ -584,6 +688,7 @@
                     <td title="${MF.escapeAttr(url)}"><code>${MF.escapeHtml(shortUrl)}</code></td>
                     <td>${MF.escapeHtml(s.sheet_name || '—')}</td>
                     <td>${s.folderable ? 'да' : 'нет'}</td>
+                    <td>${s.manual_override ? '<span style="color:#dc2626; font-weight:700;">да</span>' : 'нет'}</td>
                     <td>${s.sort_order}</td>
                     <td>${s.is_active ? 'да' : 'нет'}</td>
                     <td class="actions-cell">
@@ -705,6 +810,19 @@
             </div>
 
             <div class="form-group">
+                <label>
+                    <input type="checkbox" id="sManualOverride"
+                           ${isEdit && section.manual_override ? 'checked' : ''}>
+                    Ручное управление (не перезаписывать существующие строки)
+                </label>
+                <div class="hint">
+                    Если включено — при синхронизации с Яндекс.Диском существующие
+                    строки этого раздела не перезаписываются. Добавляются только
+                    новые файлы.
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label><input type="checkbox" id="sFolderable" ${isEdit && section.folderable ? 'checked' : ''}> Папки включены</label>
             </div>
 
@@ -741,6 +859,7 @@
         const sheetName = document.getElementById('sSheetName').value.trim() || null;
         const jsonPath = document.getElementById('sJson').value.trim();
         const container = document.getElementById('sContainer').value.trim();
+        const manualOverride = document.getElementById('sManualOverride').checked;
         const folderable = document.getElementById('sFolderable').checked;
         const isActive = document.getElementById('sActive').checked;
         const sortOrder = parseInt(document.getElementById('sSort').value, 10) || 100;
@@ -768,6 +887,7 @@
             container,
             folderable,
             is_active: isActive,
+            manual_override: manualOverride,
             sort_order: sortOrder,
             columns
         };
@@ -980,6 +1100,7 @@
         if (section === 'stats') { await loadStats(); return; }
         if (section === 'users') { await loadUsers(); return; }
         if (section === 'visitors') { await loadVisitors(); return; }
+        if (section === 'orphans') { await loadOrphans(); return; }
 
         const info = CFG.SECTIONS[section];
         if (!info) return;
@@ -1649,6 +1770,325 @@
     }
 
     // ============================================================
+    // ОСИРОТЕВШИЕ СТРОКИ
+    // ============================================================
+
+    async function refreshOrphansBadge() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('sync_orphans')
+                .select('orphans');
+            if (error) return;
+            let total = 0;
+            (data || []).forEach(item => {
+                if (Array.isArray(item.orphans)) total += item.orphans.length;
+            });
+            orphansTotalCount = total;
+            const badge = document.getElementById('orphansBadge');
+            if (!badge) return;
+            if (total > 0) {
+                badge.textContent = total;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (e) { /* тихо */ }
+    }
+
+    async function loadOrphans() {
+        document.getElementById('sectionTitle').innerHTML =
+            `<i class="fas fa-link-slash"></i> Осиротевшие строки`;
+        document.getElementById('toolbar').style.display = 'none';
+        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('contentPagination').innerHTML = '';
+
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML =
+            `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
+
+        const { data, error } = await supabaseClient
+            .from('sync_orphans')
+            .select('*')
+            .order('updated_at', { ascending: false });
+
+        if (error) {
+            wrapper.innerHTML = `<p class="empty-block">Ошибка: ${error.message}</p>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            wrapper.innerHTML = `<p class="empty-block">
+                Нет данных об осиротевших строках.<br>
+                <small>Данные появятся после следующей синхронизации с Яндекс.Диском.</small>
+            </p>`;
+            return;
+        }
+
+        orphansData = data.filter(item =>
+            Array.isArray(item.orphans) && item.orphans.length > 0
+        );
+        const total = orphansData.reduce((s, x) => s + x.orphans.length, 0);
+
+        // Обновляем бейдж
+        const badge = document.getElementById('orphansBadge');
+        if (badge) {
+            if (total > 0) {
+                badge.textContent = total;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (total === 0) {
+            wrapper.innerHTML = `<p class="empty-block">
+                Осиротевших строк нет ✓<br>
+                <small>Все файлы из Google Sheets найдены на Яндекс.Диске.</small>
+            </p>`;
+            return;
+        }
+
+        let html = `
+            <div class="orphans-banner">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    Найдено <strong>${total}</strong> осиротевших строк
+                    в <strong>${orphansData.length}</strong> разделах.
+                    <br>
+                    <small>
+                        Осиротевшие строки — это записи в Google Sheets, файлы которых
+                        больше не найдены на Яндекс.Диске (переименованы, перемещены
+                        или удалены).
+                    </small>
+                    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-danger" id="deleteAllOrphansBtn">
+                            <i class="fas fa-broom"></i> Удалить все осиротевшие (${total})
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        html += `<div class="content-table-wrapper"><table class="content-table"><thead><tr>
+            <th>Раздел</th>
+            <th>Лист Sheets</th>
+            <th>Осиротевших</th>
+            <th>Обновлено</th>
+            <th>Действия</th>
+        </tr></thead><tbody>`;
+
+        orphansData.forEach((item, idx) => {
+            const updated = item.updated_at
+                ? new Date(item.updated_at).toLocaleString('ru-RU')
+                : '—';
+            const label = item.section_label || item.section_key;
+            html += `<tr>
+                <td><strong>${MF.escapeHtml(label)}</strong><br>
+                    <code style="font-size:11px; color:#94a3b8;">
+                        ${MF.escapeHtml(item.section_key)}
+                    </code>
+                </td>
+                <td>${MF.escapeHtml(item.sheet_name || '—')}</td>
+                <td><strong style="color:#dc2626;">${item.orphans.length}</strong></td>
+                <td>${MF.escapeHtml(updated)}</td>
+                <td class="actions-cell">
+                    <button class="btn-edit" onclick="showOrphansByIndex(${idx})">
+                        <i class="fas fa-code-compare"></i> Diff-view
+                    </button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        wrapper.innerHTML = html;
+
+        const delBtn = document.getElementById('deleteAllOrphansBtn');
+        if (delBtn) delBtn.addEventListener('click', deleteAllOrphans);
+    }
+
+    // ---------- Diff-view ----------
+
+    window.showOrphansByIndex = function (idx) {
+        const item = orphansData[idx];
+        if (!item) return;
+
+        const orphans = item.orphans || [];
+        const headers = Array.isArray(item.headers) ? item.headers : [];
+
+        const modal = document.getElementById('userEditModal');
+        const box = modal.querySelector('.modal-box');
+
+        let orphanBlocks = '';
+        orphans.forEach((o, i) => {
+            const values = Array.isArray(o.values) ? o.values : [];
+            const title = o.title || '';
+            const link = o.link || '';
+            const linkShort = link.length > 60
+                ? link.slice(0, 60) + '…'
+                : link;
+
+            // Формируем "тело" — таблицу колонка: значение
+            let rowsHtml = '';
+            if (headers.length > 0) {
+                headers.forEach((h, j) => {
+                    const v = values[j] !== undefined ? String(values[j]) : '';
+                    const isTitle = (h === 'Название' || h.toLowerCase() === 'title');
+                    const isLink = (h === 'Ссылка для скачивания' || h === 'Ссылка'
+                                    || h.toLowerCase() === 'download_link');
+                    let cellCls = '';
+                    if (isLink) cellCls = 'orphan-highlight';
+                    else if (isTitle) cellCls = '';
+
+                    const cellContent = v
+                        ? (isLink && v.length > 120
+                            ? `<span title="${MF.escapeAttr(v)}">${MF.escapeHtml(v.slice(0, 120))}…</span>`
+                            : MF.escapeHtml(v))
+                        : '<i>пусто</i>';
+
+                    rowsHtml += `<tr>
+                        <td>${MF.escapeHtml(h)}</td>
+                        <td class="${cellCls} ${!v ? 'orphan-empty' : ''}">${cellContent}</td>
+                    </tr>`;
+                });
+            } else {
+                // Fallback: без headers — показываем title + link
+                rowsHtml = `
+                    <tr><td>Название</td><td>${MF.escapeHtml(title || '—')}</td></tr>
+                    <tr><td>Ссылка</td><td class="orphan-highlight">
+                        <span title="${MF.escapeAttr(link)}">${MF.escapeHtml(linkShort)}</span>
+                    </td></tr>
+                    <tr><td>Строка</td><td>${o.row || '—'}</td></tr>
+                `;
+            }
+
+            orphanBlocks += `
+                <div class="orphan-item" data-orphan-idx="${i}">
+                    <div class="orphan-header" data-toggle-idx="${i}">
+                        <i class="fas fa-caret-right caret"></i>
+                        <span class="row-num">#${o.row || i + 1}</span>
+                        <span class="orphan-title" title="${MF.escapeAttr(title)}">
+                            ${MF.escapeHtml(title || '(без названия)')}
+                        </span>
+                    </div>
+                    <div class="orphan-body" data-body-idx="${i}">
+                        <table>${rowsHtml}</table>
+                        <div class="diff-note">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Что не так:</strong>
+                            файл с этой ссылкой не найден на Яндекс.Диске.
+                            Возможные причины: файл переименован, перемещён в другую
+                            папку или удалён. Если это ошибочно — проверьте Диск;
+                            иначе строку можно удалить в Google Sheets или
+                            кнопкой «Удалить все осиротевшие».
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        box.innerHTML = `
+            <h3>
+                <i class="fas fa-code-compare"></i>
+                Осиротевшие строки — ${MF.escapeHtml(item.section_label || item.section_key)}
+                (${orphans.length})
+            </h3>
+            <p style="color:#64748b; font-size:13px; margin-bottom:15px;">
+                Лист <strong>${MF.escapeHtml(item.sheet_name || '')}</strong>.
+                Кликните на запись, чтобы развернуть diff-view с полным содержимым строки.
+            </p>
+            <div style="max-height:60vh; overflow-y:auto; padding-right:4px;">
+                ${orphanBlocks}
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
+            </div>
+        `;
+        modal.classList.add('active');
+
+        // Обработчик аккордеона
+        box.querySelectorAll('.orphan-header').forEach(h => {
+            h.addEventListener('click', function () {
+                const idx2 = this.dataset.toggleIdx;
+                const body = box.querySelector(`.orphan-body[data-body-idx="${idx2}"]`);
+                const isOpen = this.classList.toggle('expanded');
+                body.classList.toggle('expanded', isOpen);
+            });
+        });
+    };
+
+    // ---------- Массовое удаление осиротевших ----------
+
+    async function deleteAllOrphans() {
+        // Собираем все link'и из всех разделов
+        const allItems = [];
+        orphansData.forEach(sectionItem => {
+            (sectionItem.orphans || []).forEach(o => {
+                if (o.link) {
+                    allItems.push({
+                        section: sectionItem.section_key,
+                        link: o.link,
+                    });
+                }
+            });
+        });
+
+        if (allItems.length === 0) {
+            alert('Нет осиротевших строк для удаления.');
+            return;
+        }
+
+        const totalCount = allItems.length;
+        if (!confirm(
+            `Удалить ${totalCount} осиротевших строк из Google Sheets?\n\n` +
+            `Удаление выполняется через GitHub Actions (delete-content.yml).\n` +
+            `Это действие необратимо. Продолжить?`
+        )) return;
+
+        const btn = document.getElementById('deleteAllOrphansBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+        }
+
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert('Сессия истекла. Войдите заново.');
+                return;
+            }
+
+            const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    workflow: DELETE_WORKFLOW,
+                    inputs: { delete_list: JSON.stringify(allItems) }
+                })
+            });
+            const result = await resp.json();
+            if (resp.ok && result.ok) {
+                alert(
+                    `Запрос отправлен (${totalCount} строк).\n\n` +
+                    `Через 1–2 минуты Google Sheets обновится.\n` +
+                    `После следующей синхронизации с Яндекс.Диском список ` +
+                    `осиротевших обновится автоматически.`
+                );
+            } else {
+                alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
+            }
+        } catch (e) {
+            alert('Ошибка сети: ' + e.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${totalCount})`;
+            }
+        }
+    }
+
+    // ============================================================
     // СТАТИСТИКА
     // ============================================================
     async function loadStats() {
@@ -1738,6 +2178,7 @@
             else if (currentTab === 'stats') loadStats();
             else if (currentTab === 'users') loadUsers();
             else if (currentTab === 'visitors') loadVisitors();
+            else if (currentTab === 'orphans') loadOrphans();
             else loadSection(currentTab);
         });
     });
@@ -1749,6 +2190,7 @@
         else if (currentTab === 'stats') loadStats();
         else if (currentTab === 'users') loadUsers();
         else if (currentTab === 'visitors') loadVisitors();
+        else if (currentTab === 'orphans') loadOrphans();
         else loadSection(currentTab);
     });
 
