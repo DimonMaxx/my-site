@@ -15,7 +15,8 @@ yandex_disk_sync.py
   • BACKUP_BEFORE_SYNC — перед записью изменений создаётся резервная
     копия листа (_backup_<section>_<timestamp>), хранятся последние N.
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
-    в Sheets) с сохранением в Supabase-таблицу sync_orphans.
+    в Sheets) с сохранением в Supabase-таблицу sync_orphans,
+    включая полные значения строк и заголовки (для diff-view).
 """
 
 import os
@@ -169,7 +170,7 @@ class Diag:
         self.skipped   = {"bad_ext": 0, "garbage": 0, "wrong_ext": 0,
                           "dup_link": 0}
         self.skip_samples = []
-        # Новые счётчики
+        # Дополнительные счётчики
         self.preserved_edits = 0
         self.unchanged_rows  = 0
         self.orphans_found   = 0
@@ -1058,7 +1059,7 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
 
 
 # ============================================================
-# SUPABASE — ЗАГРУЗКА РАЗДЕЛОВ
+# SUPABASE
 # ============================================================
 
 def _get_supabase_client():
@@ -1100,22 +1101,24 @@ def load_sections_from_supabase():
 
 
 def save_orphans_to_supabase(section_key, section_label,
-                             sheet_name, orphans):
+                             sheet_name, orphans, headers=None):
     """
-    Upsert в sync_orphans: одна строка на раздел,
-    orphans — список dict {row, title, link}.
+    Upsert в sync_orphans: одна строка на раздел.
+    Дополнительно сохраняем headers (для diff-view).
     """
     client = _get_supabase_client()
     if client is None:
         return
     try:
         payload = {
-            "section_key": section_key,
+            "section_key":   section_key,
             "section_label": section_label,
-            "sheet_name": sheet_name,
-            "orphans": orphans or [],
-            "updated_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "sheet_name":    sheet_name,
+            "orphans":       orphans or [],
+            "updated_at":    datetime.datetime.utcnow().isoformat() + "Z",
         }
+        if headers is not None:
+            payload["headers"] = headers
         client.table(SYNC_ORPHANS_TABLE).upsert(payload).execute()
     except Exception as e:
         print(f"    [!] Не удалось сохранить orphans в Supabase: {e}")
@@ -1598,6 +1601,7 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
     """
     Возвращает список осиротевших строк:
     строки Sheets, download_link которых отсутствует в свежесобранных rows.
+    Дополнительно сохраняем ПОЛНЫЕ значения строки (для diff-view).
     """
     new_links = set()
     for row in rows:
@@ -1621,10 +1625,13 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
         title = ""
         if title_idx is not None and title_idx < len(values):
             title = str(values[title_idx]).strip()
+        # Дополняем до длины headers, чтобы diff-view мог сопоставить
+        padded = list(values) + [""] * max(0, len(headers) - len(values))
         orphans.append({
-            "row":   info["row"],
-            "title": title,
-            "link":  link,
+            "row":    info["row"],
+            "title":  title,
+            "link":   link,
+            "values": padded[:len(headers)],
         })
     return orphans
 
@@ -1705,10 +1712,6 @@ def sync_section(section, gs_client, cache):
     diag.kept = len(rows)
     print(f"\n  Сгенерировано строк: {len(rows)}")
 
-    if not rows and handler_type not in ("universal",):
-        # даже если пусто — надо найти сирот и сохранить
-        pass
-
     # --- Открываем таблицу ---
     try:
         sh = open_spreadsheet(gs_client)
@@ -1734,10 +1737,12 @@ def sync_section(section, gs_client, cache):
     if orphans:
         print(f"  Осиротевших строк: {len(orphans)} "
               f"(файлы исчезли с Диска)")
-        save_orphans_to_supabase(section_key, label, sheet_name, orphans)
+        save_orphans_to_supabase(section_key, label, sheet_name,
+                                 orphans, headers)
     else:
-        # очищаем запись — сирот нет
-        save_orphans_to_supabase(section_key, label, sheet_name, [])
+        # Очищаем запись — сирот нет
+        save_orphans_to_supabase(section_key, label, sheet_name,
+                                 [], headers)
 
     # --- Формируем изменения ---
     updates = []
@@ -1793,7 +1798,8 @@ def sync_section(section, gs_client, cache):
     if unchanged_rows:
         print(f"    Без изменений:     {unchanged_rows}")
     if manual_override and unchanged_rows:
-        print(f"    [i] manual_override=True — существующие строки не перезаписаны")
+        print(f"    [i] manual_override=True — существующие строки "
+              f"не перезаписаны")
     if not PRESERVE_USER_EDITS:
         print("    [i] PRESERVE_USER_EDITS=0 — ручные правки перезаписываются")
 
