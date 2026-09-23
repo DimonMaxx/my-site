@@ -22,9 +22,9 @@ from common import (
     normalize,
 )
 
-try:
+ try:
     from supabase import create_client as supa_create_client
-except ImportError:
+ except ImportError:
     supa_create_client = None
 
 
