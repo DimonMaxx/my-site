@@ -43,12 +43,24 @@ jobs:
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           WIKI_LANG:                 "ru"
           ENABLE_LLM_FALLBACK:       "0"
+
+          # ─── Режимы синхронизации ───
+          # 1 — сохранять ручные правки пользователя в Sheets
+          #     (непустые ячейки не перезаписываются из Диска)
+          PRESERVE_USER_EDITS:       "1"
+
+          # 1 — создавать резервную копию листа перед записью изменений
+          BACKUP_BEFORE_SYNC:        "1"
+
+          # Сколько последних резервных копий хранить на каждый раздел
+          BACKUP_KEEP_COUNT:         "3"
         run: python yandex_disk_sync.py
 
       - name: Run generate_from_sheets.py
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          SPREADSHEET_ID:          ${{ secrets.SPREADSHEET_ID }}
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python generate_from_sheets.py
 
       - name: Commit and push changes
