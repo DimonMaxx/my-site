@@ -3,6 +3,9 @@
 # Разделы читаются из Supabase (site_sections, is_active = true),
 # поэтому новые разделы, добавленные через админ-панель,
 # генерируются автоматически без правки этого файла.
+#
+# Устойчив к «дубликатам заголовков» и «хвостам» старых колонок:
+# не использует get_all_records(), а читает значения напрямую.
 
 import os
 import sys
@@ -18,10 +21,6 @@ from common import (
     get_gspread_client,
 )
 
-# ------------------------------------------------------------
-# Supabase — опциональная зависимость (не критично для чтения
-# из Sheets, но критично для получения списка разделов).
-# ------------------------------------------------------------
 try:
     from supabase import create_client as supa_create_client
 except ImportError:
@@ -42,64 +41,42 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 # ============================================================
 # РАСШИРЕННЫЙ МАППИНГ RU → EN
 # ============================================================
-# Берём базовый маппинг из common.py и дополняем ключами,
-# которые реально используются в новых разделах (music, games,
-# articles, news и любые пользовательские).
-#
-# Если в common.py появятся новые ключи — они автоматически
-# подхватятся, т.к. мы делаем merge, а не замену.
 
 _EXTRA_RU_TO_EN = {
-    # Музыка
-    "Исполнитель": "artist",
-    "Год":         "year",
-    # Игры
-    "Платформа":   "platform",
-    # Статьи / Новости / Разное
-    "Дата":        "date",
-    "Категория":   "category",
-    "Теги":        "tags",
-    "Текст":       "text",
-    # Служебные (на случай если кто-то положит в Sheets логи)
-    "Файл":        "file_name",
+    "Исполнитель":  "artist",
+    "Год":          "year",
+    "Платформа":    "platform",
+    "Дата":         "date",
+    "Категория":    "category",
+    "Теги":         "tags",
+    "Текст":        "text",
+    "Файл":         "file_name",
     "Пользователь": "username",
     "Дата и время": "downloaded_at",
 }
 
-# Итоговый RU → EN
 RU_TO_EN = dict(BASE_COLUMN_MAPPING)
 for ru, en in _EXTRA_RU_TO_EN.items():
     RU_TO_EN.setdefault(ru, en)
 
-# Обратный маппинг: EN → [RU, RU, ...]
-# (у одного EN-ключа может быть несколько русских вариантов)
 EN_TO_RU = {}
 for ru, en in RU_TO_EN.items():
     EN_TO_RU.setdefault(en, []).append(ru)
 
-# Псевдонимы: некоторые EN-ключи пишутся в один и тот же RU-заголовок.
-# Пример: frontend ожидает "body", а common.py использует "text"
-# для того же "Текст". Поддерживаем оба.
 EN_TO_RU.setdefault("body", []).extend(EN_TO_RU.get("text", []))
 
 
 # ============================================================
-# ЗАГРУЗКА РАЗДЕЛОВ ИЗ SUPABASE
+# SUPABASE
 # ============================================================
 
 def load_active_sections():
-    """
-    Возвращает список активных разделов из таблицы site_sections,
-    отсортированных по sort_order.
-    """
     if supa_create_client is None:
-        print("[!] supabase-py не установлен (pip install supabase).")
+        print("[!] supabase-py не установлен.")
         return []
-
     if not SUPABASE_SERVICE_KEY:
-        print("[!] SUPABASE_SERVICE_ROLE_KEY не задан — не могу загрузить разделы.")
+        print("[!] SUPABASE_SERVICE_ROLE_KEY не задан.")
         return []
-
     try:
         client = supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         resp = (
@@ -119,11 +96,10 @@ def load_active_sections():
 
 
 # ============================================================
-# УТИЛИТЫ ПРЕОБРАЗОВАНИЯ
+# УТИЛИТЫ
 # ============================================================
 
 def _is_empty(value):
-    """Пустая ли ячейка (None / NaN / пустая строка / пробелы)."""
     if value is None:
         return True
     try:
@@ -136,72 +112,117 @@ def _is_empty(value):
     return False
 
 
+def _read_records_safe(worksheet, headers):
+    """
+    Читает лист построчно БЕЗ get_all_records().
+    Возвращает список dict {RU-заголовок: значение}.
+
+    Устойчив к:
+      • дубликатам заголовков;
+      • «хвостам» старых колонок;
+      • пустым заголовкам.
+
+    :param worksheet: gspread.Worksheet
+    :param headers:   список ожидаемых RU-заголовков (в нужном порядке)
+    """
+    try:
+        all_values = worksheet.get_all_values()
+    except Exception as e:
+        print(f"  ОШИБКА чтения листа: {e}")
+        return None  # сигнал об ошибке
+
+    if not all_values:
+        return []
+
+    raw_header = all_values[0]
+
+    # Сопоставляем ожидаемые заголовки с позициями в листе.
+    # При дубликатах берём ПЕРВОЕ совпадение.
+    positions = {}
+    for want_idx, want in enumerate(headers):
+        want_clean = want.strip()
+        pos = None
+        # 1. Точное совпадение (регистронезависимо, без пробелов)
+        for i, h in enumerate(raw_header):
+            if (h or "").strip().lower() == want_clean.lower():
+                pos = i
+                break
+        # 2. Частичное совпадение (например, «Размер» vs «Размер (МБ)»)
+        if pos is None:
+            for i, h in enumerate(raw_header):
+                if want_clean.lower() in (h or "").strip().lower():
+                    pos = i
+                    break
+        positions[want] = pos
+
+    records = []
+    for row in all_values[1:]:
+        rec = {}
+        for want, pos in positions.items():
+            if pos is None or pos >= len(row):
+                rec[want] = ""
+            else:
+                rec[want] = row[pos]
+        records.append(rec)
+    return records
+
+
 def row_to_item(row, columns=None):
-    """
-    Преобразует одну строку Google Sheets (dict {RU-заголовок: значение})
-    в JSON-объект {EN-ключ: значение}.
-
-    :param row:     dict из worksheet.get_all_records()
-    :param columns: список EN-ключей из site_sections.columns.
-                    Если не задан — выводятся все известные EN-ключи.
-    :return:        dict (может быть пустым)
-    """
     item = {}
-
-    # Какие EN-ключи выводить
     target_keys = [k for k in (columns or []) if k]
     if not target_keys:
         target_keys = list(EN_TO_RU.keys())
 
     for en_key in target_keys:
         value = None
-
-        # 1. Ищем по русским вариантам
         for ru_col in EN_TO_RU.get(en_key, []):
             if ru_col in row and not _is_empty(row[ru_col]):
                 value = row[ru_col]
                 break
-
-        # 2. Fallback: возможно, в листе колонка названа EN-ключом
         if _is_empty(value) and en_key in row and not _is_empty(row[en_key]):
             value = row[en_key]
-
         if _is_empty(value):
             continue
-
-        # Многострочные поля оставляем как есть, остальные — strip()
         if en_key in ("text", "body", "description"):
             item[en_key] = str(value)
         else:
             item[en_key] = str(value).strip()
-
     return item
 
 
 # ============================================================
-# ГЕНЕРАЦИЯ JSON ДЛЯ ОДНОГО РАЗДЕЛА
+# ГЕНЕРАЦИЯ JSON
 # ============================================================
 
-def generate_json_for_section(worksheet, json_path, columns=None):
+def generate_json_for_section(worksheet, json_path, columns=None, headers=None):
     """
-    Читает worksheet и пишет JSON-массив в json_path.
-    Возвращает количество записей (int) или -1 при ошибке.
+    :param worksheet: gspread.Worksheet
+    :param json_path: путь к JSON
+    :param columns:   список EN-ключей из site_sections.columns
+    :param headers:   список RU-заголовков (в порядке columns) —
+                      если не задан, вычисляется автоматически
     """
     print(f"  Лист:    {worksheet.title}")
     print(f"  JSON:    {json_path}")
 
-    # Создаём папку, если её нет
     dir_part = os.path.dirname(json_path) or "."
     os.makedirs(dir_part, exist_ok=True)
 
-    # --- Чтение ---
-    try:
-        records = worksheet.get_all_records()
-    except Exception as e:
-        print(f"  ОШИБКА чтения листа: {e}")
-        return -1
+    # Определяем ожидаемые RU-заголовки
+    if headers is None:
+        headers = []
+        for key in columns or []:
+            variants = EN_TO_RU.get(key, [])
+            if variants:
+                headers.append(variants[0])
+            else:
+                headers.append(key)
+        if "Ссылка для скачивания" not in headers:
+            headers.append("Ссылка для скачивания")
 
-    # --- Пустой лист ---
+    records = _read_records_safe(worksheet, headers)
+    if records is None:
+        return -1
     if not records:
         print("  Лист пуст → записываем []")
         try:
@@ -212,7 +233,6 @@ def generate_json_for_section(worksheet, json_path, columns=None):
             return -1
         return 0
 
-    # --- Преобразование строк ---
     json_data = []
     skipped = 0
     for row in records:
@@ -222,7 +242,6 @@ def generate_json_for_section(worksheet, json_path, columns=None):
             continue
         json_data.append(item)
 
-    # --- Запись ---
     try:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
@@ -230,7 +249,6 @@ def generate_json_for_section(worksheet, json_path, columns=None):
         print(f"  ОШИБКА записи JSON: {e}")
         return -1
 
-    # --- Отчёт ---
     msg = f"  ✓ Записано: {len(json_data)} записей"
     if skipped:
         msg += f" (пропущено без title: {skipped})"
@@ -259,7 +277,6 @@ def main():
         print("[!] gspread не установлен.")
         sys.exit(1)
 
-    # --- 1. Разделы из Supabase ---
     print("\nЗагрузка разделов из Supabase (site_sections)...")
     sections = load_active_sections()
     if not sections:
@@ -274,7 +291,6 @@ def main():
             f"JSON «{s.get('json_path') or '—'}»"
         )
 
-    # --- 2. Google Sheets ---
     print("\nПодключение к Google Sheets...")
     try:
         gc = get_gspread_client()
@@ -288,18 +304,15 @@ def main():
         print(f"  Таблица открыта: {sh.title}")
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"[!] Таблица с ID '{SPREADSHEET_ID}' не найдена.")
-        print("    Проверьте, что сервисному аккаунту дан доступ "
-              "(Share → Editor).")
         sys.exit(1)
     except Exception as e:
         print(f"[!] Ошибка открытия таблицы: {e}")
         traceback.print_exc()
         sys.exit(1)
 
-    # --- 3. Обход разделов ---
     total_ok = 0
     total_records = 0
-    failed = []   # [(key, reason), ...]
+    failed = []
 
     for section in sections:
         key = section.get("key") or "?"
@@ -315,7 +328,6 @@ def main():
             failed.append((key, "нет json_path"))
             continue
 
-        # Получаем лист
         try:
             worksheet = sh.worksheet(sheet_name)
         except gspread.exceptions.WorksheetNotFound:
@@ -334,7 +346,6 @@ def main():
         else:
             failed.append((key, "ошибка генерации"))
 
-    # --- 4. Итоги ---
     print("\n" + "=" * 60)
     print(f"Обработано разделов:  {total_ok} из {len(sections)}")
     print(f"Всего записей:        {total_records}")
@@ -344,7 +355,6 @@ def main():
             print(f"  • {key}: {reason}")
     print("=" * 60)
 
-    # Возвращаем ненулевой код, только если вообще ничего не сгенерировано
     if total_ok == 0:
         sys.exit(1)
 
