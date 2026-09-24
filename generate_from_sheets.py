@@ -4,6 +4,9 @@
 # поэтому новые разделы, добавленные через админ-панель,
 # генерируются автоматически без правки этого файла.
 #
+# Поддерживает SYNC_SECTIONS=programs,music — генерирует JSON только для
+# перечисленных разделов (для селективной синхронизации).
+#
 # Устойчив к «дубликатам заголовков» и «хвостам» старых колонок:
 # не использует get_all_records(), а читает значения напрямую.
 
@@ -36,6 +39,13 @@ SUPABASE_URL = os.environ.get(
     "https://rmoonebbvpmvthvpcmpt.supabase.co",
 )
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+# SYNC_SECTIONS — список ключей разделов через запятую.
+# Пусто → генерировать JSON для всех активных разделов.
+_raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
+SYNC_SECTIONS_FILTER = [
+    s.strip() for s in _raw_sync_sections.split(",") if s.strip()
+] if _raw_sync_sections else []
 
 
 # ============================================================
@@ -273,6 +283,11 @@ def main():
     print("generate_from_sheets.py — старт")
     print("=" * 60)
 
+    if SYNC_SECTIONS_FILTER:
+        print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
+    else:
+        print("SYNC_SECTIONS_FILTER = (все активные разделы)")
+
     if gspread is None:
         print("[!] gspread не установлен.")
         sys.exit(1)
@@ -282,6 +297,17 @@ def main():
     if not sections:
         print("[!] Нет активных разделов — завершаю.")
         sys.exit(0)
+
+    # ─── Фильтр по SYNC_SECTIONS ───
+    if SYNC_SECTIONS_FILTER:
+        before = len(sections)
+        sections = [s for s in sections
+                    if s.get("key") in SYNC_SECTIONS_FILTER]
+        print(f"  [i] SYNC_SECTIONS отфильтровал {len(sections)} "
+              f"из {before} разделов")
+        if not sections:
+            print("[!] Ни один раздел не попал под фильтр — завершаю.")
+            sys.exit(0)
 
     print(f"  Получено разделов: {len(sections)}")
     for s in sections:
