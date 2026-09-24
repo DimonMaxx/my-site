@@ -12,6 +12,9 @@ yandex_disk_sync.py
     (название, описание, автор и т.п.) при обновлении существующих строк.
   • manual_override (per-section) — существующие строки раздела вообще
     не перезаписываются, добавляются только новые файлы.
+  • strip_prefix_mode (per-section: auto | always | never) — управляет
+    отрезанием yandex_path от путей файлов. По умолчанию 'always' —
+    публичная ссылка ведёт ВНУТРЬ папки yandex_path.
   • BACKUP_BEFORE_SYNC — перед записью изменений создаётся резервная
     копия листа (_backup_<section>_<timestamp>), хранятся последние N.
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
@@ -123,7 +126,7 @@ EN_TO_RU = {v: k for k, v in RU_TO_EN.items()}
 
 
 # ============================================================
-# РЕЖИМ ОБНОВЛЕНИЯ СУЩЕСТВУЮЩИХ СТРОК
+# РЕЖИМЫ СИНХРОНИЗАЦИИ
 # ============================================================
 
 # PRESERVE_USER_EDITS=1 (по умолчанию):
@@ -139,6 +142,16 @@ BACKUP_BEFORE_SYNC  = os.environ.get("BACKUP_BEFORE_SYNC", "1") == "1"
 
 # Сколько последних резервных копий хранить для каждого раздела.
 BACKUP_KEEP_COUNT   = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
+
+# STRIP_PREFIX_MODE — глобальный fallback, если у раздела нет
+# собственного strip_prefix_mode:
+#   'always' — всегда отрезать yandex_path от путей файлов.
+#              Публичная ссылка ведёт ВНУТРЬ папки yandex_path
+#              (типичный случай, работает для книг/музыки/программ).
+#   'never'  — не отрезать (публичная ссылка — родительская папка).
+#   'auto'   — старая логика через is_public_root_link (медленно,
+#              иногда ошибается).
+STRIP_PREFIX_MODE_DEFAULT = os.environ.get("STRIP_PREFIX_MODE", "always").lower()
 
 # Таблица Supabase, в которую пишутся «осиротевшие» строки.
 SYNC_ORPHANS_TABLE  = "sync_orphans"
@@ -380,6 +393,13 @@ def _strip_disk_prefix(path):
 
 
 def is_public_root_link(public_url, start_path):
+    """
+    Проверяет, лежит ли папка start_path В КОРНЕ публичной ссылки.
+    Используется только в режиме strip_prefix_mode='auto'.
+
+    True  → ссылка ведёт в родительскую папку (префикс отрезать НЕ надо).
+    False → ссылка ведёт внутрь start_path (префикс надо отрезать).
+    """
     api = "https://cloud-api.yandex.net/v1/disk/public/resources"
     start_name = (start_path or "").strip("/")
     if not start_name:
@@ -391,14 +411,19 @@ def is_public_root_link(public_url, start_path):
             headers=HEADERS, timeout=HTTP_TIMEOUT,
         )
         if r.status_code != 200:
+            print(f"  [debug] is_public_root_link: HTTP {r.status_code} → True")
             return True
         items = r.json().get('_embedded', {}).get('items', [])
+        names = [it.get('name') for it in items if it.get('type') == 'dir']
+        print(f"  [debug] is_public_root_link: root-папки = {names}")
         for it in items:
             if it.get('name') == start_name and it.get('type') == 'dir':
+                print(f"  [debug]   найден '{start_name}' в корне → True")
                 return True
+        print(f"  [debug]   '{start_name}' НЕ найден в корне → False")
         return False
     except Exception as e:
-        print(f"  [!] Не удалось определить корень ссылки: {e}")
+        print(f"  [debug] is_public_root_link: исключение {e} → True")
         return True
 
 
@@ -1081,7 +1106,7 @@ def _get_supabase_client():
 def load_sections_from_supabase():
     """
     Возвращает список активных разделов site_sections,
-    включая поле manual_override.
+    включая поля manual_override и strip_prefix_mode.
     """
     client = _get_supabase_client()
     if client is None:
@@ -1092,15 +1117,30 @@ def load_sections_from_supabase():
             client.table("site_sections")
             .select("key,label,icon,handler_type,yandex_url,yandex_path,"
                     "sheet_name,json_path,container,columns,folderable,"
-                    "is_active,manual_override,sort_order")
+                    "is_active,manual_override,sort_order,strip_prefix_mode")
             .eq("is_active", True)
             .order("sort_order")
             .execute()
         )
         return resp.data or []
     except Exception as e:
-        print(f"[!] Ошибка загрузки разделов из Supabase: {e}")
-        return []
+        # Возможно, ещё нет колонки strip_prefix_mode — пробуем без неё
+        print(f"[!] Ошибка загрузки разделов (с strip_prefix_mode): {e}")
+        try:
+            resp = (
+                client.table("site_sections")
+                .select("key,label,icon,handler_type,yandex_url,yandex_path,"
+                        "sheet_name,json_path,container,columns,folderable,"
+                        "is_active,manual_override,sort_order")
+                .eq("is_active", True)
+                .order("sort_order")
+                .execute()
+            )
+            print("[i] Загружено без strip_prefix_mode (fallback на env).")
+            return resp.data or []
+        except Exception as e2:
+            print(f"[!] Повторная ошибка загрузки разделов: {e2}")
+            return []
 
 
 def save_orphans_to_supabase(section_key, section_label,
@@ -1162,7 +1202,7 @@ def get_or_create_sheet(sh, name):
 
 
 def _col_letter(n):
-    """Преобразует индекс колонки (0-based) в буквенное обозначение A, B, ..., Z, AA, AB."""
+    """Индекс колонки (0-based) → буквенное обозначение A, B, ..., Z, AA, AB."""
     s = ""
     n += 1
     while n:
@@ -1691,12 +1731,22 @@ def sync_section(section, gs_client, cache):
     columns     = section.get("columns") or ["title", "description", "download_link"]
     manual_override = bool(section.get("manual_override"))
 
+    # Режим отрезания префикса: сначала per-section, потом env-fallback.
+    strip_mode = (
+        section.get("strip_prefix_mode")
+        or STRIP_PREFIX_MODE_DEFAULT
+        or "always"
+    ).lower()
+    if strip_mode not in ("auto", "always", "never"):
+        strip_mode = "always"
+
     print(f"\n=== Раздел: {label} ({section_key}) ===")
-    print(f"Handler:        {handler_type}")
-    print(f"Источник:       {yandex_url or '(не задан)'}")
-    print(f"Подпапка:       {start_path}")
-    print(f"Лист Sheets:    {sheet_name}")
-    print(f"manual_override:{manual_override}")
+    print(f"Handler:         {handler_type}")
+    print(f"Источник:        {yandex_url or '(не задан)'}")
+    print(f"Подпапка:        {start_path}")
+    print(f"Лист Sheets:     {sheet_name}")
+    print(f"manual_override: {manual_override}")
+    print(f"strip_prefix:    {strip_mode}")
 
     if not yandex_url:
         print("  [!] yandex_url не задан — раздел пропускается.")
@@ -1712,10 +1762,26 @@ def sync_section(section, gs_client, cache):
         print("  [!] YADISK_TOKEN не задан.")
         return
 
-    is_root = is_public_root_link(yandex_url, start_path)
-    strip_prefix = not is_root
-    print(f"  [i] Ссылка {'ведёт в корень' if is_root else 'ведёт в папку'} → "
-          f"{'НЕ отрезаем' if is_root else 'отрезаем'} префикс '{start_path}'")
+    # ─── Определение режима отрезания префикса ───
+    sp = (start_path or "").strip("/")
+
+    if not sp:
+        # Нечего отрезать — start_path пустой или "/"
+        strip_prefix = False
+        is_root = False
+    elif strip_mode == "always":
+        strip_prefix = True
+        is_root = False
+    elif strip_mode == "never":
+        strip_prefix = False
+        is_root = True
+    else:  # auto
+        is_root = is_public_root_link(yandex_url, start_path)
+        strip_prefix = not is_root
+
+    print(f"  [i] strip_prefix_mode='{strip_mode}', start_path='{start_path}' → "
+          f"{'ОТРЕЗАЕМ' if strip_prefix else 'НЕ отрезаем'} префикс "
+          f"(is_root={is_root})")
 
     diag = Diag(label)
 
@@ -1871,9 +1937,10 @@ def main():
     print("=" * 60)
     print("yandex_disk_sync.py — старт")
     print("=" * 60)
-    print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
-    print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC} "
+    print(f"PRESERVE_USER_EDITS  = {PRESERVE_USER_EDITS}")
+    print(f"BACKUP_BEFORE_SYNC   = {BACKUP_BEFORE_SYNC} "
           f"(keep last {BACKUP_KEEP_COUNT})")
+    print(f"STRIP_PREFIX_DEFAULT = {STRIP_PREFIX_MODE_DEFAULT}")
 
     if yadisk is None:
         print("[!] yadisk не установлен: pip install -r requirements.txt")
@@ -1889,6 +1956,8 @@ def main():
         flags = []
         if s.get("manual_override"):
             flags.append("manual_override")
+        if s.get("strip_prefix_mode"):
+            flags.append(f"strip={s.get('strip_prefix_mode')}")
         suffix = f" [{', '.join(flags)}]" if flags else ""
         print(f"    • {s.get('key')}: {s.get('label')} "
               f"({s.get('handler_type') or 'universal'}){suffix}")
