@@ -7,14 +7,20 @@ yandex_disk_sync.py
 Разделы и их настройки читаются из таблицы site_sections (Supabase),
 поэтому добавлять/менять разделы можно через админ-панель без правки Python.
 
-Особенности этой версии:
+Режимы ускорения:
+  • SYNC_SECTIONS=programs,music   — синхронизировать только перечисленные
+    разделы (через запятую). Пусто → все активные разделы.
+  • SKIP_ENRICHMENT=1              — не ходить во внешние API (Fantlab,
+    Wikipedia, OpenLibrary, Google Books, LLM). Используются только данные
+    из fb2/txt. Сильно ускоряет книги при отладке.
+
+Другие фичи:
   • PRESERVE_USER_EDITS — сохраняет ручные правки пользователя
     (название, описание, автор и т.п.) при обновлении существующих строк.
   • manual_override (per-section) — существующие строки раздела вообще
     не перезаписываются, добавляются только новые файлы.
   • strip_prefix_mode (per-section: auto | always | never) — управляет
-    отрезанием yandex_path от путей файлов. По умолчанию 'always' —
-    публичная ссылка ведёт ВНУТРЬ папки yandex_path.
+    отрезанием yandex_path от путей файлов.
   • BACKUP_BEFORE_SYNC — перед записью изменений создаётся резервная
     копия листа (_backup_<section>_<timestamp>), хранятся последние N.
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
@@ -22,7 +28,7 @@ yandex_disk_sync.py
     включая полные значения строк и заголовки (для diff-view).
   • ensure_headers полностью перезаписывает первую строку до максимальной
     ширины листа — устраняет «хвосты» старых колонок и дубликаты
-    заголовков, из-за которых падал get_all_records().
+    заголовков.
 """
 
 import os
@@ -146,12 +152,20 @@ BACKUP_KEEP_COUNT   = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
 # STRIP_PREFIX_MODE — глобальный fallback, если у раздела нет
 # собственного strip_prefix_mode:
 #   'always' — всегда отрезать yandex_path от путей файлов.
-#              Публичная ссылка ведёт ВНУТРЬ папки yandex_path
-#              (типичный случай, работает для книг/музыки/программ).
-#   'never'  — не отрезать (публичная ссылка — родительская папка).
-#   'auto'   — старая логика через is_public_root_link (медленно,
-#              иногда ошибается).
+#   'never'  — не отрезать.
+#   'auto'   — старая логика через is_public_root_link.
 STRIP_PREFIX_MODE_DEFAULT = os.environ.get("STRIP_PREFIX_MODE", "always").lower()
+
+# SYNC_SECTIONS — список ключей разделов через запятую.
+# Пусто → синхронизировать все активные разделы.
+_raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
+SYNC_SECTIONS_FILTER = [
+    s.strip() for s in _raw_sync_sections.split(",") if s.strip()
+] if _raw_sync_sections else []
+
+# SKIP_ENRICHMENT=1 — не ходить во внешние API (Fantlab, Wikipedia,
+# OpenLibrary, Google Books, LLM). Использовать только данные fb2/txt.
+SKIP_ENRICHMENT = os.environ.get("SKIP_ENRICHMENT", "0") == "1"
 
 # Таблица Supabase, в которую пишутся «осиротевшие» строки.
 SYNC_ORPHANS_TABLE  = "sync_orphans"
@@ -1033,6 +1047,10 @@ def _llm_lookup(title, author):
 
 
 def enrich_book(title, author, cache, diag):
+    # Fast mode: не ходим во внешние API
+    if SKIP_ENRICHMENT:
+        return {}
+
     ck = hashlib.sha1(
         f"{(title or '').lower()}|{(author or '').lower()}".encode()
     ).hexdigest()
@@ -1766,7 +1784,6 @@ def sync_section(section, gs_client, cache):
     sp = (start_path or "").strip("/")
 
     if not sp:
-        # Нечего отрезать — start_path пустой или "/"
         strip_prefix = False
         is_root = False
     elif strip_mode == "always":
@@ -1941,6 +1958,11 @@ def main():
     print(f"BACKUP_BEFORE_SYNC   = {BACKUP_BEFORE_SYNC} "
           f"(keep last {BACKUP_KEEP_COUNT})")
     print(f"STRIP_PREFIX_DEFAULT = {STRIP_PREFIX_MODE_DEFAULT}")
+    print(f"SKIP_ENRICHMENT      = {SKIP_ENRICHMENT}")
+    if SYNC_SECTIONS_FILTER:
+        print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
+    else:
+        print("SYNC_SECTIONS_FILTER = (все активные разделы)")
 
     if yadisk is None:
         print("[!] yadisk не установлен: pip install -r requirements.txt")
@@ -1951,6 +1973,18 @@ def main():
     if not sections:
         print("[!] Не удалось получить ни одного раздела — завершаю.")
         return
+
+    # ─── Фильтр по SYNC_SECTIONS ───
+    if SYNC_SECTIONS_FILTER:
+        before = len(sections)
+        sections = [s for s in sections
+                    if s.get("key") in SYNC_SECTIONS_FILTER]
+        print(f"  [i] SYNC_SECTIONS отфильтровал {len(sections)} "
+              f"из {before} разделов")
+        if not sections:
+            print("[!] Ни один раздел не попал под фильтр — завершаю.")
+            return
+
     print(f"  Получено разделов: {len(sections)}")
     for s in sections:
         flags = []
