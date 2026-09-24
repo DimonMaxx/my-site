@@ -1,986 +1,823 @@
 [
   {
     "title": "A Place For My Head",
-    "size": "4.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/A%20Place%20For%20My%20Head.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/A%20Place%20For%20My%20Head.mp3"
   },
   {
     "title": "Battle Symphony",
-    "size": "8.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Battle%20Symphony.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Battle%20Symphony.mp3"
   },
   {
     "title": "Bleed it Out",
-    "size": "6.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Bleed%20it%20Out.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Bleed%20it%20Out.mp3"
   },
   {
     "title": "Breaking The Habit",
-    "size": "4.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Breaking%20The%20Habit.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Breaking%20The%20Habit.mp3"
   },
   {
     "title": "By Myself",
-    "size": "4.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/By%20Myself.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/By%20Myself.mp3"
   },
   {
     "title": "Crawling",
-    "size": "5.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Crawling.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Crawling.mp3"
   },
   {
     "title": "Cure For The Itch",
-    "size": "6.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Cure%20For%20The%20Itch.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Cure%20For%20The%20Itch.mp3"
   },
   {
     "title": "Lying From You",
-    "size": "5.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Dirt%20Off%20Your%20Shoulder%20-%20Lying%20From%20You.mp3",
-    "folder": "Linkin Park"
+    "artist": "Dirt Off Your Shoulder",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Dirt%20Off%20Your%20Shoulder%20-%20Lying%20From%20You.mp3"
   },
   {
     "title": "Don't Stay",
-    "size": "7.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Don%27t%20Stay.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Don%27t%20Stay.mp3"
   },
   {
     "title": "ENJOY THE SILENCE ‘",
-    "size": "6.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/ENJOY%20THE%20SILENCE%20%E2%80%982004.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "year": "2004",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/ENJOY%20THE%20SILENCE%20%E2%80%982004.mp3"
   },
   {
     "title": "Easier to Run",
-    "size": "7.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Easier%20to%20Run.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Easier%20to%20Run.mp3"
   },
   {
     "title": "Faint",
-    "size": "2.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Faint.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Faint.mp3"
   },
   {
     "title": "Figure.09",
-    "size": "3.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Figure.09.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Figure.09.mp3"
   },
   {
     "title": "Foreword",
-    "size": "0.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Foreword.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Foreword.mp3"
   },
   {
     "title": "Forgotten",
-    "size": "3.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Forgotten.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Forgotten.mp3"
   },
   {
     "title": "Frgt#10",
-    "size": "1.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Frgt%2310.MP3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Frgt%2310.MP3"
   },
   {
     "title": "From The Inside",
-    "size": "4.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/From%20The%20Inside.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/From%20The%20Inside.mp3"
   },
   {
     "title": "Given Up",
-    "size": "7.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Given%20Up.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Given%20Up.mp3"
   },
   {
     "title": "Giving in feat adema",
-    "size": "5.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Giving%20in%20feat%20adema.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Giving%20in%20feat%20adema.mp3"
   },
   {
     "title": "Good Goodbye (feat. Pusha T and Stormzy)",
-    "size": "8.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Good%20Goodbye%20%28feat.%20Pusha%20T%20and%20Stormzy%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Good%20Goodbye%20%28feat.%20Pusha%20T%20and%20Stormzy%29.mp3"
   },
   {
     "title": "Halfway Right",
-    "size": "8.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Halfway%20Right.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Halfway%20Right.mp3"
   },
   {
     "title": "Hands Held High",
-    "size": "8.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hands%20Held%20High.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hands%20Held%20High.mp3"
   },
   {
     "title": "Heavy (feat. Kiiara)",
-    "size": "6.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Heavy%20%28feat.%20Kiiara%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Heavy%20%28feat.%20Kiiara%29.mp3"
   },
   {
     "title": "Hit the Floor",
-    "size": "6.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20Floor.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20Floor.mp3"
   },
   {
     "title": "Hit the floor noise instrumental project",
-    "size": "3.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20floor%20noise%20instrumental%20project.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20floor%20noise%20instrumental%20project.mp3"
   },
   {
     "title": "Hole",
-    "size": "6.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hole.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hole.mp3"
   },
   {
     "title": "In Between",
-    "size": "7.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Between.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Between.mp3"
   },
   {
     "title": "In Pieces",
-    "size": "8.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Pieces.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Pieces.mp3"
   },
   {
     "title": "In The End",
-    "size": "4.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20The%20End.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20The%20End.mp3"
   },
   {
     "title": "In the end club rmx",
-    "size": "11.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20the%20end%20club%20rmx.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20the%20end%20club%20rmx.mp3"
   },
   {
     "title": "Invisible",
-    "size": "8.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Invisible.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Invisible.mp3"
   },
   {
     "title": "In The End",
-    "size": "3.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Izzo%20-%20In%20The%20End.mp3",
-    "folder": "Linkin Park"
+    "artist": "Izzo",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Izzo%20-%20In%20The%20End.mp3"
   },
   {
     "title": "Jigga What , Faint",
-    "size": "8.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Jigga%20What%20%2C%20Faint.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Jigga%20What%20%2C%20Faint.mp3"
   },
   {
     "title": "Krawling Piano",
-    "size": "3.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Krawling%20Piano.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Krawling%20Piano.mp3"
   },
   {
     "title": "Leave Out All The Rest",
-    "size": "8.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Leave%20Out%20All%20The%20Rest.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Leave%20Out%20All%20The%20Rest.mp3"
   },
   {
     "title": "Lying From You",
-    "size": "4.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Lying%20From%20You.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Lying%20From%20You.mp3"
   },
   {
     "title": "My December",
-    "size": "5.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20December.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20December.mp3"
   },
   {
     "title": "My Reason",
-    "size": "4.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20Reason.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20Reason.mp3"
   },
   {
     "title": "No More Sorrow",
-    "size": "5.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/No%20More%20Sorrow.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/No%20More%20Sorrow.mp3"
   },
   {
     "title": "No Roads Left (Bonus)",
-    "size": "8.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/No%20Roads%20Left%20%28Bonus%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/No%20Roads%20Left%20%28Bonus%29.mp3"
   },
   {
     "title": "Nobody Can Save Me",
-    "size": "8.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Nobody%20Can%20Save%20Me.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Nobody%20Can%20Save%20Me.mp3"
   },
   {
     "title": "Nobody's Listening",
-    "size": "6.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Nobody%27s%20Listening.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Nobody%27s%20Listening.mp3"
   },
   {
     "title": "Numb Encore",
-    "size": "6.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb%20Encore.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb%20Encore.mp3"
   },
   {
     "title": "Numb",
-    "size": "7.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb.mp3"
   },
   {
     "title": "One More Light",
-    "size": "9.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20More%20Light.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20More%20Light.mp3"
   },
   {
     "title": "One Step Closer",
-    "size": "5.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20Step%20Closer.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20Step%20Closer.mp3"
   },
   {
     "title": "Paper Cut Piano",
-    "size": "2.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Paper%20Cut%20Piano.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Paper%20Cut%20Piano.mp3"
   },
   {
     "title": "Papercut",
-    "size": "2.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Papercut.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Papercut.mp3"
   },
   {
     "title": "Place for my head",
-    "size": "4.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Place%20for%20my%20head.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Place%20for%20my%20head.mp3"
   },
   {
     "title": "Points Of Authority",
-    "size": "7.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Points%20Of%20Authority.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Points%20Of%20Authority.mp3"
   },
   {
     "title": "Pushing Me Away",
-    "size": "4.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Pushing%20Me%20Away.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Pushing%20Me%20Away.mp3"
   },
   {
     "title": "Qwerty",
-    "size": "5.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Qwerty.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Qwerty.mp3"
   },
   {
     "title": "Runaway",
-    "size": "2.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Runaway.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Runaway.mp3"
   },
   {
     "title": "Session",
-    "size": "2.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Session.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Session.mp3"
   },
   {
     "title": "Shadow Of The Day",
-    "size": "11.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Shadow%20Of%20The%20Day.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Shadow%20Of%20The%20Day.mp3"
   },
   {
     "title": "Sharp Edges",
-    "size": "6.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sharp%20Edges.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sharp%20Edges.mp3"
   },
   {
     "title": "Sold My Soul To Yo Mama",
-    "size": "2.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sold%20My%20Soul%20To%20Yo%20Mama.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sold%20My%20Soul%20To%20Yo%20Mama.mp3"
   },
   {
     "title": "Somewhere I Belong",
-    "size": "4.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Somewhere%20I%20Belong.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Somewhere%20I%20Belong.mp3"
   },
   {
     "title": "Sorry for Now",
-    "size": "7.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sorry%20for%20Now.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sorry%20for%20Now.mp3"
   },
   {
     "title": "Standing In The Middle",
-    "size": "4.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Standing%20In%20The%20Middle.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Standing%20In%20The%20Middle.mp3"
   },
   {
     "title": "Step Up Nobody's Listening",
-    "size": "7.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up%20%20Nobody%27s%20Listening.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up%20%20Nobody%27s%20Listening.mp3"
   },
   {
     "title": "Step Up",
-    "size": "4.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up.mp3"
   },
   {
     "title": "Talking to Myself",
-    "size": "8.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Talking%20to%20Myself.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Talking%20to%20Myself.mp3"
   },
   {
     "title": "The Down Syndrome",
-    "size": "4.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Down%20Syndrome.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Down%20Syndrome.mp3"
   },
   {
     "title": "The Little Things Give You Away",
-    "size": "8.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Little%20Things%20Give%20You%20Away.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Little%20Things%20Give%20You%20Away.mp3"
   },
   {
     "title": "The Untitled (In the End)",
-    "size": "5.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Untitled%20%28In%20the%20End%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Untitled%20%28In%20the%20End%29.mp3"
   },
   {
     "title": "Unda",
-    "size": "6.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Unda.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Unda.mp3"
   },
   {
     "title": "Valentine's Day",
-    "size": "4.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Valentine%27s%20Day.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Valentine%27s%20Day.mp3"
   },
   {
     "title": "Wake",
-    "size": "2.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wake.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wake.mp3"
   },
   {
     "title": "What I've Done (Distorted Remix)",
-    "size": "8.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done%20%28Distorted%20Remix%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done%20%28Distorted%20Remix%29.mp3"
   },
   {
     "title": "What I've Done",
-    "size": "4.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done.mp3"
   },
   {
     "title": "Wish (Live)",
-    "size": "6.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wish%20%28Live%29.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wish%20%28Live%29.mp3"
   },
   {
     "title": "With You",
-    "size": "4.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/With%20You.mp3",
-    "folder": "Linkin Park"
+    "artist": "Linkin Park",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/With%20You.mp3"
   },
   {
     "title": "A Little More",
-    "size": "11.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/A%20Little%20More.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/A%20Little%20More.mp3"
   },
   {
     "title": "Angels Fall Down",
-    "size": "14.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Angels%20Fall%20Down.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Angels%20Fall%20Down.mp3"
   },
   {
     "title": "Awake And Alive",
-    "size": "8.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20And%20Alive.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20And%20Alive.mp3"
   },
   {
     "title": "Awake and Alive (iTunes Session)",
-    "size": "8.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20and%20Alive%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20and%20Alive%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Believe (iTunes Session)",
-    "size": "8.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Believe%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Believe%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Best Kept Secret",
-    "size": "10.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Best%20Kept%20Secret.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Best%20Kept%20Secret.mp3"
   },
   {
     "title": "Better Than Drugs",
-    "size": "9.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Better%20Than%20Drugs.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Better%20Than%20Drugs.mp3"
   },
   {
     "title": "Collide",
-    "size": "12.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Collide.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Collide.mp3"
   },
   {
     "title": "Comatose (iTunes Session)",
-    "size": "11.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Comatose",
-    "size": "8.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose.mp3"
   },
   {
     "title": "Cycle Down",
-    "size": "9.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Cycle%20Down.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Cycle%20Down.mp3"
   },
   {
     "title": "Dead Inside (Bonus Track)",
-    "size": "6.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Dead%20Inside%20%28Bonus%20Track%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Dead%20Inside%20%28Bonus%20Track%29.mp3"
   },
   {
     "title": "Don't Wake Me (Pull Remix)",
-    "size": "12.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me%20%28Pull%20Remix%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me%20%28Pull%20Remix%29.mp3"
   },
   {
     "title": "Don't Wake Me",
-    "size": "9.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me.mp3"
   },
   {
     "title": "Energy",
-    "size": "9.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Energy.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Energy.mp3"
   },
   {
     "title": "Falling Inside the Black",
-    "size": "8.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Falling%20Inside%20the%20Black.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Falling%20Inside%20the%20Black.mp3"
   },
   {
     "title": "Fingernails",
-    "size": "11.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Fingernails.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Fingernails.mp3"
   },
   {
     "title": "Forgiven",
-    "size": "8.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forgiven.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forgiven.mp3"
   },
   {
     "title": "Forsaken",
-    "size": "9.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forsaken.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forsaken.mp3"
   },
   {
     "title": "Freakshow",
-    "size": "10.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Freakshow.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Freakshow.mp3"
   },
   {
     "title": "Hard To Find",
-    "size": "8.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hard%20To%20Find.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hard%20To%20Find.mp3"
   },
   {
     "title": "Hero (The Legion of Doom Remix)",
-    "size": "9.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28The%20Legion%20of%20Doom%20Remix%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28The%20Legion%20of%20Doom%20Remix%29.mp3"
   },
   {
     "title": "Hero (iTunes Session)",
-    "size": "7.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Hero",
-    "size": "7.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero.mp3"
   },
   {
     "title": "Imperfection",
-    "size": "9.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Imperfection.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Imperfection.mp3"
   },
   {
     "title": "Intro",
-    "size": "5.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Intro.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Intro.mp3"
   },
   {
     "title": "Live Free Or Let Me Die",
-    "size": "8.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Live%20Free%20Or%20Let%20Me%20Die.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Live%20Free%20Or%20Let%20Me%20Die.mp3"
   },
   {
     "title": "Looking For Angels",
-    "size": "10.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Looking%20For%20Angels.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Looking%20For%20Angels.mp3"
   },
   {
     "title": "Lucy",
-    "size": "8.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Lucy.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Lucy.mp3"
   },
   {
     "title": "Monster (Radio Edit) (Bonus Track)",
-    "size": "6.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Radio%20Edit%29%20%28Bonus%20Track%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Radio%20Edit%29%20%28Bonus%20Track%29.mp3"
   },
   {
     "title": "Monster (Unleash the Beast)",
-    "size": "10.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Unleash%20the%20Beast%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Unleash%20the%20Beast%29.mp3"
   },
   {
     "title": "Monster (iTunes Session)",
-    "size": "6.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Monster",
-    "size": "6.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster.mp3"
   },
   {
     "title": "My Obsession",
-    "size": "11.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Obsession.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Obsession.mp3"
   },
   {
     "title": "My Religion",
-    "size": "9.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Religion.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Religion.mp3"
   },
   {
     "title": "Not Gonna Die",
-    "size": "8.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Not%20Gonna%20Die.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Not%20Gonna%20Die.mp3"
   },
   {
     "title": "Open Wounds",
-    "size": "7.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Open%20Wounds.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Open%20Wounds.mp3"
   },
   {
     "title": "Rebirthing (Acoustic)",
-    "size": "8.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28Acoustic%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28Acoustic%29.mp3"
   },
   {
     "title": "Rebirthing (iTunes Session)",
-    "size": "11.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Rebirthing",
-    "size": "9.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing.mp3"
   },
   {
     "title": "Rise",
-    "size": "10.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rise.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rise.mp3"
   },
   {
     "title": "Salvation",
-    "size": "8.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Salvation.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Salvation.mp3"
   },
   {
     "title": "Savior",
-    "size": "16.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Savior.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Savior.mp3"
   },
   {
     "title": "Say Goodbye (Acoustic)",
-    "size": "9.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye%20%28Acoustic%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye%20%28Acoustic%29.mp3"
   },
   {
     "title": "Say Goodbye",
-    "size": "9.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye.mp3"
   },
   {
     "title": "Should've When You Could've",
-    "size": "8.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Should%27ve%20When%20You%20Could%27ve.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Should%27ve%20When%20You%20Could%27ve.mp3"
   },
   {
     "title": "Sometimes (iTunes Session)",
-    "size": "8.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "Sometimes",
-    "size": "8.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes.mp3"
   },
   {
     "title": "The Last Night (iTunes Session)",
-    "size": "9.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night%20%28iTunes%20Session%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night%20%28iTunes%20Session%29.mp3"
   },
   {
     "title": "The Last Night",
-    "size": "8.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night.mp3"
   },
   {
     "title": "The Older I Get (Acoustic)",
-    "size": "7.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get%20%28Acoustic%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get%20%28Acoustic%29.mp3"
   },
   {
     "title": "The Older I Get",
-    "size": "8.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get.mp3"
   },
   {
     "title": "Those Nights",
-    "size": "8.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Those%20Nights.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Those%20Nights.mp3"
   },
   {
     "title": "Under My Skin",
-    "size": "9.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Under%20My%20Skin.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Under%20My%20Skin.mp3"
   },
   {
     "title": "What I Believe",
-    "size": "7.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/What%20I%20Believe.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/What%20I%20Believe.mp3"
   },
   {
     "title": "Whispers In The Dark",
-    "size": "9.9",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20In%20The%20Dark.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20In%20The%20Dark.mp3"
   },
   {
     "title": "Whispers in the Dark (Acoustic)",
-    "size": "7.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20in%20the%20Dark%20%28Acoustic%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20in%20the%20Dark%20%28Acoustic%29.mp3"
   },
   {
     "title": "Whispers in the Dark",
-    "size": "7.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20in%20the%20Dark.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20in%20the%20Dark.mp3"
   },
   {
     "title": "Would It Matter (Bonus Track)",
-    "size": "9.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Would%20It%20Matter%20%28Bonus%20Track%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Would%20It%20Matter%20%28Bonus%20Track%29.mp3"
   },
   {
     "title": "Yours To Hold (Acoustic)",
-    "size": "8.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold%20%28Acoustic%29.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold%20%28Acoustic%29.mp3"
   },
   {
     "title": "Yours To Hold",
-    "size": "9.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold.mp3",
-    "folder": "Skillet"
+    "artist": "Skillet",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold.mp3"
   },
   {
     "title": "Unofficial Music Video",
-    "size": "5.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/A%20Demon%27s%20Fate%20-%20Unofficial%20Music%20Video.mp3",
-    "folder": "Within Temptation"
+    "artist": "A Demon's Fate",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/A%20Demon%27s%20Fate%20-%20Unofficial%20Music%20Video.mp3"
   },
   {
     "title": "All-i-need",
-    "size": "11.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/All-i-need.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/All-i-need.mp3"
   },
   {
     "title": "And We Run (Evolution track)",
-    "size": "13.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Evolution%20track%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Evolution%20track%29.mp3"
   },
   {
     "title": "And We Run (Feat. Xzibit)",
-    "size": "8.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Feat.%20Xzibit%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Feat.%20Xzibit%29.mp3"
   },
   {
     "title": "Covered By Roses (Evolution track)",
-    "size": "10.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses%20%28Evolution%20track%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses%20%28Evolution%20track%29.mp3"
   },
   {
     "title": "Covered By Roses",
-    "size": "11.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses.mp3"
   },
   {
     "title": "Dangerous (Feat. Howard Jones)",
-    "size": "11.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dangerous%20%28Feat.%20Howard%20Jones%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dangerous%20%28Feat.%20Howard%20Jones%29.mp3"
   },
   {
     "title": "Dirty Dancer",
-    "size": "9.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dirty%20Dancer.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dirty%20Dancer.mp3"
   },
   {
     "title": "Dog Days",
-    "size": "11.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dog%20Days.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dog%20Days.mp3"
   },
   {
     "title": "Edge Of The World",
-    "size": "11.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Edge%20Of%20The%20World.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Edge%20Of%20The%20World.mp3"
   },
   {
     "title": "Endless-War",
-    "size": "7.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Endless-War.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Endless-War.mp3"
   },
   {
     "title": "Faster Music Video",
-    "size": "3.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Faster%20Music%20Video.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Faster%20Music%20Video.mp3"
   },
   {
     "title": "In the Middle of the night",
-    "size": "4.8",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/In%20the%20Middle%20of%20the%20night.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/In%20the%20Middle%20of%20the%20night.mp3"
   },
   {
     "title": "Iron Unofficial Music Video (Wonder Woman movie) HD",
-    "size": "5.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Iron%20%20%20Unofficial%20Music%20Video%20%28Wonder%20Woman%20movie%29%20HD.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Iron%20%20%20Unofficial%20Music%20Video%20%28Wonder%20Woman%20movie%29%20HD.mp3"
   },
   {
     "title": "Jacoby-shaddix-The-reckoning",
-    "size": "6.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Jacoby-shaddix-The-reckoning.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Jacoby-shaddix-The-reckoning.mp3"
   },
   {
     "title": "Let Her Go",
-    "size": "8.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Her%20Go.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Her%20Go.mp3"
   },
   {
     "title": "Let Us Burn",
-    "size": "12.6",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Us%20Burn.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Us%20Burn.mp3"
   },
   {
     "title": "Mother Earth",
-    "size": "12.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Mother%20Earth.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Mother%20Earth.mp3"
   },
   {
     "title": "Paradise (What About Us) ft. Tarja",
-    "size": "5.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Paradise%20%28What%20About%20Us%29%20ft.%20Tarja.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Paradise%20%28What%20About%20Us%29%20ft.%20Tarja.mp3"
   },
   {
     "title": "Radioactive",
-    "size": "7.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Radioactive.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Radioactive.mp3"
   },
   {
     "title": "Say my name",
-    "size": "3.7",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Say%20my%20name.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Say%20my%20name.mp3"
   },
   {
     "title": "Shot In The Dark (The Great Wall) Video HD",
-    "size": "8.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Shot%20In%20The%20Dark%20%28The%20Great%20Wall%29%20Video%20HD.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Shot%20In%20The%20Dark%20%28The%20Great%20Wall%29%20Video%20HD.mp3"
   },
   {
     "title": "Silver Moonlight (Evolution track)",
-    "size": "14.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight%20%28Evolution%20track%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight%20%28Evolution%20track%29.mp3"
   },
   {
     "title": "Silver Moonlight",
-    "size": "12.1",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight.mp3"
   },
   {
     "title": "Summertime Sadness",
-    "size": "9.4",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Summertime%20Sadness.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Summertime%20Sadness.mp3"
   },
   {
     "title": "Supernova",
-    "size": "13.0",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Supernova.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Supernova.mp3"
   },
   {
     "title": "Tell Me Why (Evolution track)",
-    "size": "11.5",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why%20%28Evolution%20track%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why%20%28Evolution%20track%29.mp3"
   },
   {
     "title": "Tell Me Why",
-    "size": "14.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why.mp3"
   },
   {
     "title": "What-have-you-done-feat-Keith-Caputo",
-    "size": "9.2",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/What-have-you-done-feat-Keith-Caputo.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/What-have-you-done-feat-Keith-Caputo.mp3"
   },
   {
     "title": "Whole World Is Watching (Feat. Dave Pirner)",
-    "size": "9.3",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Whole%20World%20Is%20Watching%20%28Feat.%20Dave%20Pirner%29.mp3",
-    "folder": "Within Temptation"
+    "artist": "Within Temptation",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Whole%20World%20Is%20Watching%20%28Feat.%20Dave%20Pirner%29.mp3"
   }
 ]
