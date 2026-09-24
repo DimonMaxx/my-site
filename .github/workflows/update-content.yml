@@ -2,6 +2,17 @@ name: Sync content from Yandex.Disk
 
 on:
   workflow_dispatch:
+    inputs:
+      sections:
+        description: 'Разделы через запятую (пусто = все). Например: programs,music'
+        required: false
+        default: ''
+        type: string
+      skip_enrichment:
+        description: 'Пропустить обогащение из внешних API (быстро, но без описаний книг)'
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: '0 3 * * *'
 
@@ -29,8 +40,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Clear enrichment cache
-        run: rm -rf _cache/ || true
+      # ─── Кэш обогащения (ускоряет повторные запуски книг в разы) ───
+      - name: Restore enrichment cache
+        uses: actions/cache@v4
+        with:
+          path: _cache
+          key: enrichment-${{ github.ref }}-${{ hashFiles('_content/*.json') }}
+          restore-keys: |
+            enrichment-${{ github.ref }}-
+            enrichment-
+
+      - name: Ensure cache dir exists
+        run: mkdir -p _cache
 
       - name: Create credentials.json
         run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
@@ -48,6 +69,12 @@ jobs:
           PRESERVE_USER_EDITS:       "1"
           BACKUP_BEFORE_SYNC:        "1"
           BACKUP_KEEP_COUNT:         "3"
+
+          # ─── Селективная синхронизация ───
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+
+          # ─── Fast mode ───
+          SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
         run: python yandex_disk_sync.py
 
       - name: Run generate_from_sheets.py
@@ -55,6 +82,7 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
         run: python generate_from_sheets.py
 
       - name: Commit and push changes
@@ -74,6 +102,7 @@ jobs:
 
           git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
 
+          # Подтягиваем чужие изменения и повторяем коммит поверх них
           git pull --rebase origin main || {
             echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
