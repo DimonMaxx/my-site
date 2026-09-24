@@ -17,6 +17,9 @@ yandex_disk_sync.py
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
     в Sheets) с сохранением в Supabase-таблицу sync_orphans,
     включая полные значения строк и заголовки (для diff-view).
+  • ensure_headers полностью перезаписывает первую строку до максимальной
+    ширины листа — устраняет «хвосты» старых колонок и дубликаты
+    заголовков, из-за которых падал get_all_records().
 """
 
 import os
@@ -1158,21 +1161,58 @@ def get_or_create_sheet(sh, name):
         return sh.add_worksheet(title=name, rows=2000, cols=12)
 
 
+def _col_letter(n):
+    """Преобразует индекс колонки (0-based) в буквенное обозначение A, B, ..., Z, AA, AB."""
+    s = ""
+    n += 1
+    while n:
+        n, r = divmod(n - 1, 26)
+        s = chr(65 + r) + s
+    return s
+
+
 def ensure_headers(sheet, headers):
+    """
+    Обновляет заголовки листа. Полностью перезаписывает первую строку
+    до максимальной ширины листа, чтобы не осталось «хвостов»
+    от старых версий схемы (иначе gspread.get_all_records()
+    ругается на дубликаты).
+    """
     try:
         current = sheet.row_values(1)
     except Exception:
         current = []
-    current_clean = [c.strip() for c in current if c is not None]
-    headers_clean = [h.strip() for h in headers]
-    if current_clean[:len(headers_clean)] == headers_clean:
+
+    # Нужно ли обновлять?
+    need_update = False
+    if len(current) != len(headers):
+        need_update = True
+    else:
+        for i, h in enumerate(headers):
+            if (current[i] or "").strip() != h.strip():
+                need_update = True
+                break
+    if not need_update:
         return
-    end_col_letter = chr(ord('A') + len(headers) - 1) if len(headers) <= 26 else "Z"
+
+    # Определяем максимальную ширину листа (чтобы перезаписать «хвост»)
+    try:
+        all_values = sheet.get_all_values()
+        max_cols = max((len(r) for r in all_values), default=len(headers))
+    except Exception:
+        max_cols = len(headers)
+    max_cols = max(max_cols, len(headers))
+
+    # Формируем строку: заголовки + пустые ячейки для «хвоста»
+    new_row = list(headers) + [""] * (max_cols - len(headers))
+
+    end_col_letter = _col_letter(max_cols - 1)
     range_a1 = f"A1:{end_col_letter}1"
     try:
-        sheet.update(values=[headers], range_name=range_a1,
+        sheet.update(values=[new_row], range_name=range_a1,
                      value_input_option="USER_ENTERED")
-        print(f"    [+] Обновлены заголовки: {headers}")
+        print(f"    [+] Обновлены заголовки: {headers} "
+              f"(очищено до {max_cols} колонок)")
     except Exception as e:
         print(f"    [!] Заголовки: {e}")
 
@@ -1729,7 +1769,7 @@ def sync_section(section, gs_client, cache):
     link_ru = "Ссылка для скачивания"
     link_idx = headers.index(link_ru) if link_ru in headers else 0
     n_cols = len(headers)
-    end_col_letter = chr(ord('A') + n_cols - 1) if n_cols <= 26 else "Z"
+    end_col_letter = _col_letter(n_cols - 1)
 
     # --- Детект сирот ---
     orphans = find_orphan_rows(existing, rows, headers, link_idx)
