@@ -74,104 +74,11 @@ jobs:
 
           git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
 
-          # Подтягиваем чужие изменения и повторяем коммит поверх них
-          git pull --rebase origin main
-
-          # На случай, если во время rebase возникли конфликты в _content/*,
-          # оставляем «нашу» версию (сгенерированную только что).
-          if [ -f .git/rebase-merge/interactive ] || [ -d .git/rebase-apply ]; then
-            echo "Rebase conflict — разрешаем в пользу свежей генерации"
+          git pull --rebase origin main || {
+            echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
             git add _content/ || true
             GIT_EDITOR=true git rebase --continue || git rebase --skip || true
-          fi
-
-          git pushname: Sync content from Yandex.Disk
-
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * *'
-
-permissions:
-  contents: write
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Clear enrichment cache
-        run: rm -rf _cache/ || true
-
-      - name: Create credentials.json
-        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
-
-      - name: Run yandex_disk_sync.py
-        env:
-          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          YADISK_TOKEN:              ${{ secrets.YADISK_TOKEN }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          GOOGLE_BOOKS_API_KEY:      ${{ secrets.GOOGLE_BOOKS_API_KEY }}
-          SPREADSHEET_NAME:          "НаполнениеСайта"
-          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
-          WIKI_LANG:                 "ru"
-          ENABLE_LLM_FALLBACK:       "0"
-          PRESERVE_USER_EDITS:       "1"
-          BACKUP_BEFORE_SYNC:        "1"
-          BACKUP_KEEP_COUNT:         "3"
-        run: python yandex_disk_sync.py
-
-      - name: Run generate_from_sheets.py
-        env:
-          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python generate_from_sheets.py
-
-      - name: Commit and push changes
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add _content/ || true
-          if [ -d _cache ]; then
-            git add _cache/ || true
-          fi
-
-          if git diff --staged --quiet; then
-            echo "Нет изменений для коммита."
-            exit 0
-          fi
-
-          git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
-
-          # Подтягиваем чужие изменения и повторяем коммит поверх них
-          git pull --rebase origin main
-
-          # На случай, если во время rebase возникли конфликты в _content/*,
-          # оставляем «нашу» версию (сгенерированную только что).
-          if [ -f .git/rebase-merge/interactive ] || [ -d .git/rebase-apply ]; then
-            echo "Rebase conflict — разрешаем в пользу свежей генерации"
-            git checkout --theirs _content/ 2>/dev/null || true
-            git add _content/ || true
-            GIT_EDITOR=true git rebase --continue || git rebase --skip || true
-          fi
+          }
 
           git push
