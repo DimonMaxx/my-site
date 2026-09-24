@@ -2,6 +2,9 @@
 (function () {
     'use strict';
 
+    // ============================================================
+    // Экранирование
+    // ============================================================
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -13,17 +16,26 @@
         return String(str).replace(/&/g, '&amp;')
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+
+    // ============================================================
+    // Slug
+    // ============================================================
     function slugify(text) {
         if (!text) return '';
         let slug = text.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
         return slug.replace(/[\s\-]+/g, '-');
     }
+
+    // ============================================================
+    // Пагинация
+    // ============================================================
     function getMaxPageButtons() {
         const w = window.innerWidth;
         if (w < 480) return 5;
         if (w < 768) return 7;
         return 11;
     }
+
     function getVisiblePages(currentPage, totalPages) {
         const MAX = getMaxPageButtons();
         const pages = [];
@@ -39,6 +51,7 @@
         for (let i = start; i <= end; i++) pages.push(i);
         return pages;
     }
+
     function renderPagination(containerId, totalItems, totalPages, state) {
         const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES;
         const sizes = PAGE_SIZES.map(sz =>
@@ -67,6 +80,7 @@
             </div>
         `;
     }
+
     function attachPaginationHandlers(container, containerId, state, onRender) {
         if (!state || !container) return;
         const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
@@ -108,6 +122,10 @@
             });
         }
     }
+
+    // ============================================================
+    // Прочие утилиты
+    // ============================================================
     function toggleDesc(btn) {
         const cell = btn.closest('td');
         if (!cell) return;
@@ -124,11 +142,13 @@
             btn.textContent = 'Свернуть';
         }
     }
+
     function triggerDownload(url) {
         const a = document.createElement('a');
         a.href = url; a.rel = 'noopener'; a.style.display = 'none';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
+
     function formatDateRu(date) {
         if (!date) return '—';
         const d = date instanceof Date ? date : new Date(date);
@@ -137,6 +157,9 @@
                d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
+    // ============================================================
+    // Supabase client (singleton)
+    // ============================================================
     let _supabaseClient = null;
     function getSupabaseClient() {
         if (_supabaseClient) return _supabaseClient;
@@ -147,47 +170,116 @@
         return _supabaseClient;
     }
 
-    /* ============================================================
-     * Загрузка разделов из Supabase (с fallback на DEFAULT_SECTIONS)
-     * ============================================================ */
+    // ============================================================
+    // Таймаут-обёртка
+    // ============================================================
+    function _withTimeout(promise, ms, label) {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => {
+                reject(new Error(`${label}: таймаут ${ms}ms`));
+            }, ms);
+            promise.then(
+                v => { clearTimeout(t); resolve(v); },
+                e => { clearTimeout(t); reject(e); }
+            );
+        });
+    }
+
+    // ============================================================
+    // Безопасная замена содержимого SECTIONS
+    // (не переприсваиваем ссылку — мутируем объект)
+    // ============================================================
+    function _replaceSections(cfg, newSections) {
+        if (!cfg.SECTIONS || typeof cfg.SECTIONS !== 'object') {
+            cfg.SECTIONS = {};
+        }
+        // Очищаем старые ключи
+        Object.keys(cfg.SECTIONS).forEach(k => { delete cfg.SECTIONS[k]; });
+        // Копируем новые
+        Object.keys(newSections).forEach(k => { cfg.SECTIONS[k] = newSections[k]; });
+    }
+
+    // ============================================================
+    // Загрузка разделов из Supabase (с fallback на DEFAULT_SECTIONS)
+    // ============================================================
     let _sectionsLoaded = null;
+
     function loadSections(force) {
         if (_sectionsLoaded && !force) return _sectionsLoaded;
+
         _sectionsLoaded = (async function () {
             const cfg = window.APP_CONFIG;
+
+            if (!cfg) {
+                console.error('[loadSections] APP_CONFIG не загружен');
+                return {};
+            }
+
+            const applyFallback = () => {
+                console.warn('[loadSections] → fallback на DEFAULT_SECTIONS');
+                _replaceSections(cfg, cfg.DEFAULT_SECTIONS || {});
+                return cfg.SECTIONS;
+            };
+
             try {
                 const client = getSupabaseClient();
-                const { data, error } = await client
-                    .from('site_sections')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('sort_order', { ascending: true });
-                if (error) throw error;
-                if (data && data.length > 0) {
+
+                const { data, error } = await _withTimeout(
+                    client
+                        .from('site_sections')
+                        .select('key,label,icon,json_path,container,folderable,columns,sort_order,is_active,manual_override')
+                        .eq('is_active', true)
+                        .order('sort_order', { ascending: true }),
+                    8000,
+                    'site_sections'
+                );
+
+                if (error) {
+                    console.error('[loadSections] Supabase error:', error);
+                    return applyFallback();
+                }
+
+                if (Array.isArray(data) && data.length > 0) {
                     const sections = {};
                     data.forEach(row => {
+                        if (!row || !row.key) return;
                         sections[row.key] = {
-                            label: row.label,
+                            label: row.label || row.key,
                             icon: row.icon || 'fa-folder',
-                            json: row.json_path,
-                            container: row.container,
+                            json: row.json_path || '',
+                            container: row.container || (row.key + '-container'),
                             folderable: !!row.folderable,
-                            columns: Array.isArray(row.columns) ? row.columns : []
+                            columns: Array.isArray(row.columns) ? row.columns : [],
+                            manual_override: !!row.manual_override,
+                            sort_order: row.sort_order || 100,
                         };
                     });
-                    cfg.SECTIONS = sections;
-                } else {
-                    cfg.SECTIONS = Object.assign({}, cfg.DEFAULT_SECTIONS);
+                    // Сортируем по sort_order
+                    const sorted = {};
+                    Object.entries(sections)
+                        .sort((a, b) => (a[1].sort_order || 100) - (b[1].sort_order || 100))
+                        .forEach(([k, v]) => { sorted[k] = v; });
+
+                    _replaceSections(cfg, sorted);
+                    console.log('[loadSections] загружено из Supabase:',
+                        Object.keys(cfg.SECTIONS));
+                    return cfg.SECTIONS;
                 }
+
+                console.warn('[loadSections] Supabase вернул пусто → fallback');
+                return applyFallback();
             } catch (e) {
-                console.warn('loadSections: используется DEFAULT_SECTIONS', e);
-                cfg.SECTIONS = Object.assign({}, cfg.DEFAULT_SECTIONS);
+                console.error('[loadSections] исключение:', e);
+                return applyFallback();
             }
-            return cfg.SECTIONS;
         })();
+
         return _sectionsLoaded;
     }
 
+    // ============================================================
+    // Экспорт
+    // ============================================================
     window.MF = Object.freeze({
         escapeHtml, escapeAttr, slugify,
         getMaxPageButtons, getVisiblePages,
