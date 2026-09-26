@@ -6,7 +6,7 @@
     <title>Предложить материал — MyFiles</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -54,7 +54,6 @@
             border-bottom: 2px solid #eef2ff;
         }
 
-        /* Информационный блок */
         .info-block {
             background: #fef3c7;
             border: 1px solid #f59e0b;
@@ -178,6 +177,19 @@
             margin: 0;
         }
 
+        .error-message {
+            display: none;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .error-message.show { display: block; }
+        .error-message i { margin-right: 6px; }
+
         .field-group-title {
             font-size: 13px;
             font-weight: 700;
@@ -216,16 +228,12 @@
         </div>
     </div>
 
-    <!-- Сама форма. Атрибуты Netlify Forms + новый набор полей -->
-    <form id="submitForm" name="submitForm" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="submitForm">
-
-        <!-- Поле-ловушка для ботов -->
-        <div style="display: none;">
-            <label>Не заполняйте это поле, если вы человек: <input name="bot-field" /></label>
+    <form id="submitForm" name="submitForm" novalidate>
+        <!-- Honeypot для ботов: невидимое поле. Реальный пользователь его не заполнит. -->
+        <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+            <label>Не заполняйте это поле: <input type="text" name="bot-field" tabindex="-1" autocomplete="off"></label>
         </div>
 
-        <!-- ===== Автор заявки ===== -->
         <div class="field-group-title">Контактные данные</div>
 
         <div class="form-row">
@@ -240,7 +248,6 @@
             </div>
         </div>
 
-        <!-- ===== Категория и название ===== -->
         <div class="field-group-title">Материал</div>
 
         <div class="form-group">
@@ -262,7 +269,6 @@
             <input type="text" id="title" name="title" placeholder="Например: Супер-программа v2.0" required>
         </div>
 
-        <!-- ===== Общие поля для медиа ===== -->
         <div class="form-group">
             <label for="description">Краткое описание <span class="required">*</span></label>
             <textarea id="description" name="description" placeholder="Что это за материал и чем он полезен..." required></textarea>
@@ -274,7 +280,6 @@
             <div class="hint">Ссылка на файл в облаке (Яндекс.Диск, Google Drive и т.п.).</div>
         </div>
 
-        <!-- ===== Поля для книг ===== -->
         <div class="section-fields" id="fields-books" style="display:none;">
             <div class="field-group-title">Поля для книг</div>
             <div class="form-row">
@@ -289,7 +294,6 @@
             </div>
         </div>
 
-        <!-- ===== Поля для программ ===== -->
         <div class="section-fields" id="fields-programs" style="display:none;">
             <div class="field-group-title">Поля для программ</div>
             <div class="form-row">
@@ -304,7 +308,6 @@
             </div>
         </div>
 
-        <!-- ===== Поля для музыки ===== -->
         <div class="section-fields" id="fields-music" style="display:none;">
             <div class="field-group-title">Поля для музыки</div>
             <div class="form-row">
@@ -319,7 +322,6 @@
             </div>
         </div>
 
-        <!-- ===== Поля для игр ===== -->
         <div class="section-fields" id="fields-games" style="display:none;">
             <div class="field-group-title">Поля для игр</div>
             <div class="form-row">
@@ -334,7 +336,6 @@
             </div>
         </div>
 
-        <!-- ===== Поля для фильмов ===== -->
         <div class="section-fields" id="fields-movies" style="display:none;">
             <div class="field-group-title">Поля для фильмов</div>
             <div class="form-row">
@@ -349,7 +350,6 @@
             </div>
         </div>
 
-        <!-- ===== Дополнительная информация ===== -->
         <div class="form-group" style="margin-top: 25px;">
             <label for="comment">Дополнительная информация</label>
             <textarea id="comment" name="comment" placeholder="Что-то ещё, что мы должны знать..."></textarea>
@@ -358,9 +358,12 @@
         <button type="submit" class="btn-submit" id="submitBtn">
             <i class="fas fa-paper-plane"></i> Отправить на модерацию
         </button>
+
+        <div id="errorMessage" class="error-message">
+            <i class="fas fa-exclamation-triangle"></i><span id="errorText"></span>
+        </div>
     </form>
 
-    <!-- Сообщение об успехе -->
     <div class="success-message" id="successMessage">
         <i class="fas fa-check-circle"></i>
         <h3>Спасибо за заявку!</h3>
@@ -374,14 +377,12 @@
 </div>
 
 <script>
-    // Показ полей в зависимости от выбранной категории
+    // ─── Показ полей в зависимости от выбранной категории ───
     const categorySelect = document.getElementById('category');
     const allSections = document.querySelectorAll('.section-fields');
 
     categorySelect.addEventListener('change', function() {
-        // Скрываем все секции
         allSections.forEach(sec => sec.style.display = 'none');
-        // Показываем нужную
         const val = this.value;
         if (val) {
             const target = document.getElementById('fields-' + val);
@@ -389,12 +390,23 @@
         }
     });
 
-    // Обработка отправки формы
+    // ─── Отправка формы через Supabase Edge Function ───
     (function() {
         const form = document.getElementById('submitForm');
         const submitBtn = document.getElementById('submitBtn');
         const successMessage = document.getElementById('successMessage');
+        const errorBox = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
         if (!form) return;
+
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorBox.classList.add('show');
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function hideError() {
+            errorBox.classList.remove('show');
+        }
 
         function showSuccess() {
             form.style.display = 'none';
@@ -403,38 +415,66 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            hideError();
+
+            // Простая клиентская валидация
+            const required = ['name', 'email', 'category', 'title', 'description', 'download_link'];
+            for (const field of required) {
+                const el = form.elements[field];
+                if (!el || !String(el.value).trim()) {
+                    showError('Пожалуйста, заполните все обязательные поля.');
+                    return;
+                }
+            }
+            const email = form.elements['email'].value.trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('Пожалуйста, введите корректный email.');
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
 
+            // Собираем данные формы (включая honeypot)
             const formData = new FormData(form);
+            const payload = {};
+            for (const [k, v] of formData.entries()) {
+                if (typeof v === 'string') payload[k] = v;
+            }
 
-            // Отправка в Netlify Forms
-            fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(formData).toString()
-            })
-            .then(response => {
-                if (response.ok) {
+            try {
+                const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL)
+                    || 'https://rmoonebbvpmvthvpcmpt.supabase.co';
+                const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || '';
+
+                const resp = await fetch(`${SUPABASE_URL}/functions/v1/submit-form`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const result = await resp.json().catch(() => ({}));
+
+                if (resp.ok && result.ok) {
                     showSuccess();
                 } else {
-                    throw new Error('Ошибка при отправке. Попробуйте позже.');
+                    showError(result.error || 'Не удалось отправить заявку. Попробуйте позже.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить на модерацию';
                 }
-            })
-            .catch(error => {
-                alert('Произошла ошибка: ' + error.message);
+            } catch (err) {
+                console.error(err);
+                showError('Ошибка сети. Проверьте соединение и попробуйте снова.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить на модерацию';
-            });
+            }
         });
-
-        // Если вернулись со страницы подтверждения (Netlify)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === '1') {
-            showSuccess();
-        }
     })();
 </script>
 </body>
