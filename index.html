@@ -105,10 +105,28 @@
             min-width: 280px;
         }
         .audio-cell audio {
-            width: 320px;      /* было 240px — ползунок стал длиннее */
-            height: 40px;      /* было 36px — кнопки плеера чуть крупнее */
+            width: 320px;
+            height: 40px;
             outline: none;
         }
+        /* ─── Скрытие кнопки скачивания и «трёх точек» в нативных контролах ───
+           Работает в WebKit/Blink (Chrome, Edge, Opera, Safari).
+           В сочетании с атрибутом controlsList="nodownload ..." на <audio>
+           это закрывает все пути к нативному скачиванию трека. */
+        .audio-cell audio::-webkit-media-controls-overflow-button,
+        .audio-cell audio::-webkit-media-controls-download-button,
+        .audio-cell audio::-internal-media-controls-download-button {
+            display: none !important;
+            -webkit-appearance: none !important;
+        }
+        /* На случай, если браузер не поддерживает controlsList и оставляет
+           overflow-кнопку единственным элементом — прячем всю панель overflow. */
+        .audio-cell audio::-webkit-media-controls-panel .audio-overflow-button,
+        .audio-cell audio::-webkit-media-controls-panel [aria-label="More options"],
+        .audio-cell audio::-webkit-media-controls-panel [aria-label="More"] {
+            display: none !important;
+        }
+
         .audio-controls {
             display: flex;
             gap: 8px;
@@ -640,9 +658,17 @@
                             const isLogged = !!currentUser;
                             const dlClass = isLogged ? 'audio-download' : 'audio-download disabled';
                             const audioId = `audio-player-${audioIdx++}`;
+                            // ВАЖНО: controlsList="nodownload noplaybackrate noremoteplayback"
+                            //   и disableRemotePlayback — убирают нативную кнопку
+                            //   скачивания и «три точки» (overflow) в Chrome/Edge/Safari.
                             tbody += `<td class="col-center">
                                 <div class="audio-cell">
-                                    <audio id="${audioId}" controls preload="none" src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
+                                    <audio id="${audioId}"
+                                           controls
+                                           controlsList="nodownload noplaybackrate noremoteplayback"
+                                           disableRemotePlayback
+                                           preload="none"
+                                           src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
                                     <div class="audio-controls">
                                         <button type="button" class="audio-seek-btn" data-audio-id="${audioId}" data-delta="-10" title="Назад на 10 секунд">
                                             <i class="fas fa-backward"></i> 10
