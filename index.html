@@ -95,10 +95,52 @@
         .btn-download-sm:hover { background: #1d4ed8; transform: translateY(-1px); }
         .btn-download-sm.disabled { background: #94a3b8; cursor: not-allowed; }
         .empty-block { text-align: center; color: #94a3b8; padding: 40px 20px; font-style: italic; background: #f8fafc; border-radius: 12px; }
-        .audio-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 220px; }
-        .audio-cell audio { width: 240px; height: 36px; outline: none; }
+
+        /* ─── Аудио-плеер ─── */
+        .audio-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-width: 280px;
+        }
+        .audio-cell audio {
+            width: 320px;      /* было 240px — ползунок стал длиннее */
+            height: 40px;      /* было 36px — кнопки плеера чуть крупнее */
+            outline: none;
+        }
+        .audio-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .audio-seek-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.4;
+        }
+        .audio-seek-btn:hover {
+            background: #eef2ff;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .audio-seek-btn:active { transform: scale(0.96); }
+        .audio-seek-btn i { font-size: 11px; }
+
         .audio-download { font-size: 12px; color: #2563eb; text-decoration: none; font-weight: 600; }
         .audio-download:hover { text-decoration: underline; }
+        .audio-download.disabled { color: #94a3b8; cursor: not-allowed; }
 
         .pagination-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 15px; padding: 12px 18px; background: #f8fafc; border-radius: 12px; font-size: 14px; }
         .pagination-total strong { color: #0f172a; font-size: 16px; }
@@ -126,7 +168,8 @@
             .folder-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
             .content-table-wrapper { margin: 0 -12px; padding: 0 12px; }
             .content-table { font-size: 12px; }
-            .audio-cell audio { width: 180px; }
+            .audio-cell { min-width: 0; }
+            .audio-cell audio { width: 220px; height: 36px; }
         }
     </style>
 </head>
@@ -241,7 +284,6 @@
             } else if (key === 'description' || key === 'body') {
                 out.push({ key, label: labels[key] || key, type: 'description' });
             } else if (key === 'download_link') {
-                // зависит от того, музыка это или нет
                 out.push({ key, label: 'Скачать', type: '__download__' });
                 out.push({ key, label: 'Скачиваний', type: 'count' });
             } else {
@@ -267,12 +309,7 @@
                 }
                 return { key: col, label: CFG.COLUMN_LABELS[col] || col, type: 'text' };
             });
-            // Для музыки добавим «Скачиваний»
-            if (isMusic) {
-                cols.push({ key: 'download_link', label: 'Скачиваний', type: 'count' });
-            } else {
-                cols.push({ key: 'download_link', label: 'Скачиваний', type: 'count' });
-            }
+            cols.push({ key: 'download_link', label: 'Скачиваний', type: 'count' });
             sectionRenderers[meta.container] = { columns: cols };
         });
     }
@@ -281,7 +318,6 @@
     function buildSidebarAndTabs() {
         const navInner = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
-        // Очистить всё, кроме "Главная"
         navInner.querySelectorAll('.nav-link:not([data-tab="home"])').forEach(el => el.remove());
         tabsWrapper.querySelectorAll('.tab-content:not(#home)').forEach(el => el.remove());
 
@@ -467,7 +503,6 @@
             const f = (item.folder || '').trim();
             if (f) { counts[f] = (counts[f] || 0) + 1; withFolder++; }
         });
-        // Доп. папки из Supabase
         (extraFolders[sectionKey] || []).forEach(name => {
             if (!(name in counts)) counts[name] = 0;
         });
@@ -569,6 +604,9 @@
         });
         thead += '</tr>';
 
+        // ─── Счётчик для уникальных id аудио-плееров ───
+        let audioIdx = 0;
+
         let tbody = '';
         if (pageItems.length === 0) {
             tbody = `<tr><td colspan="${cols.length}" class="empty-block">Ничего не найдено</td></tr>`;
@@ -601,9 +639,18 @@
                             const fid = MF.slugify(ftitle);
                             const isLogged = !!currentUser;
                             const dlClass = isLogged ? 'audio-download' : 'audio-download disabled';
+                            const audioId = `audio-player-${audioIdx++}`;
                             tbody += `<td class="col-center">
                                 <div class="audio-cell">
-                                    <audio controls preload="none" src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
+                                    <audio id="${audioId}" controls preload="none" src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
+                                    <div class="audio-controls">
+                                        <button type="button" class="audio-seek-btn" data-audio-id="${audioId}" data-delta="-10" title="Назад на 10 секунд">
+                                            <i class="fas fa-backward"></i> 10
+                                        </button>
+                                        <button type="button" class="audio-seek-btn" data-audio-id="${audioId}" data-delta="10" title="Вперёд на 10 секунд">
+                                            10 <i class="fas fa-forward"></i>
+                                        </button>
+                                    </div>
                                     <a href="#" class="${dlClass}" data-file-id="${MF.escapeAttr(fid)}" data-download-url="${MF.escapeAttr(item.download_link)}" data-file-name="${MF.escapeAttr(ftitle)}">
                                         <i class="fas fa-download"></i> Скачать
                                     </a>
@@ -703,6 +750,34 @@
                 incrementDownload(this.dataset.fileId, this.dataset.downloadUrl, this.dataset.fileName);
             });
         });
+
+        // ─── Кнопки перемотки ±10 секунд ───
+        container.querySelectorAll('.audio-seek-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const audioId = this.dataset.audioId;
+                const delta = parseFloat(this.dataset.delta) || 0;
+                const audio = container.querySelector('audio[id="' + audioId + '"]');
+                if (!audio) return;
+
+                const duration = isFinite(audio.duration) ? audio.duration : Infinity;
+                const cur = isFinite(audio.currentTime) ? audio.currentTime : 0;
+                let next = cur + delta;
+                if (next < 0) next = 0;
+                if (duration !== Infinity && next > duration) next = duration;
+
+                try { audio.currentTime = next; } catch (err) {}
+
+                // Визуальная вспышка на кнопке
+                this.style.background = '#dbeafe';
+                this.style.borderColor = '#2563eb';
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.borderColor = '';
+                }, 200);
+            });
+        });
+
         MF.attachPaginationHandlers(container, containerId, state, () => renderTableWithState(containerId, container, renderFn));
         updateDownloadCountsDisplay();
     }
