@@ -103,24 +103,23 @@
             align-items: center;
             gap: 6px;
             min-width: 280px;
+            /* Запрещаем выделение и перетаскивание внутри плеера */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
         }
         .audio-cell audio {
             width: 320px;
             height: 40px;
             outline: none;
         }
-        /* ─── Скрытие кнопки скачивания и «трёх точек» в нативных контролах ───
-           Работает в WebKit/Blink (Chrome, Edge, Opera, Safari).
-           В сочетании с атрибутом controlsList="nodownload ..." на <audio>
-           это закрывает все пути к нативному скачиванию трека. */
+        /* Скрытие нативной кнопки скачивания и «трёх точек» в WebKit/Blink */
         .audio-cell audio::-webkit-media-controls-overflow-button,
         .audio-cell audio::-webkit-media-controls-download-button,
         .audio-cell audio::-internal-media-controls-download-button {
             display: none !important;
             -webkit-appearance: none !important;
         }
-        /* На случай, если браузер не поддерживает controlsList и оставляет
-           overflow-кнопку единственным элементом — прячем всю панель overflow. */
         .audio-cell audio::-webkit-media-controls-panel .audio-overflow-button,
         .audio-cell audio::-webkit-media-controls-panel [aria-label="More options"],
         .audio-cell audio::-webkit-media-controls-panel [aria-label="More"] {
@@ -215,7 +214,6 @@
         <aside class="sidebar" id="sidebarNav">
             <nav class="sidebar-nav" id="sidebarNavInner">
                 <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
-                <!-- Остальные пункты будут добавлены динамически из SECTIONS -->
             </nav>
 
             <div class="stats-panel" id="statsPanel">
@@ -241,7 +239,6 @@
                         <i class="fas fa-info-circle"></i> Выберите раздел в меню слева.
                     </p>
                 </div>
-                <!-- Остальные вкладки будут созданы динамически -->
             </div>
         </div>
     </div>
@@ -264,9 +261,32 @@
     const loadedSections = new Set();
     const tableStates = {};
     let sectionRenderers = {};
-    let extraFolders = {}; // { sectionKey: [ {name, sort_order} ] }
+    let extraFolders = {};
 
     try { localStorage.removeItem('github_token'); } catch (e) {}
+
+    // ─── ГЛОБАЛЬНАЯ ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ НА АУДИО ───
+    // Блокирует правый клик по <audio> и всем элементам внутри .audio-cell.
+    // В Chrome/Edge/Yandex полностью убирает меню, в Safari/FF оставляет
+    // только нейтральные пункты, убирая «Сохранить аудио как…».
+    document.addEventListener('contextmenu', function (e) {
+        const target = e.target;
+        if (!target) return;
+        if (target.tagName === 'AUDIO'
+            || target.closest('audio')
+            || target.closest('.audio-cell')) {
+            e.preventDefault();
+            return false;
+        }
+    }, true);
+
+    // Дополнительно: глобальный запрет drag для audio (на всякий случай)
+    document.addEventListener('dragstart', function (e) {
+        if (e.target && e.target.tagName === 'AUDIO') {
+            e.preventDefault();
+            return false;
+        }
+    }, true);
 
     // --- Прокси ---
     function buildProxyUrl(downloadUrl) {
@@ -292,7 +312,6 @@
         return map[ext] || '';
     }
 
-    // --- Построение рендереров из columns ---
     function buildColumnsFromKeys(keys) {
         const labels = CFG.COLUMN_LABELS || {};
         const out = [];
@@ -332,7 +351,6 @@
         });
     }
 
-    // --- Динамическая навигация и контейнеры ---
     function buildSidebarAndTabs() {
         const navInner = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
@@ -355,7 +373,6 @@
         });
     }
 
-    // --- Загрузка доп. папок для разделов ---
     async function loadExtraFolders() {
         try {
             const { data, error } = await supabaseClient
@@ -371,7 +388,6 @@
         } catch (e) { console.warn('extra folders:', e); extraFolders = {}; }
     }
 
-    // --- Аутентификация ---
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) { currentUser = null; currentProfile = null; renderAuthWidget(false); return; }
@@ -407,7 +423,6 @@
         if (ub) ub.style.display = isAdmin ? 'inline-flex' : 'none';
     }
 
-    // --- Статистика, скачивания ---
     async function loadStats() {
         try {
             const r1 = await supabaseClient.rpc('get_total_visitors');
@@ -452,7 +467,6 @@
         }
     }
 
-    // --- Таблица ---
     function initTableState(id, cols) {
         if (!tableStates[id]) {
             tableStates[id] = {
@@ -622,7 +636,6 @@
         });
         thead += '</tr>';
 
-        // ─── Счётчик для уникальных id аудио-плееров ───
         let audioIdx = 0;
 
         let tbody = '';
@@ -658,15 +671,14 @@
                             const isLogged = !!currentUser;
                             const dlClass = isLogged ? 'audio-download' : 'audio-download disabled';
                             const audioId = `audio-player-${audioIdx++}`;
-                            // ВАЖНО: controlsList="nodownload noplaybackrate noremoteplayback"
-                            //   и disableRemotePlayback — убирают нативную кнопку
-                            //   скачивания и «три точки» (overflow) в Chrome/Edge/Safari.
                             tbody += `<td class="col-center">
-                                <div class="audio-cell">
+                                <div class="audio-cell" oncontextmenu="return false;">
                                     <audio id="${audioId}"
                                            controls
                                            controlsList="nodownload noplaybackrate noremoteplayback"
                                            disableRemotePlayback
+                                           draggable="false"
+                                           oncontextmenu="return false;"
                                            preload="none"
                                            src="${MF.escapeAttr(audioUrl)}"${mimeAttr}></audio>
                                     <div class="audio-controls">
@@ -794,7 +806,6 @@
 
                 try { audio.currentTime = next; } catch (err) {}
 
-                // Визуальная вспышка на кнопке
                 this.style.background = '#dbeafe';
                 this.style.borderColor = '#2563eb';
                 setTimeout(() => {
@@ -804,11 +815,25 @@
             });
         });
 
+        // ─── Локальные обработчики contextmenu на audio (доп. защита) ───
+        container.querySelectorAll('.audio-cell audio').forEach(audio => {
+            audio.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+        });
+        container.querySelectorAll('.audio-cell').forEach(cell => {
+            cell.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                return false;
+            });
+        });
+
         MF.attachPaginationHandlers(container, containerId, state, () => renderTableWithState(containerId, container, renderFn));
         updateDownloadCountsDisplay();
     }
 
-    // --- Переключение вкладок ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         const target = document.getElementById(tabId);
